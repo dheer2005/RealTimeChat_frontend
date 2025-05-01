@@ -6,13 +6,12 @@ import { ChatService } from '../Services/chat.service';
 import { AuthenticationService } from '../Services/authentication.service';
 import $ from 'jquery';
 import { ProfileDescriptionComponent } from '../profile-description/profile-description.component';
-import { PickerComponent } from '@ctrl/ngx-emoji-mart';
 
 
 @Component({
   selector: 'app-chat-component',
   standalone: true,
-  imports: [FormsModule, CommonModule, RouterLink, ProfileDescriptionComponent,PickerComponent],
+  imports: [FormsModule, CommonModule, RouterLink, ProfileDescriptionComponent],
   templateUrl: './chat-component.component.html',
   styleUrl: './chat-component.component.css'
 })
