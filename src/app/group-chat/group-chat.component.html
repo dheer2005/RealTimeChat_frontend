@@ -1,0 +1,28 @@
+<div class="chat-box">
+    <div class="messages" id="group-chat-scroll">
+      <div *ngFor="let msg of messages" 
+           [ngClass]="{'my-message': msg.fromUser === fromUser, 'other-message': msg.fromUser !== fromUser}">
+        <div class="msg-info">
+          <div class="msg-text">
+            <b>{{ msg.fromUser }}</b>
+            <p>{{ msg.message }}</p>
+            <span class="msg-time">{{ msg.created | date:'shortTime' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Input Area -->
+    <div class="input-area">
+      <input [(ngModel)]="message" 
+             (keyup.enter)="send()" 
+             placeholder="Type a message..." />
+      <button (click)="send()">Send</button>
+    </div>
+  </div>
+  
+  <div class="" style="position: absolute; top: 50vh; left: 50vw;" *ngIf="isLoader">
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>

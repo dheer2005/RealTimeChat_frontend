@@ -1,0 +1,27 @@
+<section class="container m-auto">
+    <div class="d-flex flex-column justify-content-center align-items-center">
+        <h2 class="text-center">Messages</h2>
+        <div class="search mt-2">
+            <input type="text" (keyup)="onKeyPress($event)" [(ngModel)]="this.filter" placeholder="Search">
+        </div>
+        <div  *ngFor="let users of filteredList()">
+            <div class="users" (click)="userCard(users.userName)">
+                <div class="img">{{ users.userName.charAt(0).toUpperCase()}}</div>
+                <div class="username">{{users.userName}}
+                    <div class="lastMsg" *ngIf="users.lastMessage">
+                        {{users.lastMessageSender}} - {{ users.lastMessage | slice:0:30 }}{{ users.lastMessage.length > 30 ? '...' : '' }}
+                      </div>
+                </div>
+                
+                <div class="msgAlerts" *ngIf="users.unreadCount>0">{{users.unreadCount}}</div>
+                
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="" style="position: absolute; top: 50vh; left: 50vw;" *ngIf="IsLoader">
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>

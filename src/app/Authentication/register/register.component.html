@@ -1,0 +1,28 @@
+<section class="body">
+    <div class="box">
+        <span class="borderLine"></span>
+        <form #form="ngForm" (ngSubmit)="onRegister()">
+            <h2>Sign Up</h2>
+            <div class="inputBox">
+                <input type="text" name="userName" [(ngModel)]="register.UserName" required>
+                <span>Username</span>
+                <i></i>
+            </div>
+            <div class="inputBox">
+                <input type="text" name="email" [(ngModel)]="register.Email" required>
+                <span>Email</span>
+                <i></i>
+            </div>
+            <div class="inputBox">
+                <input type="password" name="password" [(ngModel)]="register.Password" required>
+                <span>Password</span>
+                <i></i>
+            </div>
+
+            <div class="links">
+                <a class="ms-auto text-light" routerLink="/login">SignIn</a>
+            </div>
+            <input type="submit" id="submit" value="Register">
+        </form>
+    </div>
+    </section>
