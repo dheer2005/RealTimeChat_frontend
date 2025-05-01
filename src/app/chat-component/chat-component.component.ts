@@ -50,12 +50,10 @@ export class ChatComponent implements OnInit, OnDestroy{
           })).sort((a:any, b:any) => a.created.getTime() - b.created.getTime());
           this.authSvc.markMessagesAsSeen(this.fromUser, this.UserTo).subscribe(()=>{
           });
-          // setTimeout(() => this.scrollToBottom(), 100);
         });
 
       }, 1000);
       this.chatService.startConnection(this.fromUser, (FromUser,userTo, message, Created, Status) => {
-        // console.log('Received Message:', { FromUser,userTo, message, Created, Status });
         if((this.UserTo == FromUser && this.fromUser == userTo) || (this.fromUser == FromUser && this.UserTo == userTo)){
           this.messages.push({ fromUser: FromUser,userTo, message, created: new Date(Created), status: Status});
           
@@ -64,7 +62,6 @@ export class ChatComponent implements OnInit, OnDestroy{
         },
         () => {},
         ).then(() => {
-          // console.log(this.fromUser)
           this.chatService.getMessages(this.fromUser, this.UserTo).subscribe((res: any) => {
             this.messages = res.map((msg: any) => ({
               id: msg.id, 
@@ -82,7 +79,6 @@ export class ChatComponent implements OnInit, OnDestroy{
 
   send() {
     if (this.message.trim()) {
-      // console.log('sending this message',this.fromUser, this.UserTo, this.message, this.currentTime, this.status);
       this.Receiver = this.UserTo;
       this.chatService.sendMessage(this.fromUser, this.UserTo, this.message, this.currentTime, this.status);
       this.message = '';
@@ -95,7 +91,6 @@ export class ChatComponent implements OnInit, OnDestroy{
 
   userDesc(userTo: string){
     this.profileClicked = true;
-    // this.router.navigate(['profile', userTo])
   }
 
   exitProfile(){
