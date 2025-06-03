@@ -39,25 +39,51 @@ export class VideoChatComponent implements OnInit {
     })
 
     this.signalRService.answerReceived.subscribe(async (data) => {
-      if (data) {
-        await this.peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
-        this.remoteDescriptionSet = true;
+      // console.log("Answer received:", data);
+      if (!this.peerConnection || this.peerConnection.signalingState === 'closed') return;
 
-        this.pendingCandidates.forEach(async candidate => {
-          await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
-        });
-        this.pendingCandidates = [];
+      if (data && data.answer) {
+        if (this.peerConnection.remoteDescription) {
+          console.warn("Remote description already set. Skipping...");
+          return;
+        }
+        
+        try {
+          if (this.peerConnection.signalingState === 'have-local-offer') {
+            await this.peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+            this.remoteDescriptionSet = true;
+
+            for (const candidate of this.pendingCandidates) {
+              await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+            }
+            this.pendingCandidates = [];
+          } else {
+            console.warn('Unexpected signaling state. Expected have-local-offer but got:', this.peerConnection.signalingState);
+          }
+
+        } catch (error) {
+          console.error("Error setting remote description or adding candidates:", error);
+        }
       }
 
     })
 
     this.signalRService.candidateReceived.subscribe(async (data) => {
-      if (data) {
+      if (!this.peerConnection || this.peerConnection.signalingState === 'closed') return;
+
+      if (!data || !data.candidate) {
+        console.warn("Invalid ICE candidate data received:", data);
+        return;
+      }
+
+      try {
         if (this.remoteDescriptionSet) {
-          await this.peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+          await this.peerConnection.addIceCandidate(new RTCIceCandidate(data?.candidate));
         } else {
-          this.pendingCandidates.push(data.candidate);
+          this.pendingCandidates.push(data!.candidate);
         }
+      } catch (err) {
+        console.error("Error adding ICE candidate:", err);
       }
     })
   }
@@ -80,10 +106,14 @@ export class VideoChatComponent implements OnInit {
     let offer = await this.signalRService.offerReceived.getValue()?.offer;
 
     if (offer) {
-      await this.peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
-      let answer = await this.peerConnection.createAnswer();
-      await this.peerConnection.setLocalDescription(answer);
-      this.signalRService.sendAnswer(this.signalRService.remoteUserId, answer);
+      if (this.peerConnection.signalingState === 'stable') {
+        await this.peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+        let answer = await this.peerConnection.createAnswer();
+        await this.peerConnection.setLocalDescription(answer);
+        this.signalRService.sendAnswer(this.signalRService.remoteUserId, answer);
+      } else {
+        console.warn("Cannot accept offer: invalid signaling state:", this.peerConnection.signalingState);
+      }
     }
   }
 
@@ -112,6 +142,7 @@ export class VideoChatComponent implements OnInit {
       this.remoteVideo.nativeElement.srcObject = event.streams[0];
     }
   }
+
   stream: any;
   async startLocalVideo() {
     this.stream = await navigator.mediaDevices.getUserMedia({
@@ -154,7 +185,6 @@ export class VideoChatComponent implements OnInit {
 
     setTimeout(() => {
       this.signalRService.isOpen = false;
-
     }, 0);
   }
 

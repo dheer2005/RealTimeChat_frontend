@@ -48,22 +48,22 @@ export class ChatComponent implements OnInit, OnDestroy{
   
 
   async ngOnInit(): Promise<void> {
-      // setInterval(() => {
-      //   this.chatService.getMessages(this.fromUser, this.UserTo).subscribe((res: any) => {
-      //     this.messages = res.map((msg: any) => ({
-      //       id: msg.id, 
-      //       fromUser: msg.fromUser,
-      //       userTo: msg.userTo,
-      //       message: msg.message,
-      //       created: new Date(msg.created),
-      //       status: msg.status
-      //     })).sort((a:any, b:any) => a.created.getTime() - b.created.getTime());
+      setInterval(() => {
+        this.chatService.getMessages(this.fromUser, this.UserTo).subscribe((res: any) => {
+          this.messages = res.map((msg: any) => ({
+            id: msg.id, 
+            fromUser: msg.fromUser,
+            userTo: msg.userTo,
+            message: msg.message,
+            created: new Date(msg.created),
+            status: msg.status
+          })).sort((a:any, b:any) => a.created.getTime() - b.created.getTime());
 
-      //     this.authSvc.markMessagesAsSeen(this.fromUser, this.UserTo).subscribe(()=>{
-      //     });
-      //   });
+          this.authSvc.markMessagesAsSeen(this.fromUser, this.UserTo).subscribe(()=>{
+          });
+        });
 
-      // }, 1000);
+      }, 1000);
       this.chatService.startConnection(this.fromUser, (FromUser,userTo, message, Created, Status) => {
         if((this.UserTo == FromUser && this.fromUser == userTo) || (this.fromUser == FromUser && this.UserTo == userTo)){
           this.messages.push({ fromUser: FromUser,userTo, message, created: new Date(Created), status: Status});

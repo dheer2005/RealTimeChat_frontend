@@ -39,9 +39,9 @@ export class HomeComponent implements OnInit {
     
     fetchUsers(); 
 
-    // setInterval(() => {
-    //   fetchUsers(); 
-    // }, 1000);
+    setInterval(() => {
+      fetchUsers(); 
+    }, 1000);
   }
   
 
