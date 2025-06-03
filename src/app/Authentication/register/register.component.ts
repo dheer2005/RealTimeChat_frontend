@@ -23,7 +23,7 @@ export class RegisterComponent {
 
   onRegister(){
     this.authSvc.registerUser(this.register).subscribe({
-      next: (res:any)=>{
+      next: ()=>{
         alert("User Created");
         this.router.navigateByUrl('/login');
       },

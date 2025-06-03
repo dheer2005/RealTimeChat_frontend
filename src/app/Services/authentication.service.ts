@@ -21,6 +21,10 @@ export class AuthenticationService {
   seenUrl: any = "https://chatify.bsite.net/api/Seen/messages/" 
   chatUrl: any = "https://chatify.bsite.net/api/ChatHub/"
   baseUrl: any = "https://chatify.bsite.net/api/Authentication/"
+
+  // seenUrl: any = "https://localhost:7180/api/Seen/messages/" 
+  // chatUrl: any = "https://localhost:7180/api/ChatHub/"
+  // baseUrl: any = "https://localhost:7180/api/Authentication/"
   httpOptions:any={
     header: new Headers({
       'content-type': 'application/json'
@@ -45,10 +49,6 @@ export class AuthenticationService {
 
   markMessagesAsSeen(fromUser: string, toUser: string) {
     return this.http.post(this.seenUrl+"mark-seen", { fromUser, toUser });
-  }
-
-  updateMessageStatus(id: number, status: 'sent' | 'delivered' | 'seen') {
-    return this.http.post(this.seenUrl+"update-status", { id, status });
   }
 
   checkAuthentication(){
@@ -84,5 +84,4 @@ export class AuthenticationService {
     }
     return null;
   }
-
 }

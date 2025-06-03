@@ -5,6 +5,10 @@
   flex-direction: row;
 }
 
+.hangup{
+  color: red;
+}
+
 .profileBody{
   display: flex;
   justify-content: center;
@@ -153,27 +157,21 @@
   font-size: 30px;
 }
 
-
-/* .input-area {
-  padding: 10px;
-  border-top: 1px solid #ccc;
-  position: relative;
+.video-call-wrapper {
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.emoji-btn {
-  background: transparent;
-  border: none;
-  font-size: 1.5rem;
+.video-call-wrapper:hover {
+  color: #3b82f6;
+}
+
+.video-call-icon {
   cursor: pointer;
 }
 
-.emoji-picker-container {
-  position: absolute;
-  height: 300px;
-  width: 400px;
-  overflow-y: scroll;
-  bottom: 70px;
-  left: 10px;
-  z-index: 10;
-  background: whitesmoke;
-} */
+.video-call-icon:hover {
+  color: #ef4444;
+}

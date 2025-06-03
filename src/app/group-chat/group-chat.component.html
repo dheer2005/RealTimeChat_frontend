@@ -10,14 +10,13 @@
           </div>
         </div>
       </div>
-    </div>
+    </div>  
   
-    <!-- Input Area -->
-    <div class="input-area">
-      <input [(ngModel)]="message" 
+    <div class="input-area row">
+      <input class="col-11" [(ngModel)]="message" 
              (keyup.enter)="send()" 
              placeholder="Type a message..." />
-      <button (click)="send()">Send</button>
+      <button class="col-1 " (click)="send()">Send</button>
     </div>
   </div>
   

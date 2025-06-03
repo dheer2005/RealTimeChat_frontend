@@ -1,6 +1,5 @@
 .search>input{
     width: 500px;
-    /* border: none; */
     padding: 10px;
     height: 50px;
     border-radius: 20px;
@@ -15,7 +14,6 @@
     width: 500px;
     margin-top: 20px;
     display: flex;
-    /* justify-content: space-between; */
     align-items: center;
     background: grey;
     border-radius: 5px ;
@@ -29,7 +27,6 @@
     height: 50px;
     margin-right: 50px;
     border-radius: 50%;
-    /* background-color: rgb(232, 229, 229); */
     background-color: black;
     display: flex;
     justify-content: center;

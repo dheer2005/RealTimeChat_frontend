@@ -25,7 +25,7 @@ export class GroupChatComponent implements OnInit {
 
   ngOnInit(): void {
     this.chatSvc.startConnection(this.fromUser,
-      () => {},    // this will ignore private messages
+      () => {},
       (groupName, fromUser, message, created) => {
         if (groupName === this.groupName) {
           this.messages.push({ groupName, fromUser, message, created });
@@ -67,5 +67,4 @@ export class GroupChatComponent implements OnInit {
       scrollTop: $('#group-chat-scroll')[0].scrollHeight
     }, 300);
   }
-
 }

@@ -10,7 +10,10 @@ import { AuthenticationService } from './authentication.service';
 })
 export class ChatService {
   private hubConnection! : signalR.HubConnection;
-  private baseUrl = 'https://chatify.bsite.net';
+  private baseUrl = 'https://chatify.bsite.net/api';
+  private chatHubUrl = 'https://chatify.bsite.net';
+  // private baseUrl = 'https://localhost:7180/api/';
+  // private chatHubUrl = 'https://localhost:7180/';
   private token:any;
   
 
@@ -20,31 +23,26 @@ export class ChatService {
   onReceiveGroup: (...args: any[]) => void): Promise<void>{
     this.token = this.authSvc.getToken();
     this.hubConnection = new signalR.HubConnectionBuilder()
-    .withUrl(`${this.baseUrl}/chat`, {
+    .withUrl(`${this.chatHubUrl}chat`, {
       accessTokenFactory: ()=> this.token!,
       withCredentials: false
     })
     .withAutomaticReconnect()
     .build();
-
    
     this.hubConnection.on("ReceiveMessage", (fromUser: string, userTo:string, message: string, created: string, status: string) => {
       onReceive(fromUser, userTo, message, new Date(created), status);
     });
 
     this.hubConnection.on("ReceiveGroupMessage", (groupName, fromUser, message, created) => {
-      // Only process messages actually sent to the group
       if (groupName === this.joinedGroupName) {
         onReceiveGroup(groupName, fromUser, message, new Date(created));
       }
     });
-    
-    
-
+   
     try {
       await this.hubConnection.start();
       console.log("SignalR Connected.");
-      // await this.hubConnection.invoke("JoinGroup", FromUser);
     } catch (err) {
       console.error("SignalR Connection Error:", err);
     }
@@ -60,7 +58,6 @@ export class ChatService {
     this.saveMessage({ FromUser : FromUser, UserTo: UserTo, message, Created, Status });
   }
 
-
   private joinedGroupName: string = '';
   public joinGroup(groupName: string): Promise<void> {
     this.joinedGroupName = groupName;
@@ -71,8 +68,6 @@ export class ChatService {
     return this.hubConnection.invoke("LeaveGroup", groupName);
   }
 
-  
-  
   public sendMessageToGroup(groupName: string, fromUser: string, message: string, created: Date) {
     if (this.hubConnection.state === signalR.HubConnectionState.Connected) {
       this.hubConnection.invoke("SendMessageToGroup", groupName, fromUser, message, created);
@@ -80,7 +75,6 @@ export class ChatService {
       console.warn("SignalR not connected. Message not sent.");
     }
   
-    // Save to DB
     const groupMsg = {
       GroupName: groupName,
       FromUser: fromUser,
@@ -89,37 +83,32 @@ export class ChatService {
       Status: 'Sent'
     };
   
-    // console.log(groupMsg);
     this.SaveGroupChats(groupMsg);
   }
   
-
-
   private saveMessage(message: any) {
-    return this.http.post('https://chatify.bsite.net/api/Chat', message).subscribe();
+    return this.http.post(`${this.baseUrl}Chat`, message).subscribe();
   }
 
   public getMessages(fromUser: string, userTo: string) {
-    return this.http.get(`https://chatify.bsite.net/api/Chat/${fromUser}/${userTo}`);
+    return this.http.get(`${this.baseUrl}Chat/${fromUser}/${userTo}`);
   }
   
   public SaveGroupChats(grpMessage: any){
-    return this.http.post(`https://chatify.bsite.net/api/Chat/groupChat`, grpMessage);
+    return this.http.post(`${this.baseUrl}Chat/groupChat`, grpMessage);
   }
 
   public getGroupMessages(groupName: string): Observable<any[]> {
-    return this.http.get<any[]>(`https://chatify.bsite.net/api/Chat/getGroupMessages/${groupName}`);
+    return this.http.get<any[]>(`${this.baseUrl}Chat/getGroupMessages/${groupName}`);
   }
 
   public unreadCount(){
-    return this.http.get<any[]>(`https://chatify.bsite.net/api/Seen/messages/unread-counts`);
+    return this.http.get<any[]>(`${this.baseUrl}Seen/messages/unread-counts`);
   }
 
   public lastMessage(userName:string){
-    return this.http.get<any[]>(`https://chatify.bsite.net/api/Chat/lastMessages/${userName}`);
+    return this.http.get<any[]>(`${this.baseUrl}Chat/lastMessages/${userName}`);
   }
-
-
 }
 
 

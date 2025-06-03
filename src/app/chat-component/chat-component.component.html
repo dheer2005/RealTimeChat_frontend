@@ -5,6 +5,10 @@
     <div class="backBtn" routerLink="/home"><i class="fa-solid fa-arrow-left"></i></div>
     <div class="profilePic" (click)="userDesc(UserTo)">{{ UserTo.charAt(0).toUpperCase()}}</div>
     <div class="UserToName">{{UserTo | uppercase}}</div>
+    <div class="ms-auto video-call-wrapper" (click)="displayDialog(UserTo)">
+      <mat-icon class="video-call-icon me-3 ">video_call</mat-icon>
+    </div>
+
   </div>
   <div class="messages" id="chat-scroll">
     <div 

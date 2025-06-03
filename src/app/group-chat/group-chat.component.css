@@ -1,6 +1,7 @@
 
 .chat-box {
     display: flex;
+    width: 100%;
     flex-direction: column;
     height: 90vh;
     max-height: 100vh;
@@ -82,7 +83,6 @@
   }
   
   .input-area {
-    display: flex;
     padding: 1rem;
     border-top: 1px solid #ccc;
     background: white;
@@ -110,11 +110,13 @@
     cursor: pointer;
     font-size: 1rem;
     margin-left: 10px;
+    display: flex;
+    justify-content: center;
+    text-align: center;
   }
   
   .input-area button:hover {
     background-color: #45a049;
-    transform: scale(1.05);
   }
   
   .input-area button:focus {
@@ -127,30 +129,5 @@
     padding-bottom: 10px;
   }
   
-  /* Mobile Responsiveness */
-  @media (max-width: 768px) {
-    .chat-box {
-      height: 100%;
-      margin: 0;
-      border-radius: 0;
-      box-shadow: none;
-    }
   
-    .input-area {
-      flex-direction: column;
-      gap: 10px;
-    }
-  
-    .input-area input, .input-area button {
-      width: 100%;
-    }
-  
-    .msg-info {
-      font-size: 0.75rem;
-    }
-  
-    .msg-text {
-      font-size: 0.9rem;
-    }
-  }
   

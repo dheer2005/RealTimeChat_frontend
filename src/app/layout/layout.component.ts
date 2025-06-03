@@ -14,8 +14,6 @@ import { ToastrService } from 'ngx-toastr';
 export class LayoutComponent {
   constructor(public authSvc: AuthenticationService, private router: Router, private toastr: ToastrService){}
  
- 
-
  logout(){
   localStorage.removeItem('jwt');
   this.authSvc.UserName = null;

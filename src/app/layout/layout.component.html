@@ -12,9 +12,6 @@
           <li class="nav-item">
             <a class="nav-link" routerLink="/group-chat">Group-Chats</a>
           </li>
-          <!-- <li class="ms-auto nav-item" *ngIf="!UserName">
-            <a class="nav-link ms-auto" routerLink="/login">Login</a>
-          </li> -->
           <div class="d-flex ms-auto" *ngIf="authSvc?.UserName">
           <li class=" nav-item">
             <a class="nav-link ms-auto text-primary" routerLink="/home">Welcome {{authSvc.UserName | uppercase}}! </a>

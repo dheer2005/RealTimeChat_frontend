@@ -35,14 +35,13 @@ export class HomeComponent implements OnInit {
           console.error('Error fetching users:', err);
         }
       });
-      console.log(this.userList2);
     };
     
     fetchUsers(); 
 
-    setInterval(() => {
-      fetchUsers(); 
-    }, 1000);
+    // setInterval(() => {
+    //   fetchUsers(); 
+    // }, 1000);
   }
   
 
