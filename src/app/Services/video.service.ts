@@ -11,6 +11,7 @@ export class VideoService {
 
   public hubConnection!: HubConnection;
   private hubUrl = 'https://chatify.bsite.net/video';
+
   // private hubUrl = 'https://localhost:7180/video';
   private token: any;
 

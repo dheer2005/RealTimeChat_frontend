@@ -12,6 +12,7 @@ export class ChatService {
   private hubConnection! : signalR.HubConnection;
   private baseUrl = 'https://chatify.bsite.net/api/';
   private chatHubUrl = 'https://chatify.bsite.net/';
+  
   // private baseUrl = 'https://localhost:7180/api/';
   // private chatHubUrl = 'https://localhost:7180/';
   private token:any;
