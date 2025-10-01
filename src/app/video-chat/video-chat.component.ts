@@ -168,20 +168,16 @@ export class VideoChatComponent implements OnInit, OnDestroy {
   private setupPeerConnection(): void {
     if (!this.isBrowser) return;
 
-    // ICE servers configuration
     // NOTE: For production, you NEED a TURN server!
     const configuration: RTCConfiguration = {
       iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun1.l.google.com:19302' },
-        { urls: 'stun:stun2.l.google.com:19302' },
-        { urls: 'stun:stun.services.mozilla.com' }
-        // TODO: Add TURN server for production
-        // {
-        //   urls: 'turn:your-turn-server.com:3478',
-        //   username: 'your-username',
-        //   credential: 'your-password'
-        // }
+        { urls: 'stun:stun.services.mozilla.com' },
+        {
+          urls: 'turn:relay1.expressturn.com:3480',
+          username: 'efPU52K4SLOQ34W2QY',
+          credential: '1TJPNFxHKXrZfelz'
+        }
       ],
       iceCandidatePoolSize: 10
     };
