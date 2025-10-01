@@ -11,8 +11,8 @@ import { AuthenticationService } from './authentication.service';
 export class ChatService {
   private hubConnection!: signalR.HubConnection;
 
-  private baseUrl = 'https://chatify.bsite.net/api/';
-  private chatHubUrl = 'https://chatify.bsite.net/';
+  private baseUrl = 'https://realtime001.bsite.net/api/';
+  private chatHubUrl = 'https://realtime001.bsite.net/';
   
   // private baseUrl = 'https://localhost:7180/api/';
   // private chatHubUrl = 'https://localhost:7180/';

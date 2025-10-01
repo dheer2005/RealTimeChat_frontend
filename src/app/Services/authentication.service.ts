@@ -18,9 +18,9 @@ export class AuthenticationService {
   
   
   public UserName:any;
-  seenUrl: any = "https://chatify.bsite.net/api/Seen/messages/" 
-  chatUrl: any = "https://chatify.bsite.net/api/ChatHub/"
-  baseUrl: any = "https://chatify.bsite.net/api/Authentication/"
+  seenUrl: any = "https://realtime001.bsite.net/api/Seen/messages/" 
+  chatUrl: any = "https://realtime001.bsite.net/api/ChatHub/"
+  baseUrl: any = "https://realtime001.bsite.net/api/Authentication/"
 
   // seenUrl: any = "https://localhost:7180/api/Seen/messages/" 
   // chatUrl: any = "https://localhost:7180/api/ChatHub/"

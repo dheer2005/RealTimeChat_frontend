@@ -10,7 +10,7 @@ import { BehaviorSubject } from 'rxjs';
 })
 export class VideoService {
   public hubConnection!: HubConnection;
-  private hubUrl = 'https://chatify.besite.net/video';
+  private hubUrl = 'https://realtime001.bsite.net/video';
 
 
   // private hubUrl = 'https://localhost:7180/video';
