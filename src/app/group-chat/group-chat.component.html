@@ -1,27 +1,52 @@
 <div class="chat-box">
-    <div class="messages" id="group-chat-scroll">
-      <div *ngFor="let msg of messages" 
-           [ngClass]="{'my-message': msg.fromUser === fromUser, 'other-message': msg.fromUser !== fromUser}">
-        <div class="msg-info">
-          <div class="msg-text">
-            <b>{{ msg.fromUser }}</b>
-            <p>{{ msg.message }}</p>
-            <span class="msg-time">{{ msg.created | date:'shortTime' }}</span>
-          </div>
+  <!-- Group Header (Optional - you can add this) -->
+  <div class="userTo d-flex align-items-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 18px 20px; color: white;">
+    <div class="backBtn" routerLink="/home" style="background: rgba(255,255,255,0.2); border: none; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-right: 12px; color: white;">
+      <i class="fa-solid fa-arrow-left"></i>
+    </div>
+    <div class="profilePic" style="width: 42px; height: 42px; border-radius: 50%; background: rgba(255,255,255,0.3); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 600; margin-right: 12px;">
+      G
+    </div>
+    <div style="flex: 1; font-size: 18px; font-weight: 600; letter-spacing: 0.5px;">
+      GROUP CHAT
+    </div>
+  </div>
+
+  <!-- Messages Area -->
+  <div class="messages" id="group-chat-scroll">
+    <div
+      *ngFor="let msg of messages"
+      [ngClass]="{
+        'my-message': msg.fromUser === fromUser,
+        'other-message': msg.fromUser !== fromUser
+      }"
+    >
+      <div class="msg-info">
+        <div class="msg-text">
+          <b *ngIf="msg.fromUser !== fromUser">{{ msg.fromUser }}</b>
+          <p>{{ msg.message }}</p>
+          <span class="msg-time">{{ msg.created | date: 'shortTime' }}</span>
         </div>
       </div>
-    </div>  
-  
-    <div class="input-area row">
-      <input class="col-11" [(ngModel)]="message" 
-             (keyup.enter)="send()" 
-             placeholder="Type a message..." />
-      <button class="col-1 " (click)="send()">Send</button>
     </div>
   </div>
-  
-  <div class="" style="position: absolute; top: 50vh; left: 50vw;" *ngIf="isLoader">
-    <div class="spinner-border" role="status">
-      <span class="visually-hidden">Loading...</span>
-    </div>
+
+  <!-- Input Area -->
+  <div class="input-area">
+    <input
+      [(ngModel)]="message"
+      (keyup.enter)="send()"
+      placeholder="Type a message..."
+    />
+    <button (click)="send()">
+      <i class="fa-solid fa-paper-plane"></i> Send
+    </button>
   </div>
+</div>
+
+<!-- Loading Spinner -->
+<div class="loading-overlay" *ngIf="isLoader">
+  <div class="spinner-border" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+</div>

@@ -1,18 +1,21 @@
 <div class="chat-body">
   <div class="chat-container w-100">
+    <!-- Chat Header -->
     <div class="userTo d-flex align-items-center">
       <div class="backBtn" routerLink="/home">
         <i class="fa-solid fa-arrow-left"></i>
       </div>
       <div class="profilePic" (click)="userDesc(UserTo)">
-        {{ UserTo.charAt(0).toUpperCase() }}
+        {{ UserTo?.charAt(0).toUpperCase() }}
       </div>
       <div class="UserToName">{{ UserTo | uppercase }}</div>
       <div class="ms-auto video-call-wrapper" (click)="displayDialog(UserTo)">
-        <mat-icon class="video-call-icon me-3">video_call</mat-icon>
+        <mat-icon class="video-call-icon">videocam</mat-icon>
       </div>
     </div>
-    <div class="messages" id="chat-scroll">
+
+    <!-- Messages Area -->
+    <div class="chat-messages messages" #chatScroll id="chat-scroll">
       <div
         *ngFor="let msg of messages"
         [ngClass]="{
@@ -21,51 +24,49 @@
         }"
         class="message-bubble"
       >
-        <div class="userName">{{ msg.fromUser }}</div>
+        <div class="userName" *ngIf="msg.fromUser !== fromUser">
+          {{ msg.fromUser }}
+        </div>
         <div class="message-text">{{ msg.message }}</div>
         <div class="timestamp">
-          {{ msg.created | date : "shortTime" }}
+          {{ msg.created | date : 'shortTime' }}
           <ng-container *ngIf="msg.fromUser === fromUser">
-            <span *ngIf="msg.status === 'seen'" title="Seen">✔✔</span>
-            <span *ngIf="msg.status === 'sent'" title="Sent">✔</span>
+            <span *ngIf="msg.status === 'seen'" title="Seen">✓✓</span>
+            <span *ngIf="msg.status === 'sent'" title="Sent">✓</span>
           </ng-container>
         </div>
       </div>
     </div>
 
+    <!-- Input Area -->
     <div class="input-area">
       <input
         [(ngModel)]="message"
         placeholder="Type a message..."
         (keyup.enter)="send()"
       />
-      <button (click)="send()">Send</button>
+      <button (click)="send()">
+        <i class="fa-solid fa-paper-plane"></i> Send
+      </button>
     </div>
   </div>
 
-  <div
-    class="profileBody w-50 d-flex justify-content-center"
-    *ngIf="profileClicked"
-  >
-    <div class="">
-      <div class="profile-header">
-        <div class="Profile-name">{{ UserTo | uppercase }}</div>
-        <div class="backProfile" (click)="exitProfile()">
-          <i class="fa-solid fa-xmark"></i>
-        </div>
+  <!-- Profile Sidebar -->
+  <div class="profileBody w-50" *ngIf="profileClicked">
+    <div class="profile-header">
+      <div class="Profile-name">{{ UserTo | uppercase }}</div>
+      <div class="backProfile" (click)="exitProfile()">
+        <i class="fa-solid fa-xmark"></i>
       </div>
-      <div class="profile-section">
-        <app-profile-description></app-profile-description>
-      </div>
+    </div>
+    <div class="profile-section">
+      <app-profile-description></app-profile-description>
     </div>
   </div>
 </div>
 
-<div
-  class=""
-  style="position: absolute; top: 50vh; left: 50vw"
-  *ngIf="isLoader"
->
+<!-- Loading Spinner -->
+<div class="loading-overlay" *ngIf="isLoader">
   <div class="spinner-border" role="status">
     <span class="visually-hidden">Loading...</span>
   </div>

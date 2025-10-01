@@ -1,68 +1,83 @@
 .video-container {
-    position: relative;
-    height: 100%;
-    width: 100%;
-    overflow: hidden;
+  max-width: 600px;
+  margin: 0 auto;
+  background: #1a1a2e;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 }
 
-.local-video {
-    width: 8rem; 
-    height: 13rem; 
-    position: absolute;
-    top: 1rem;
-    right: 1.25rem;
-    object-fit: cover;
-    border: 2px solid red;
-    border-radius: 0.5rem;
+.local-video,
+.remote-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #000;
 }
 
 .remote-video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    background-color: #1e293b; 
+  display: block;
+  aspect-ratio: 4/3;
+}
+
+.local-video {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  width: 150px;
+  height: 112px;
+  border-radius: 12px;
+  border: 3px solid white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  z-index: 10;
 }
 
 .controls {
-    position: absolute;
-    bottom: 2.5rem;
-    left: 0;
-    right: 0;
-    z-index: 50;
-    display: flex;
-    justify-content: center;
-    gap: 0.75rem;
-    padding: 1rem;
+  background: #16213e;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  flex-wrap: wrap;
 }
 
 .btn {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-weight: bold;
-    padding: 0.5rem 1rem;
-    border-radius: 9999px; 
-    color: white;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-    border: none;
-    cursor: pointer;
-    transition: background-color 0.3s;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  gap: 2px;
+}
+
+.btn mat-icon {
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
 }
 
 .btn.accept {
-    background-color: #22c55e; 
-}
-
-.btn.accept:hover {
-    background-color: #374151; 
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
 }
 
 .btn.decline,
 .btn.end {
-    background-color: #ef4444; 
+  background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
 }
 
-.btn.decline:hover,
-.btn.end:hover {
-    background-color: #b91c1c; 
+.btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.btn:active {
+  transform: scale(1.05);
 }

@@ -1,34 +1,35 @@
 <div class="video-container">
-    <video class="local-video" #localVideo autoplay playsinline></video>
+  <!-- Video Streams -->
+  <div style="position: relative;">
     <video class="remote-video" #remoteVideo autoplay playsinline></video>
-    
-    
+    <video class="local-video" #localVideo autoplay playsinline muted></video>
+  </div>
 
-    <div class="controls">
-        @if(signalRService.incomingCall){
-            <button class="btn accept" (click)="acceptCall()">
-                <mat-icon>call</mat-icon>
-                Accept
-            </button>
-            <button class="btn decline" (click)="declineCall()">
-                <mat-icon>call_end</mat-icon>
-                Decline
-            </button>
-        }
+  <!-- Controls -->
+  <div class="controls">
+    @if(signalRService.incomingCall){
+      <button class="btn accept" (click)="acceptCall()" title="Accept Call">
+        <mat-icon>call</mat-icon>
+        <span>Accept</span>
+      </button>
+      <button class="btn decline" (click)="declineCall()" title="Decline Call">
+        <mat-icon>call_end</mat-icon>
+        <span>Decline</span>
+      </button>
+    }
 
-        @if(!signalRService.incomingCall && !this.signalRService.isCallActive){
-            <button class="btn accept" (click)="startCall()">
-                <mat-icon>call</mat-icon>
-                Start Call
-            </button>
-        }
+    @if(!signalRService.incomingCall && !signalRService.isCallActive){
+      <button class="btn accept" (click)="startCall()" title="Start Call">
+        <mat-icon>videocam</mat-icon>
+        <span>Start</span>
+      </button>
+    }
 
-        @if(!this.signalRService.incomingCall){
-            <button class="btn end" (click)="endCall()">
-                <mat-icon>call_end</mat-icon>
-                End Call
-            </button>
-        }
-    </div>
+    @if(!signalRService.incomingCall){
+      <button class="btn end" (click)="endCall()" title="End Call">
+        <mat-icon>call_end</mat-icon>
+        <span>End</span>
+      </button>
+    }
+  </div>
 </div>
-

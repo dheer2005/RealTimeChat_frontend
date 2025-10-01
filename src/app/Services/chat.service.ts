@@ -1,41 +1,64 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import * as signalR from '@microsoft/signalr';
 import { Observable } from 'rxjs';
 import { AuthenticationService } from './authentication.service';
-
 
 @Injectable({
   providedIn: 'root'
 })
 export class ChatService {
-  private hubConnection! : signalR.HubConnection;
+  private hubConnection!: signalR.HubConnection;
+
   private baseUrl = 'https://chatify.bsite.net/api/';
   private chatHubUrl = 'https://chatify.bsite.net/';
   
   // private baseUrl = 'https://localhost:7180/api/';
   // private chatHubUrl = 'https://localhost:7180/';
-  private token:any;
-  
+  private token: string | null = null;
+  private joinedGroupName: string = '';
+  private isBrowser: boolean;
 
-  constructor(private http: HttpClient, private authSvc: AuthenticationService){  }
+  constructor(
+    private http: HttpClient, 
+    private authSvc: AuthenticationService,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {
+    this.isBrowser = isPlatformBrowser(this.platformId);
+  }
 
-  public async startConnection(FromUser: string, onReceive: (...args: any[])=>void,
-  onReceiveGroup: (...args: any[]) => void): Promise<void>{
+  public async startConnection(
+    FromUser: string, 
+    onReceive: (fromUser: string, userTo: string, message: string, created: Date, status: string) => void,
+    onReceiveGroup: (groupName: string, fromUser: string, message: string, created: Date) => void
+  ): Promise<void> {
+    // Only start connection in browser
+    if (!this.isBrowser) {
+      console.log("Skipping SignalR connection - not in browser");
+      return;
+    }
+
     this.token = this.authSvc.getToken();
+    
+    if (!this.token) {
+      console.warn("No token available for SignalR connection");
+      return;
+    }
+
     this.hubConnection = new signalR.HubConnectionBuilder()
-    .withUrl(`${this.chatHubUrl}chat`, {
-      accessTokenFactory: ()=> this.token!,
-      withCredentials: false
-    })
-    .withAutomaticReconnect()
-    .build();
+      .withUrl(`${this.chatHubUrl}chat`, {
+        accessTokenFactory: () => this.token!,
+        withCredentials: false
+      })
+      .withAutomaticReconnect()
+      .build();
    
-    this.hubConnection.on("ReceiveMessage", (fromUser: string, userTo:string, message: string, created: string, status: string) => {
+    this.hubConnection.on("ReceiveMessage", (fromUser: string, userTo: string, message: string, created: string, status: string) => {
       onReceive(fromUser, userTo, message, new Date(created), status);
     });
 
-    this.hubConnection.on("ReceiveGroupMessage", (groupName, fromUser, message, created) => {
+    this.hubConnection.on("ReceiveGroupMessage", (groupName: string, fromUser: string, message: string, created: string) => {
       if (groupName === this.joinedGroupName) {
         onReceiveGroup(groupName, fromUser, message, new Date(created));
       }
@@ -49,29 +72,49 @@ export class ChatService {
     }
   }
 
-  public sendMessage(FromUser: string, UserTo: string, message: string, Created: Date, Status: 'seen' | 'sent') {
+  public sendMessage(FromUser: string, UserTo: string, message: string, Created: Date, Status: 'seen' | 'sent'): void {
+    if (!this.isBrowser || !this.hubConnection) {
+      console.warn("SignalR not available");
+      return;
+    }
+
     if (this.hubConnection.state === signalR.HubConnectionState.Connected) {
-      this.hubConnection.invoke("SendMessage", FromUser, UserTo, message, Created, Status);
+      this.hubConnection.invoke("SendMessage", FromUser, UserTo, message, Created, Status)
+        .catch(err => console.error("Error sending message:", err));
     } else {
       console.warn("SignalR not connected. Message not sent.");
     }
-    console.log({ FromUser : FromUser, UserTo: UserTo, message,Created, Status })
-    this.saveMessage({ FromUser : FromUser, UserTo: UserTo, message, Created, Status });
+    
+    console.log({ FromUser, UserTo, message, Created, Status });
+    this.saveMessage({ FromUser, UserTo, message, Created, Status });
   }
 
-  private joinedGroupName: string = '';
   public joinGroup(groupName: string): Promise<void> {
+    if (!this.isBrowser || !this.hubConnection) {
+      return Promise.resolve();
+    }
+
     this.joinedGroupName = groupName;
     return this.hubConnection.invoke("JoinGroup", groupName);
   }
   
   public leaveGroup(groupName: string): Promise<void> {
+    if (!this.isBrowser || !this.hubConnection) {
+      return Promise.resolve();
+    }
+
     return this.hubConnection.invoke("LeaveGroup", groupName);
   }
 
-  public sendMessageToGroup(groupName: string, fromUser: string, message: string, created: Date) {
+  public sendMessageToGroup(groupName: string, fromUser: string, message: string, created: Date): void {
+    if (!this.isBrowser || !this.hubConnection) {
+      console.warn("SignalR not available");
+      return;
+    }
+
     if (this.hubConnection.state === signalR.HubConnectionState.Connected) {
-      this.hubConnection.invoke("SendMessageToGroup", groupName, fromUser, message, created);
+      this.hubConnection.invoke("SendMessageToGroup", groupName, fromUser, message, created)
+        .catch(err => console.error("Error sending group message:", err));
     } else {
       console.warn("SignalR not connected. Message not sent.");
     }
@@ -84,18 +127,24 @@ export class ChatService {
       Status: 'Sent'
     };
   
-    this.SaveGroupChats(groupMsg);
+    this.SaveGroupChats(groupMsg).subscribe({
+      next: () => console.log("Group message saved"),
+      error: (err) => console.error("Error saving group message:", err)
+    });
   }
   
-  private saveMessage(message: any) {
-    return this.http.post(`${this.baseUrl}Chat`, message).subscribe();
+  private saveMessage(message: any): void {
+    this.http.post(`${this.baseUrl}Chat`, message).subscribe({
+      next: () => console.log("Message saved"),
+      error: (err) => console.error("Error saving message:", err)
+    });
   }
 
-  public getMessages(fromUser: string, userTo: string) {
+  public getMessages(fromUser: string, userTo: string): Observable<any> {
     return this.http.get(`${this.baseUrl}Chat/${fromUser}/${userTo}`);
   }
   
-  public SaveGroupChats(grpMessage: any){
+  public SaveGroupChats(grpMessage: any): Observable<any> {
     return this.http.post(`${this.baseUrl}Chat/groupChat`, grpMessage);
   }
 
@@ -103,17 +152,19 @@ export class ChatService {
     return this.http.get<any[]>(`${this.baseUrl}Chat/getGroupMessages/${groupName}`);
   }
 
-  public unreadCount(){
+  public unreadCount(): Observable<any[]> {
     return this.http.get<any[]>(`${this.baseUrl}Seen/messages/unread-counts`);
   }
 
-  public lastMessage(userName:string){
+  public lastMessage(userName: string): Observable<any[]> {
     return this.http.get<any[]>(`${this.baseUrl}Chat/lastMessages/${userName}`);
   }
-}
 
-
-
-
-
-
+  public stopConnection(): void {
+    if (this.isBrowser && this.hubConnection) {
+      this.hubConnection.stop()
+        .then(() => console.log("SignalR connection stopped"))
+        .catch(err => console.error("Error stopping SignalR connection:", err));
+    }
+  }
+}  

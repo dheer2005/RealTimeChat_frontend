@@ -1,7 +1,9 @@
-import { Component, ElementRef, inject, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, inject, OnInit, OnDestroy, ViewChild, Inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { VideoService } from '../Services/video.service';
 import { MatDialogRef } from '@angular/material/dialog';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-video-chat',
@@ -10,36 +12,56 @@ import { MatDialogRef } from '@angular/material/dialog';
   templateUrl: './video-chat.component.html',
   styleUrl: './video-chat.component.css'
 })
-export class VideoChatComponent implements OnInit {
+export class VideoChatComponent implements OnInit, OnDestroy {
   @ViewChild('localVideo') localVideo!: ElementRef<HTMLVideoElement>;
   @ViewChild('remoteVideo') remoteVideo!: ElementRef<HTMLVideoElement>;
+  
   private peerConnection!: RTCPeerConnection;
   private remoteDescriptionSet = false;
   private pendingCandidates: RTCIceCandidateInit[] = [];
+  private stream: MediaStream | null = null;
+  private isBrowser: boolean;
+  
+  // Subscriptions for cleanup
+  private answerSubscription?: Subscription;
+  private candidateSubscription?: Subscription;
 
+  constructor(
+    public signalRService: VideoService,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {
+    this.isBrowser = isPlatformBrowser(this.platformId);
+  }
 
-  constructor(public signalRService: VideoService) { }
   private dialogRef: MatDialogRef<VideoChatComponent> = inject(MatDialogRef);
 
   ngOnInit(): void {
+    // Only initialize in browser
+    if (!this.isBrowser) {
+      console.warn('Video chat not available during SSR');
+      return;
+    }
+
     this.setupPeerConnection();
     this.startLocalVideo();
     this.signalRService.startConnection();
-    this.setupSignalListers();
+    this.setupSignalListeners();
   }
 
+  private setupSignalListeners(): void {
+    if (!this.isBrowser) return;
 
-  setupSignalListers() {
-    this.signalRService.hubConnection.on('CallEnded', () => {
+    // Handle call ended
+    this.signalRService.hubConnection?.on('CallEnded', () => {
       this.stopLocalVideo();
       this.signalRService.isCallActive = false;
       this.signalRService.incomingCall = false;
       this.signalRService.remoteUserId = '';
       this.dialogRef.close();
-    })
+    });
 
-    this.signalRService.answerReceived.subscribe(async (data) => {
-      // console.log("Answer received:", data);
+    // Handle answer received
+    this.answerSubscription = this.signalRService.answerReceived.subscribe(async (data) => {
       if (!this.peerConnection || this.peerConnection.signalingState === 'closed') return;
 
       if (data && data.answer) {
@@ -53,22 +75,23 @@ export class VideoChatComponent implements OnInit {
             await this.peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
             this.remoteDescriptionSet = true;
 
+            // Add pending candidates
             for (const candidate of this.pendingCandidates) {
               await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
             }
             this.pendingCandidates = [];
           } else {
-            console.warn('Unexpected signaling state. Expected have-local-offer but got:', this.peerConnection.signalingState);
+            console.warn('Unexpected signaling state. Expected have-local-offer but got:', 
+              this.peerConnection.signalingState);
           }
-
         } catch (error) {
           console.error("Error setting remote description or adding candidates:", error);
         }
       }
+    });
 
-    })
-
-    this.signalRService.candidateReceived.subscribe(async (data) => {
+    // Handle ICE candidate received
+    this.candidateSubscription = this.signalRService.candidateReceived.subscribe(async (data) => {
       if (!this.peerConnection || this.peerConnection.signalingState === 'closed') return;
 
       if (!data || !data.candidate) {
@@ -78,126 +101,232 @@ export class VideoChatComponent implements OnInit {
 
       try {
         if (this.remoteDescriptionSet) {
-          await this.peerConnection.addIceCandidate(new RTCIceCandidate(data?.candidate));
+          await this.peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
         } else {
-          this.pendingCandidates.push(data!.candidate);
+          this.pendingCandidates.push(data.candidate);
         }
       } catch (err) {
         console.error("Error adding ICE candidate:", err);
       }
-    })
+    });
   }
 
-  declineCall() {
-    this.signalRService.endCall(this.signalRService.remoteUserId);
+  async declineCall(): Promise<void> {
+    if (!this.isBrowser) return;
+
+    await this.signalRService.endCall(this.signalRService.remoteUserId);
     this.stopLocalVideo();
     this.signalRService.isOpen = false;
+    this.dialogRef.close();
   }
 
+  async acceptCall(): Promise<void> {
+    if (!this.isBrowser) return;
 
-  async acceptCall() {
     this.signalRService.incomingCall = false;
     this.signalRService.isCallActive = true;
 
-    // await this.startLocalVideo();
+    // Enable audio tracks
+    if (this.stream) {
+      this.stream.getAudioTracks().forEach((track) => track.enabled = true);
+    }
 
-    this.stream.getAudioTracks().forEach((track: any) => track.enabled = true);
-
-    let offer = await this.signalRService.offerReceived.getValue()?.offer;
+    const offerData = this.signalRService.offerReceived.getValue();
+    const offer = offerData?.offer;
 
     if (offer) {
-      if (this.peerConnection.signalingState === 'stable') {
-        await this.peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
-        let answer = await this.peerConnection.createAnswer();
-        await this.peerConnection.setLocalDescription(answer);
-        this.signalRService.sendAnswer(this.signalRService.remoteUserId, answer);
-      } else {
-        console.warn("Cannot accept offer: invalid signaling state:", this.peerConnection.signalingState);
+      try {
+        if (this.peerConnection.signalingState === 'stable') {
+          await this.peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+          const answer = await this.peerConnection.createAnswer();
+          await this.peerConnection.setLocalDescription(answer);
+          await this.signalRService.sendAnswer(this.signalRService.remoteUserId, answer);
+        } else {
+          console.warn("Cannot accept offer: invalid signaling state:", 
+            this.peerConnection.signalingState);
+        }
+      } catch (error) {
+        console.error("Error accepting call:", error);
       }
     }
   }
 
-  async startCall() {
-    this.signalRService.isCallActive = true;
-    // await this.startLocalVideo();
-    let offer = await this.peerConnection.createOffer();
-    await this.peerConnection.setLocalDescription(offer);
-    this.signalRService.sendOffer(this.signalRService.remoteUserId, offer);
+  async startCall(): Promise<void> {
+    if (!this.isBrowser) return;
+
+    try {
+      this.signalRService.isCallActive = true;
+      const offer = await this.peerConnection.createOffer();
+      await this.peerConnection.setLocalDescription(offer);
+      await this.signalRService.sendOffer(this.signalRService.remoteUserId, offer);
+    } catch (error) {
+      console.error("Error starting call:", error);
+      this.signalRService.isCallActive = false;
+    }
   }
 
-  setupPeerConnection() {
-    this.peerConnection = new RTCPeerConnection({
-      iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, {
-        urls: 'stun:stun.services.mozilla.com'
-      }]
-    });
+  private setupPeerConnection(): void {
+    if (!this.isBrowser) return;
 
+    // ICE servers configuration
+    // NOTE: For production, you NEED a TURN server!
+    const configuration: RTCConfiguration = {
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:stun2.l.google.com:19302' },
+        { urls: 'stun:stun.services.mozilla.com' }
+        // TODO: Add TURN server for production
+        // {
+        //   urls: 'turn:your-turn-server.com:3478',
+        //   username: 'your-username',
+        //   credential: 'your-password'
+        // }
+      ],
+      iceCandidatePoolSize: 10
+    };
+
+    this.peerConnection = new RTCPeerConnection(configuration);
+
+    // Handle ICE candidates
     this.peerConnection.onicecandidate = (event) => {
       if (event.candidate) {
-        this.signalRService.sendCandidate(this.signalRService.remoteUserId, event.candidate)
+        this.signalRService.sendCandidate(
+          this.signalRService.remoteUserId, 
+          event.candidate
+        ).catch(err => console.error("Error sending ICE candidate:", err));
       }
-    }
+    };
 
+    // Handle remote track
     this.peerConnection.ontrack = (event) => {
-      this.remoteVideo.nativeElement.srcObject = event.streams[0];
-    }
-  }
-
-  stream: any;
-  async startLocalVideo() {
-    this.stream = await navigator.mediaDevices.getUserMedia({
-      video: true,
-      audio: true,
-    });
-
-    this.localVideo.nativeElement.srcObject = this.stream;
-    this.stream.getAudioTracks().forEach((track: any) => {
-      if (!this.signalRService.isCallActive) {
-        track.enabled = false;  // Mic OFF if not in active call
+      if (this.remoteVideo?.nativeElement) {
+        this.remoteVideo.nativeElement.srcObject = event.streams[0];
       }
-    });
-    this.stream.getTracks().forEach((track: any) => this.peerConnection.addTrack(track, this.stream));
+    };
+
+    // Monitor connection state
+    this.peerConnection.oniceconnectionstatechange = () => {
+      console.log('ICE connection state:', this.peerConnection.iceConnectionState);
+      
+      if (this.peerConnection.iceConnectionState === 'failed' || 
+          this.peerConnection.iceConnectionState === 'disconnected') {
+        console.warn('Connection failed/disconnected. May need TURN server.');
+      }
+    };
   }
 
-  async stopLocalVideo() {
-    if (this.stream) {
-      this.stream.getTracks().forEach((track: any) => {
-        track.stop();
+  private async startLocalVideo(): Promise<void> {
+    if (!this.isBrowser) return;
+
+    try {
+      this.stream = await navigator.mediaDevices.getUserMedia({
+        video: { 
+          width: { ideal: 640 },
+          height: { ideal: 480 }
+        },
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        }
       });
-    }
-    this.peerConnection.onicecandidate = null;
-    this.peerConnection.ontrack = null;
-    this.peerConnection.oniceconnectionstatechange = null;
-    this.peerConnection.getSenders().forEach((sender) => {
-      if (sender.track) {
-        sender.track.stop();
+
+      if (this.localVideo?.nativeElement) {
+        this.localVideo.nativeElement.srcObject = this.stream;
       }
-    });
-    this.peerConnection.close();
-    this.dialogRef.close();
+
+      // Mute audio initially if not in active call
+      this.stream.getAudioTracks().forEach((track) => {
+        track.enabled = this.signalRService.isCallActive;
+      });
+
+      // Add tracks to peer connection
+      this.stream.getTracks().forEach((track) => {
+        if (this.stream) {
+          this.peerConnection.addTrack(track, this.stream);
+        }
+      });
+    } catch (error) {
+      console.error('Error accessing media devices:', error);
+      alert('Unable to access camera/microphone. Please check permissions.');
+    }
+  }
+
+  private stopLocalVideo(): void {
+    if (!this.isBrowser) return;
+
+    // Stop all tracks in the stream
+    if (this.stream) {
+      this.stream.getTracks().forEach((track) => track.stop());
+      this.stream = null;
+    }
+
+    // Clear local video
+    if (this.localVideo?.nativeElement) {
+      this.localVideo.nativeElement.srcObject = null;
+    }
+
+    // Clear remote video
+    if (this.remoteVideo?.nativeElement) {
+      this.remoteVideo.nativeElement.srcObject = null;
+    }
+
+    // Clean up peer connection
+    if (this.peerConnection) {
+      this.peerConnection.onicecandidate = null;
+      this.peerConnection.ontrack = null;
+      this.peerConnection.oniceconnectionstatechange = null;
+
+      this.peerConnection.getSenders().forEach((sender) => {
+        if (sender.track) {
+          sender.track.stop();
+        }
+      });
+
+      this.peerConnection.close();
+    }
+
+    // Reset state
     this.signalRService.isCallActive = false;
     this.signalRService.incomingCall = false;
-    const stream = this.localVideo.nativeElement.srcObject as MediaStream;
-    if (stream) {
-      stream.getTracks().forEach((track) => track.stop());
-      this.localVideo.nativeElement.srcObject = null;
-    }
-
-    setTimeout(() => {
-      this.signalRService.isOpen = false;
-    }, 0);
+    this.remoteDescriptionSet = false;
+    this.pendingCandidates = [];
   }
 
+  async endCall(): Promise<void> {
+    if (!this.isBrowser || !this.peerConnection) return;
 
-  async endCall() {
-    if (this.peerConnection) {
-      this.signalRService.endCall(this.signalRService.remoteUserId);
-      await this.stopLocalVideo();
-      // this.dialogRef.close();
-      this.localVideo.nativeElement.srcObject = null;
+    try {
+      await this.signalRService.endCall(this.signalRService.remoteUserId);
+      this.stopLocalVideo();
       this.signalRService.remoteUserId = '';
+      
+      setTimeout(() => {
+        this.signalRService.isOpen = false;
+        this.dialogRef.close();
+      }, 100);
+    } catch (error) {
+      console.error('Error ending call:', error);
+      this.dialogRef.close();
     }
   }
 
+  ngOnDestroy(): void {
+    // Clean up subscriptions
+    if (this.answerSubscription) {
+      this.answerSubscription.unsubscribe();
+    }
+    if (this.candidateSubscription) {
+      this.candidateSubscription.unsubscribe();
+    }
 
+    // Remove SignalR event listeners
+    if (this.isBrowser && this.signalRService.hubConnection) {
+      this.signalRService.hubConnection.off('CallEnded');
+    }
+
+    // Stop media and close connection
+    this.stopLocalVideo();
+  }
 }
