@@ -9,11 +9,14 @@ import { ProfileDescriptionComponent } from '../profile-description/profile-desc
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
 import { VideoChatComponent } from '../video-chat/video-chat.component';
+import { Subscription } from 'rxjs';
+import { NgZone } from '@angular/core';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-chat-component',
   standalone: true,
-  imports: [FormsModule, CommonModule, RouterLink, ProfileDescriptionComponent, MatIconModule],
+  imports: [FormsModule, CommonModule, ProfileDescriptionComponent, MatIconModule],
   templateUrl: './chat-component.component.html',
   styleUrl: './chat-component.component.css'
 })
@@ -30,8 +33,14 @@ export class ChatComponent implements OnInit, OnDestroy {
   profileClicked: boolean = false;
   status: 'seen' | 'sent' = 'sent';
   isLoader: boolean = true;
+  isUserTyping: boolean = false;
+  isUserOnline: boolean = false;
+  userInfo: any;
   
-  private messagePollingInterval: any;
+  private typingSubscription?: Subscription;
+  private onlineUsersSubscription?: Subscription;
+  private messagesSeenSubscription?: Subscription;
+  private typingTimeout: any;
   private isBrowser: boolean;
 
   constructor(
@@ -39,7 +48,9 @@ export class ChatComponent implements OnInit, OnDestroy {
     private chatService: ChatService,
     private authSvc: AuthenticationService,
     private signalRService: VideoService,
-    private router: Router,
+    public router: Router,
+    private ngZone: NgZone,
+    private toastrSvc: ToastrService,
     public dialog: MatDialog,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
@@ -47,32 +58,54 @@ export class ChatComponent implements OnInit, OnDestroy {
     
     this.activatedRoute.paramMap.subscribe(param => {
       this.UserTo = param.get('name');
+      this.authSvc.getUserInfo(this.UserTo!).subscribe({
+        next: (res) => {
+          this.userInfo = res;
+        },
+        error: (err) => {
+          this.toastrSvc.error(err.error?.message || 'Error fetching user info', 'Error');
+        }
+      });
     });
     this.fromUser = this.authSvc.getUserName();
   }
 
-  async ngOnInit(): Promise<void> {
-    // Only initialize in browser
+  ngOnInit(): void {
     if (!this.isBrowser) {
       return;
     }
 
-    // Load initial messages
-    this.loadMessages();
+    this.messagesSeenSubscription = this.chatService.messagesSeen$.subscribe((seenByUser) => {
+      if (this.UserTo === seenByUser) {
+        this.messages = this.messages.map(msg => {
+          if (msg.fromUser === this.authSvc.getUserName() && msg.userTo === this.UserTo) {
+            return { ...msg, status: 'seen' };
+          }
+          return msg;
+        });
+      }
+    });
 
-    // Start SignalR connection
-    await this.chatService.startConnection(
+    this.typingSubscription = this.chatService.typingUsers$.subscribe(
+      (typingUsers) => {
+        this.isUserTyping = typingUsers[this.UserTo] || false;
+      }
+    );
+
+    this.onlineUsersSubscription = this.chatService.onlineUsers$.subscribe(
+      (users) => {
+        const user = users.find(u => u.userName === this.UserTo);
+        this.isUserOnline = user?.isOnline || false;
+      }
+    );
+
+    this.chatService.startConnection(
       this.fromUser,
       this.onReceiveMessage.bind(this),
       () => { }
-    );
-
-    // Reduced polling - only check every 5 seconds as backup
-    // (SignalR should handle real-time updates)
-    
-    // this.messagePollingInterval = setInterval(() => {
-    //   this.loadMessages(false); // Silent load without loader
-    // }, 5000);
+    ).then(() => {
+      this.loadMessages();
+    });
   }
 
   private loadMessages(showLoader: boolean = true): void {
@@ -94,13 +127,9 @@ export class ChatComponent implements OnInit, OnDestroy {
         if (showLoader) {
           this.isLoader = false;
         }
-
         setTimeout(() => this.scrollToBottom(), 100);
-
-        // Mark messages as seen
-        this.authSvc.markMessagesAsSeen(this.fromUser, this.UserTo).subscribe({
-          error: (err) => console.error('Error marking messages as seen:', err)
-        });
+        
+        this.chatService.markAsSeen(this.fromUser, this.UserTo);
       },
       error: (err) => {
         console.error('Error loading messages:', err);
@@ -112,11 +141,9 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   private onReceiveMessage(FromUser: string, userTo: string, message: string, Created: Date, Status: string): void {
-    // Only add message if it's relevant to current conversation
     if ((this.UserTo === FromUser && this.fromUser === userTo) || 
         (this.fromUser === FromUser && this.UserTo === userTo)) {
       
-      // Check if message already exists (to avoid duplicates)
       const exists = this.messages.some(msg => 
         msg.fromUser === FromUser && 
         msg.userTo === userTo && 
@@ -125,15 +152,15 @@ export class ChatComponent implements OnInit, OnDestroy {
       );
 
       if (!exists) {
+        const finalStatus = (this.UserTo === this.fromUser) ? 'seen' : Status;
+
         this.messages.push({ 
           fromUser: FromUser, 
-          userTo, 
-          message, 
-          created: new Date(Created), 
-          status: Status 
+          userTo,
+          message,
+          created: new Date(Created),
+          status: finalStatus
         });
-        
-        // Sort messages by date
         this.messages.sort((a, b) => a.created.getTime() - b.created.getTime());
         
         setTimeout(() => this.scrollToBottom(), 100);
@@ -141,18 +168,38 @@ export class ChatComponent implements OnInit, OnDestroy {
     }
   }
 
+  onInputChange(): void {
+    this.chatService.notifyTyping(this.UserTo);
+
+    if (this.typingTimeout) {
+      clearTimeout(this.typingTimeout);
+    }
+
+    this.typingTimeout = setTimeout(() => {
+      this.chatService.notifyStopTyping(this.UserTo);
+    }, 2000);
+  }
+
   send(): void {
     if (this.message.trim()) {
+      this.chatService.notifyStopTyping(this.UserTo);
+      
+      if (this.typingTimeout) {
+        clearTimeout(this.typingTimeout);
+      }
+
       this.Receiver = this.UserTo;
       this.currentTime = new Date();
       
-      this.chatService.sendMessage(
-        this.fromUser, 
-        this.UserTo, 
-        this.message, 
-        this.currentTime, 
-        this.status
-      );
+      if(this.fromUser != this.UserTo){
+        this.chatService.sendMessage(
+          this.fromUser, 
+          this.UserTo, 
+          this.message, 
+          this.currentTime, 
+          this.status
+        );
+      }
       
       this.message = '';
       setTimeout(() => this.scrollToBottom(), 100);
@@ -190,11 +237,9 @@ export class ChatComponent implements OnInit, OnDestroy {
 
     try {
       if (this.chatScrollContainer?.nativeElement) {
-        // Use native Angular approach instead of jQuery
         this.chatScrollContainer.nativeElement.scrollTop = 
           this.chatScrollContainer.nativeElement.scrollHeight;
       } else {
-        // Fallback to querySelector if ViewChild isn't ready
         const element = document.getElementById('chat-scroll');
         if (element) {
           element.scrollTop = element.scrollHeight;
@@ -206,20 +251,29 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    // Clear the polling interval
-    if (this.messagePollingInterval) {
-      clearInterval(this.messagePollingInterval);
-      this.messagePollingInterval = null;
+    if (this.typingTimeout) {
+      clearTimeout(this.typingTimeout);
     }
 
-    // Stop SignalR connection
-    if (this.isBrowser) {
-      this.chatService.stopConnection();
+    if (this.typingSubscription) {
+      this.typingSubscription.unsubscribe();
     }
 
-    // Clear data
+    if (this.onlineUsersSubscription) {
+      this.onlineUsersSubscription.unsubscribe();
+    }
+
+    if (this.messagesSeenSubscription) {
+      this.messagesSeenSubscription.unsubscribe();
+    }
+
     this.UserTo = null;
     this.fromUser = '';
     this.messages = [];
+  }
+
+  backToHome(){
+    this.chatService.setCurrentChatUser(null);
+    this.router.navigate(['/home']);
   }
 }

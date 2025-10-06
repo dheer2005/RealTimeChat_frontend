@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ChatService } from '../Services/chat.service';
 import { AuthenticationService } from '../Services/authentication.service';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import $ from 'jquery';
 @Component({
@@ -19,8 +19,12 @@ export class GroupChatComponent implements OnInit {
   groupName: string = 'AngularDevs'; 
   isLoader: boolean = true;
 
-  constructor(private chatSvc: ChatService, private authSvc: AuthenticationService) {
+  constructor(private chatSvc: ChatService, private authSvc: AuthenticationService, private location: Location) {
     this.fromUser = this.authSvc.getUserName();
+  }
+
+  groupChatBack(){
+    this.location.back();
   }
 
   ngOnInit(): void {

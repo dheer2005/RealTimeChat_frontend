@@ -18,13 +18,13 @@ export class AuthenticationService {
   
   
   public UserName:any;
-  seenUrl: any = "https://realtime001.bsite.net/api/Seen/messages/" 
-  chatUrl: any = "https://realtime001.bsite.net/api/ChatHub/"
-  baseUrl: any = "https://realtime001.bsite.net/api/Authentication/"
+  // seenUrl: any = "https://realtime001.bsite.net/api/Seen/messages/" 
+  // chatUrl: any = "https://realtime001.bsite.net/api/ChatHub/"
+  // baseUrl: any = "https://realtime001.bsite.net/api/Authentication/"
 
-  // seenUrl: any = "https://localhost:7180/api/Seen/messages/" 
-  // chatUrl: any = "https://localhost:7180/api/ChatHub/"
-  // baseUrl: any = "https://localhost:7180/api/Authentication/"
+  seenUrl: any = "https://localhost:7180/api/Seen/messages/" 
+  chatUrl: any = "https://localhost:7180/api/ChatHub/"
+  baseUrl: any = "https://localhost:7180/api/Authentication/"
   httpOptions:any={
     header: new Headers({
       'content-type': 'application/json'
@@ -51,6 +51,10 @@ export class AuthenticationService {
     return this.http.post(this.seenUrl+"mark-seen", { fromUser, toUser });
   }
 
+  getUserInfo(userName: string){
+    return this.http.get<any>(`${this.baseUrl}get-user-info-by-userName/${userName}`, this.httpOptions);
+  }
+
   checkAuthentication(){
     const token = localStorage.getItem('jwt');
     if(token && !this.jwtHelper.isTokenExpired(token)){
@@ -70,8 +74,7 @@ export class AuthenticationService {
       const token = localStorage.getItem('jwt');
       if(token != null){
         const decodeToken:any = jwtDecode(token);
-        this.UserName = decodeToken.UserName;
-        console.log(this.UserName);
+        this.UserName =decodeToken ? decodeToken["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"] : null;
         return this.UserName;
       }
       return token;

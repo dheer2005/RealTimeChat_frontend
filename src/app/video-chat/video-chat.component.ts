@@ -153,7 +153,6 @@ export class VideoChatComponent implements OnInit, OnDestroy {
 
   async startCall(): Promise<void> {
     if (!this.isBrowser) return;
-
     try {
       this.signalRService.isCallActive = true;
       const offer = await this.peerConnection.createOffer();
@@ -168,7 +167,6 @@ export class VideoChatComponent implements OnInit, OnDestroy {
   private setupPeerConnection(): void {
     if (!this.isBrowser) return;
 
-    // NOTE: For production, you NEED a TURN server!
     const configuration: RTCConfiguration = {
       iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },

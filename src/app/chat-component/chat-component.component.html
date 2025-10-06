@@ -1,73 +1,116 @@
-<div class="chat-body">
-  <div class="chat-container w-100">
-    <!-- Chat Header -->
-    <div class="userTo d-flex align-items-center">
-      <div class="backBtn" routerLink="/home">
-        <i class="fa-solid fa-arrow-left"></i>
-      </div>
-      <div class="profilePic" (click)="userDesc(UserTo)">
-        {{ UserTo?.charAt(0).toUpperCase() }}
-      </div>
-      <div class="UserToName">{{ UserTo | uppercase }}</div>
-      <div class="ms-auto video-call-wrapper" (click)="displayDialog(UserTo)">
-        <mat-icon class="video-call-icon">videocam</mat-icon>
-      </div>
-    </div>
-
-    <!-- Messages Area -->
-    <div class="chat-messages messages" #chatScroll id="chat-scroll">
-      <div
-        *ngFor="let msg of messages"
-        [ngClass]="{
-          sent: msg.fromUser === fromUser,
-          received: msg.fromUser !== fromUser
-        }"
-        class="message-bubble"
-      >
-        <div class="userName" *ngIf="msg.fromUser !== fromUser">
-          {{ msg.fromUser }}
+<div class="chat-container">
+  <div class="chat-header">
+    <div class="header-left">
+      <button (click)="backToHome()" class="back-btn">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M15 18l-6-6 6-6" stroke-width="2"/>
+        </svg>
+      </button>
+      
+      <div class="user-header-info">
+        <div class="user-avatar-small">
+          <img [src]="userInfo?.profileImage" [alt]="userInfo?.userName"/>
         </div>
-        <div class="message-text">{{ msg.message }}</div>
-        <div class="timestamp">
-          {{ msg.created | date : 'shortTime' }}
-          <ng-container *ngIf="msg.fromUser === fromUser">
-            <span *ngIf="msg.status === 'seen'" title="Seen">✓✓</span>
-            <span *ngIf="msg.status === 'sent'" title="Sent">✓</span>
-          </ng-container>
+        <div class="user-details">
+          <h3>{{ UserTo }}</h3>
+          <div class="status-row">
+            <span *ngIf="isUserOnline" class="status-text online">
+              <span class="status-dot"></span> Online
+            </span>
+            <span *ngIf="!isUserOnline" class="status-text offline">
+              <span class="status-dot"></span> Offline
+            </span>
+            <span *ngIf="isUserTyping" class="typing-text">
+              typing...
+            </span>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Input Area -->
-    <div class="input-area">
-      <input
-        [(ngModel)]="message"
-        placeholder="Type a message..."
-        (keyup.enter)="send()"
-      />
-      <button (click)="send()">
-        <i class="fa-solid fa-paper-plane"></i> Send
+    <div class="header-right">
+      <button (click)="displayDialog(UserTo)" class="video-call-btn" title="Video Call">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z"/>
+        </svg>
+      </button>
+      <button (click)="userDesc(UserTo)" class="profile-btn" title="View Profile">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+        </svg>
       </button>
     </div>
   </div>
 
-  <!-- Profile Sidebar -->
-  <div class="profileBody w-50" *ngIf="profileClicked">
-    <div class="profile-header">
-      <div class="Profile-name">{{ UserTo | uppercase }}</div>
-      <div class="backProfile" (click)="exitProfile()">
-        <i class="fa-solid fa-xmark"></i>
+  <div *ngIf="isLoader" class="loader-container">
+    <div class="loader"></div>
+    <p>Loading messages...</p>
+  </div>
+
+  <div *ngIf="!isLoader" class="messages-container" #chatScroll id="chat-scroll">
+    <div *ngFor="let msg of messages" 
+         class="message-wrapper"
+         [class.sent]="msg.fromUser === fromUser"
+         [class.received]="msg.fromUser !== fromUser">
+      
+      <div class="message-bubble">
+        <p class="message-text">{{ msg.message }}</p>
+        <div class="message-meta">
+          <span class="message-time">
+            {{ msg.created | date:'shortTime' }}
+          </span>
+          <span *ngIf="msg.fromUser === fromUser" class="message-status">
+            <svg *ngIf="msg.status === 'sent'" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M13.5 2L6 9.5 2.5 6" stroke="currentColor" stroke-width="2" fill="none"/>
+            </svg>
+            <svg *ngIf="msg.status === 'seen'" width="16" height="16" viewBox="0 0 16 16" fill="currentColor" class="seen">
+              <path d="M13.5 2L6 9.5 2.5 6M10.5 2L3 9.5" stroke="#4CAF50" stroke-width="2" fill="none"/>
+            </svg>
+          </span>
+        </div>
       </div>
     </div>
-    <div class="profile-section">
-      <app-profile-description></app-profile-description>
+
+    <div *ngIf="isUserTyping" class="message-wrapper received typing-indicator-wrapper">
+      <div class="message-bubble typing-bubble">
+        <div class="typing-animation">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- Loading Spinner -->
-<div class="loading-overlay" *ngIf="isLoader">
-  <div class="spinner-border" role="status">
-    <span class="visually-hidden">Loading...</span>
+  <div class="message-input-container">
+    <div class="input-wrapper">
+      <textarea
+        [(ngModel)]="message"
+        (input)="onInputChange()"
+        (keydown.enter)="$event.preventDefault(); send()"
+        placeholder="Type a message..."
+        class="message-input"
+        rows="1"
+      ></textarea>
+      
+      <button 
+        (click)="send()" 
+        [disabled]="!message.trim()"
+        class="send-btn"
+        [class.active]="message.trim()"
+      >
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="profileClicked" class="profile-sidebar">
+    <div class="profile-overlay" (click)="exitProfile()"></div>
+    <div class="profile-content">
+      <button (click)="exitProfile()" class="close-profile-btn">×</button>
+      <app-profile-description></app-profile-description>
+    </div>
   </div>
 </div>

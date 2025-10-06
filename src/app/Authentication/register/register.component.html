@@ -3,26 +3,52 @@
         <span class="borderLine"></span>
         <form #form="ngForm" (ngSubmit)="onRegister()">
             <h2>Sign Up</h2>
+            
+            <div class="profilePreview">
+                <img [src]="previewImageUrl || 'assets/default-avatar.png'" alt="Profile Preview">
+            </div>
+
             <div class="inputBox">
-                <input type="text" name="userName" [(ngModel)]="register.UserName" required>
+                <input type="text" name="userName" [(ngModel)]="register.UserName" required autocomplete="username">
                 <span>Username</span>
                 <i></i>
             </div>
+
             <div class="inputBox">
-                <input type="text" name="email" [(ngModel)]="register.Email" required>
+                <input type="text" name="fullName" [(ngModel)]="register.FullName" required autocomplete="name">
+                <span>Full Name</span>
+                <i></i>
+            </div>
+
+            <div class="inputBox">
+                <input type="email" name="email" [(ngModel)]="register.Email" required autocomplete="email">
                 <span>Email</span>
                 <i></i>
             </div>
+
             <div class="inputBox">
-                <input type="password" name="password" [(ngModel)]="register.Password" required>
+                <input type="number" name="phoneNumber" [(ngModel)]="register.PhoneNumber" required autocomplete="tel">
+                <span>Phone Number</span>
+                <i></i>
+            </div>
+
+            <div class="inputBox">
+                <input type="password" name="password" [(ngModel)]="register.Password" required autocomplete="new-password">
                 <span>Password</span>
                 <i></i>
             </div>
 
-            <div class="links">
-                <a class="ms-auto text-light" routerLink="/login">SignIn</a>
+            <div class="inputBox">
+                <!-- <span>Profile Image</span> -->
+                <input type="file" name="profileImage" (change)="onFileSelected($event)" accept="image/*" required>
+                <i></i>
             </div>
+            
+            <div class="links">
+                <a routerLink="/login">Already have an account? Sign In</a>
+            </div>
+
             <input type="submit" id="submit" value="Register">
         </form>
     </div>
-    </section>
+</section>
