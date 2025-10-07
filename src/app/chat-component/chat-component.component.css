@@ -359,8 +359,8 @@
 
 .close-profile-btn {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 40px;
+  right: 20px;
   background: none;
   border: none;
   font-size: 32px;
@@ -372,10 +372,11 @@
   align-items: center;
   justify-content: center;
   border-radius: 50%;
+  z-index: 5;
 }
 
 .close-profile-btn:hover {
-  background: #f0f0f0;
+  scale: 1.1;
 }
 
 /* Scrollbar Styling */

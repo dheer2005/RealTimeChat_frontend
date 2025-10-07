@@ -195,7 +195,7 @@
   <div *ngIf="profileClicked" class="profile-sidebar">
     <div class="profile-overlay" (click)="exitProfile()"></div>
     <div class="profile-content">
-      <button (click)="exitProfile()" class="close-profile-btn">×</button>
+      <button (click)="exitProfile()" class="close-profile-btn"><i class="fa-solid fa-xmark text-light"></i></button>
       <app-profile-description></app-profile-description>
     </div>
   </div>
