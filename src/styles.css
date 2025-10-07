@@ -120,11 +120,6 @@ body {
     background: #2a2a3e;
   }
 
-  .message-text {
-    background: #2a2a3e;
-    color: #e0e0e0;
-  }
-
   .chat-messages,
   .messages {
     background: #16213e;
