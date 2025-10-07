@@ -20,7 +20,7 @@ export class ChatService {
   private isBrowser: boolean;
   private currentChatUser: string | null = null;
 
-  private messageHandlers: Array<(fromUser: string, userTo: string, message: string, created: Date, status: string) => void> = [];
+  private messageHandlers: Array<(fromUser: string, userTo: string, message: string, created: Date, status: string, isImage: boolean, mediaUrl: string | null) => void> = [];
   private groupMessageHandlers: Array<(groupName: string, fromUser: string, message: string, created: Date) => void> = [];
   
   public onlineUsers$ = new BehaviorSubject<any[]>([]);
@@ -54,7 +54,7 @@ export class ChatService {
 
   public async startConnection(
     FromUser: string, 
-    onReceive: (fromUser: string, userTo: string, message: string, created: Date, status: string) => void,
+    onReceive: (fromUser: string, userTo: string, message: string, created: Date, status: string, isImage: boolean, mediaUrl: string | null) => void,
     onReceiveGroup: (groupName: string, fromUser: string, message: string, created: Date) => void
   ): Promise<void> {
     if (!this.isBrowser) {
@@ -106,7 +106,7 @@ export class ChatService {
 
   private async initializeConnection(
     FromUser: string,
-    onReceive: (fromUser: string, userTo: string, message: string, created: Date, status: string) => void,
+    onReceive: (fromUser: string, userTo: string, message: string, created: Date, status: string, isImage: boolean, mediaUrl: string | null) => void,
     onReceiveGroup: (groupName: string, fromUser: string, message: string, created: Date) => void
   ): Promise<void> {
     console.log("Initializing new SignalR connection...");
@@ -139,11 +139,11 @@ export class ChatService {
   }
 
   private setupEventHandlers(): void {
-    this.hubConnection.on("ReceiveMessage", (fromUser: string, userTo: string, message: string, created: string, status: string) => {
+    this.hubConnection.on("ReceiveMessage", (fromUser: string, userTo: string, message: string, created: string, status: string, isImage: boolean, mediaUrl: string | null) => {
       const createdDate = new Date(created);
       
       this.messageHandlers.forEach(handler => {
-        handler(fromUser, userTo, message, createdDate, status);
+        handler(fromUser, userTo, message, createdDate, status, isImage, mediaUrl);
       });
 
       const currentUser = this.getCurrentChatUser();
@@ -266,20 +266,22 @@ export class ChatService {
     }
   }
 
-  public sendMessage(FromUser: string, UserTo: string, message: string, Created: Date, Status: 'seen' | 'sent'): void {
+  public sendMessage(FromUser: string, UserTo: string, message: string, Created: Date, Status: 'seen' | 'sent', isImage: boolean, mediaUrl: string | null): void {
     if (!this.isBrowser || !this.hubConnection) {
       console.warn("SignalR not available");
       return;
     }
 
     if (this.hubConnection.state === signalR.HubConnectionState.Connected) {
-      this.hubConnection.invoke("SendMessage", FromUser, UserTo, message, Created, Status)
+      this.hubConnection.invoke("SendMessage", FromUser, UserTo, message, Created, Status, isImage, mediaUrl)
         .catch(err => console.error("Error sending message:", err));
     } else {
       console.warn("SignalR not connected. Message not sent via SignalR.");
     }
     
-    this.saveMessage({ FromUser, UserTo, message, Created, Status });
+
+    console.log("Saving message to database:", { FromUser, UserTo, message, Created, Status, isImage, mediaUrl });
+    this.saveMessage({ FromUser, UserTo, message, Created, Status, isImage, mediaUrl });
   }
 
   public notifyTyping(recipientUserName: string): void {

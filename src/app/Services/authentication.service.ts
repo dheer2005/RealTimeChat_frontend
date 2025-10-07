@@ -25,6 +25,7 @@ export class AuthenticationService {
   seenUrl: any = "https://localhost:7180/api/Seen/messages/" 
   chatUrl: any = "https://localhost:7180/api/ChatHub/"
   baseUrl: any = "https://localhost:7180/api/Authentication/"
+  mediaUrl: any = "https://localhost:7180/api/Media/"
   httpOptions:any={
     header: new Headers({
       'content-type': 'application/json'
@@ -53,6 +54,10 @@ export class AuthenticationService {
 
   getUserInfo(userName: string){
     return this.http.get<any>(`${this.baseUrl}get-user-info-by-userName/${userName}`, this.httpOptions);
+  }
+
+  uploadImage(formData: FormData): Observable<any> {
+    return this.http.post(`${this.mediaUrl}uploadMedia`, formData);
   }
 
   checkAuthentication(){

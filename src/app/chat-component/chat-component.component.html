@@ -34,7 +34,7 @@
           <path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z"/>
         </svg>
       </button>
-      <button (click)="userDesc(UserTo)" class="profile-btn" title="View Profile">
+      <button (click)="userDesc()" class="profile-btn" title="View Profile">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
           <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
         </svg>
@@ -49,12 +49,20 @@
 
   <div *ngIf="!isLoader" class="messages-container" #chatScroll id="chat-scroll">
     <div *ngFor="let msg of messages" 
-         class="message-wrapper"
-         [class.sent]="msg.fromUser === fromUser"
-         [class.received]="msg.fromUser !== fromUser">
-      
+       class="message-wrapper"
+       [class.sent]="msg.fromUser === fromUser"
+       [class.received]="msg.fromUser !== fromUser">
+    
       <div class="message-bubble">
-        <p class="message-text">{{ msg.message }}</p>
+        <!-- Image Message -->
+        <div *ngIf="msg.isImage" class="image-message">
+          <img [src]="msg.mediaUrl" alt="Shared image" class="message-image" />
+          <p *ngIf="msg.message" class="image-caption">{{ msg.message }}</p>
+        </div>
+
+        <!-- Text Message -->
+        <p *ngIf="!msg.isImage" class="message-text">{{ msg.message }}</p>
+        
         <div class="message-meta">
           <span class="message-time">
             {{ msg.created | date:'shortTime' }}
@@ -84,6 +92,18 @@
 
   <div class="message-input-container">
     <div class="input-wrapper">
+      <button 
+        class="icon-btn"
+        (click)="toggleImageModal()"
+        title="Attach image"
+      >
+        <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke-width="2"/>
+          <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/>
+          <path d="M21 15l-5-5L5 21" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+
       <textarea
         [(ngModel)]="message"
         (input)="onInputChange()"
@@ -103,6 +123,75 @@
           <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
         </svg>
       </button>
+    </div>
+  </div>
+
+  <!-- send image modal -->
+  <div 
+    class="image-modal"
+    *ngIf="showImageModal"
+    [class.visible]="showImageModal"
+    (click)="closeModal($event)"
+  >
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <button class="close-btn" (click)="closeModal($event)">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M18 6L6 18M6 6l12 12" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+
+      <h3 class="modal-title">Attach Image</h3>
+
+      <div *ngIf="!selectedImage; else previewSection" class="upload-box">
+        <input 
+          type="file" 
+          #fileInput 
+          accept="image/*" 
+          (change)="onFileSelected($event)" 
+          hidden 
+        />
+        <div class="upload-icon">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke-width="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/>
+            <path d="M21 15l-5-5L5 21" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <button (click)="fileInput.click()" class="upload-btn">Choose Image</button>
+        <p class="upload-hint">Click to select an image from your device</p>
+      </div>
+
+      <ng-template #previewSection>
+        <div class="preview-container">
+          <img [src]="previewUrl" alt="Preview" class="preview-img" />
+          
+          <div class="caption-section">
+            <textarea
+              [(ngModel)]="imageCaption"
+              placeholder="Add a caption..."
+              class="caption-input"
+              rows="2"
+              maxlength="200"
+            ></textarea>
+            <span class="caption-count">{{ imageCaption.length }}/200</span>
+          </div>
+
+          <div class="preview-actions">
+            <button class="cancel-btn" (click)="clearImage()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M18 6L6 18M6 6l12 12" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              Change Image
+            </button>
+            <button class="send-image-btn" (click)="send()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+              </svg>
+              Send
+            </button>
+          </div>
+        </div>
+      </ng-template>
     </div>
   </div>
 

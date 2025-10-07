@@ -1,27 +1,26 @@
 <nav class="navbar navbar-expand-lg  ">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="#">Chatify</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav">
-          <li class="nav-item">
-            <a class="nav-link active" aria-current="page" href="#">Home</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" routerLink="/group-chat">Group-Chats</a>
-          </li>
-          <div class="d-flex ms-auto" *ngIf="authSvc?.UserName">
+  <div class="container-fluid">
+    <a class="navbar-brand text-light fw-semibold" href="#">Chatify</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="#">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/group-chat">Group-Chats</a>
+        </li>
+        <div class="d-flex ms-auto" *ngIf="authSvc?.UserName">
           <li class=" nav-item">
-            <a class="nav-link ms-auto fw-semibold text-light" routerLink="/home">Welcome {{authSvc.UserName | uppercase}}! </a>
+            <a class="nav-link ms-auto text-light" routerLink="/home">Welcome <span class="text-info fw-semibold ">{{authSvc.UserName | uppercase}} !</span> </a>
           </li>
           <li class=" nav-item" >
-            <a class="nav-link ms-auto btn btn-secondary p-2" type="submit" (click)="logout()"> logout</a>
+            <a class="nav-link ms-auto btn btn-danger p-2" type="submit" (click)="logout()">Logout</a>
           </li>
         </div>
-          
-        </ul>
-      </div>
+      </ul>
     </div>
-  </nav>
+  </div>
+</nav>

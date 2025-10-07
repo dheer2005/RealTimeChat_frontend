@@ -21,6 +21,7 @@ import { ToastrService } from 'ngx-toastr';
   styleUrl: './chat-component.component.css'
 })
 export class ChatComponent implements OnInit, OnDestroy {
+  @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
   @ViewChild('chatScroll', { static: false }) chatScrollContainer!: ElementRef;
 
   messages: any[] = [];
@@ -36,6 +37,15 @@ export class ChatComponent implements OnInit, OnDestroy {
   isUserTyping: boolean = false;
   isUserOnline: boolean = false;
   userInfo: any;
+
+  isImage: boolean = false;
+  mediaUrl: string | null = null;
+
+  showImageModal: boolean = false;
+  selectedImage: File | null = null;
+  previewUrl: string | null = null;
+  imageCaption: string = '';
+  showCaptionInput: boolean = false;
   
   private typingSubscription?: Subscription;
   private onlineUsersSubscription?: Subscription;
@@ -69,6 +79,55 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
     this.fromUser = this.authSvc.getUserName();
   }
+
+
+  toggleImageModal() {
+    this.showImageModal = true;
+  }
+
+  closeModal(event?: Event) {
+    if (event) {
+      this.showImageModal = false;
+      this.clearImage();
+    }
+  }
+
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file');
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Image size should not exceed 5MB');
+        return;
+      }
+
+      this.selectedImage = file;
+      
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        this.previewUrl = e.target.result;
+        this.showCaptionInput = true;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  clearImage() {
+    this.selectedImage = null;
+    this.previewUrl = null;
+    this.imageCaption = '';
+    this.showCaptionInput = false;
+    if (this.fileInput) {
+      this.fileInput.nativeElement.value = '';
+    }
+  }
+
 
   ngOnInit(): void {
     if (!this.isBrowser) {
@@ -121,7 +180,9 @@ export class ChatComponent implements OnInit, OnDestroy {
           userTo: msg.userTo,
           message: msg.message,
           created: new Date(msg.created),
-          status: msg.status
+          status: msg.status,
+          isImage: msg.isImage,
+          mediaUrl: msg.mediaUrl
         })).sort((a: any, b: any) => a.created.getTime() - b.created.getTime());
 
         if (showLoader) {
@@ -140,7 +201,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
-  private onReceiveMessage(FromUser: string, userTo: string, message: string, Created: Date, Status: string): void {
+  private onReceiveMessage(FromUser: string, userTo: string, message: string, Created: Date, Status: string, isImage: boolean, mediaUrl: string | null): void {
     if ((this.UserTo === FromUser && this.fromUser === userTo) || 
         (this.fromUser === FromUser && this.UserTo === userTo)) {
       
@@ -148,6 +209,7 @@ export class ChatComponent implements OnInit, OnDestroy {
         msg.fromUser === FromUser && 
         msg.userTo === userTo && 
         msg.message === message &&
+        msg.mediaUrl === mediaUrl &&
         Math.abs(new Date(msg.created).getTime() - new Date(Created).getTime()) < 1000
       );
 
@@ -159,6 +221,8 @@ export class ChatComponent implements OnInit, OnDestroy {
           userTo,
           message,
           created: new Date(Created),
+          isImage,
+          mediaUrl,
           status: finalStatus
         });
         this.messages.sort((a, b) => a.created.getTime() - b.created.getTime());
@@ -180,8 +244,46 @@ export class ChatComponent implements OnInit, OnDestroy {
     }, 2000);
   }
 
+  
+
   send(): void {
-    if (this.message.trim()) {
+    // Check if sending image or text message
+    if (this.selectedImage) {
+      // Handle image message
+      const formData = new FormData();
+      formData.append('file', this.selectedImage);
+
+      this.authSvc.uploadImage(formData).subscribe({
+        next: (res: any) => {
+          console.log('Image uploaded successfully:', res);
+          const mediaUrl = res.url;
+          
+          this.Receiver = this.UserTo;
+          this.currentTime = new Date();
+          
+          if (this.fromUser != this.UserTo) {
+            this.chatService.sendMessage(
+              this.fromUser,
+              this.UserTo,
+              this.imageCaption || '',
+              this.currentTime,
+              this.status,
+              true, 
+              mediaUrl
+            );
+          }
+          
+          this.showImageModal = false;
+          this.clearImage();
+          
+          setTimeout(() => this.scrollToBottom(), 100);
+        },
+        error: (err:any) => {
+          console.error('Image upload failed', err);
+          alert('Failed to upload image. Please try again.');
+        }
+      });
+    } else if (this.message.trim()) {
       this.chatService.notifyStopTyping(this.UserTo);
       
       if (this.typingTimeout) {
@@ -190,14 +292,16 @@ export class ChatComponent implements OnInit, OnDestroy {
 
       this.Receiver = this.UserTo;
       this.currentTime = new Date();
-      
-      if(this.fromUser != this.UserTo){
+
+      if (this.fromUser != this.UserTo) {
         this.chatService.sendMessage(
           this.fromUser, 
           this.UserTo, 
           this.message, 
           this.currentTime, 
-          this.status
+          this.status,
+          this.isImage,
+          this.mediaUrl
         );
       }
       
@@ -222,7 +326,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
-  userDesc(userTo: string): void {
+  userDesc(): void {
     this.profileClicked = true;
   }
 
