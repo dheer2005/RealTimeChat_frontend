@@ -3,7 +3,7 @@
     <video class="remote-video" #remoteVideo autoplay playsinline></video>
     
     <div class="controls">
-        @if(signalRService.incomingCall){
+        <ng-container *ngIf="this.signalRService.isCallActive">
             <button class="btn accept" (click)="acceptCall()">
                 <mat-icon>call</mat-icon>
                 Accept
@@ -12,21 +12,28 @@
                 <mat-icon>call_end</mat-icon>
                 Decline
             </button>
-        }
-
-        @if(!signalRService.incomingCall && !this.signalRService.isCallActive){
-            <button class="btn accept" (click)="startCall()">
-                <mat-icon>call</mat-icon>
-                Start Call
-            </button>
-        }
-
-        @if(!this.signalRService.incomingCall){
+        </ng-container>
+        
+        <ng-container *ngIf="!signalRService.incomingCall && !this.signalRService.isCallActive">
             <button class="btn end" (click)="endCall()">
                 <mat-icon>call_end</mat-icon>
                 End Call
             </button>
-        }
+        </ng-container>
+
+        <ng-container *ngIf="!this.signalRService.isCallActive">
+            <button class="btn accept" (click)="startCall()">
+                <mat-icon>call</mat-icon>
+                Start Call
+            </button>
+        </ng-container>
+
+        <ng-container *ngIf="!this.signalRService.incomingCall">
+            <button class="btn end" (click)="endCall()">
+                <mat-icon>call_end</mat-icon>
+                End Call
+            </button>
+        </ng-container>
     </div>
 </div>
 

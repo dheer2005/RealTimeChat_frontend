@@ -1,5 +1,5 @@
 import { Component, ElementRef, inject, OnInit, OnDestroy, ViewChild, Inject, PLATFORM_ID } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
+import { isPlatformBrowser, NgIf } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { VideoService } from '../Services/video.service';
 import { MatDialogRef } from '@angular/material/dialog';
@@ -8,7 +8,7 @@ import { Subscription } from 'rxjs';
 @Component({
   selector: 'app-video-chat',
   standalone: true,
-  imports: [MatIconModule],
+  imports: [MatIconModule, NgIf],
   templateUrl: './video-chat.component.html',
   styleUrl: './video-chat.component.css'
 })
