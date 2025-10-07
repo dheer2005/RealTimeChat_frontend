@@ -327,12 +327,17 @@
 }
 
 .send-btn.active {
-  background: #007bff;
+  background: darkgreen;
   color: white;
 }
 
 .send-btn.active:hover {
-  background: #0056b3;
+  background: darkgreen;
+}
+
+.send-btn svg{
+  margin-left: 2px;
+  color: #000;
 }
 
 .profile-sidebar {
@@ -726,7 +731,7 @@
 .message-text {
   margin: 0;
   font-size: 14px;
-  color: #1a1a1a;
+  /* color: #1a1a1a; */
   word-wrap: break-word;
   white-space: pre-wrap;
 }

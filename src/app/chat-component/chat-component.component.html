@@ -54,13 +54,11 @@
        [class.received]="msg.fromUser !== fromUser">
     
       <div class="message-bubble">
-        <!-- Image Message -->
         <div *ngIf="msg.isImage" class="image-message">
           <img [src]="msg.mediaUrl" alt="Shared image" class="message-image" />
           <p *ngIf="msg.message" class="image-caption">{{ msg.message }}</p>
         </div>
 
-        <!-- Text Message -->
         <p *ngIf="!msg.isImage" class="message-text">{{ msg.message }}</p>
         
         <div class="message-meta">
@@ -126,7 +124,6 @@
     </div>
   </div>
 
-  <!-- send image modal -->
   <div 
     class="image-modal"
     *ngIf="showImageModal"
