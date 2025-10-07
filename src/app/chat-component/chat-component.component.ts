@@ -309,7 +309,7 @@ export class ChatComponent implements OnInit, OnDestroy {
       }
       
       this.message = '';
-      setTimeout(() => this.scrollToBottom(), 100);
+      setTimeout(() => this.scrollToBottom(), 300);
       this.isSending = false;
     }
   }
@@ -324,12 +324,15 @@ export class ChatComponent implements OnInit, OnDestroy {
     
     this.dialog.open(VideoChatComponent, {
       width: '400px',
+      maxWidth: '95vw',
       height: '550px',
+      maxHeight: '95vh',
       disableClose: true,
-      autoFocus: false
+      autoFocus: false,
+      panelClass: 'video-call-dialog'
     });
   }
-
+  
   userDesc(): void {
     this.profileClicked = true;
   }

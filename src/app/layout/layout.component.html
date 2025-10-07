@@ -1,25 +1,41 @@
-<nav class="navbar navbar-expand-lg  ">
+<nav class="navbar navbar-expand-lg custom-navbar">
   <div class="container-fluid">
     <a class="navbar-brand text-light fw-semibold" href="#">Chatify</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+
+    <!-- Toggle button for mobile -->
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbarNav"
+      aria-controls="navbarNav"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
       <span class="navbar-toggler-icon"></span>
     </button>
+
+    <!-- Navbar links -->
     <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav">
+      <ul class="navbar-nav ms-auto align-items-lg-center">
         <li class="nav-item">
-          <a class="nav-link active" aria-current="page" href="#">Home</a>
+          <a class="nav-link active" routerLink="/">Home</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/group-chat">Group-Chats</a>
+          <a class="nav-link" routerLink="/group-chat">Group Chats</a>
         </li>
-        <div class="d-flex ms-auto" *ngIf="authSvc?.UserName">
-          <li class=" nav-item">
-            <a class="nav-link ms-auto text-light" routerLink="/home">Welcome <span class="text-info fw-semibold ">{{authSvc.UserName | uppercase}} !</span> </a>
+
+        <!-- Authenticated user section -->
+        <ng-container *ngIf="authSvc?.UserName">
+          <li class="nav-item welcome-text mt-2 mt-lg-0 text-center text-lg-start">
+            <a class="nav-link text-light">
+              Welcome <span class="text-info fw-semibold">{{ authSvc.UserName | uppercase }}!</span>
+            </a>
           </li>
-          <li class=" nav-item" >
-            <a class="nav-link ms-auto btn btn-danger p-2" type="submit" (click)="logout()">Logout</a>
+          <li class=" nav-item mt-2 mt-lg-0 text-center text-lg-start">
+            <button class="btn btn-danger logout-btn" (click)="logout()">Logout</button>
           </li>
-        </div>
+        </ng-container>
       </ul>
     </div>
   </div>

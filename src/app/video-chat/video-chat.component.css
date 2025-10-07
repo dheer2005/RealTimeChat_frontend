@@ -1,48 +1,80 @@
+/* Modern Video Call Modal Styles */
+
 .video-container {
-  max-width: 600px;
-  margin: 0 auto;
-  background: #1a1a2e;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(145deg, #0a0e27 0%, #1a1f3a 100%);
   border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
 }
 
-.local-video,
+/* Video Elements */
 .remote-video {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  background: #000;
-}
-
-.remote-video {
+  background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
   display: block;
-  aspect-ratio: 4/3;
+  flex: 1;
 }
 
 .local-video {
   position: absolute;
-  bottom: 20px;
-  right: 20px;
-  width: 150px;
-  height: 112px;
-  border-radius: 12px;
-  border: 3px solid white;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  top: 16px;
+  right: 16px;
+  width: 120px;
+  height: 90px;
+  border-radius: 16px;
+  border: 3px solid rgba(255, 255, 255, 0.15);
+  object-fit: cover;
   z-index: 10;
+  background: #000;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.local-video:hover {
+  transform: scale(1.05);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+/* Controls Container */
 .controls {
-  background: #16213e;
+  background: rgba(10, 14, 39, 0.85);
+  backdrop-filter: blur(20px) saturate(180%);
   padding: 20px;
   display: flex;
   justify-content: center;
-  gap: 15px;
-  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  position: relative;
 }
 
+.controls::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(139, 92, 246, 0.3) 50%,
+    transparent
+  );
+}
+
+/* Button Styles */
 .btn {
-  width: 56px;
+  min-width: 56px;
   height: 56px;
   border-radius: 50%;
   border: none;
@@ -51,33 +83,230 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.3s ease;
-  color: white;
-  font-size: 11px;
+  color: #fff;
+  font-size: 0.7rem;
   font-weight: 600;
-  gap: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  padding: 2px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.btn:hover::before {
+  opacity: 1;
+}
+
+/* Material Icon Styling */
 .btn mat-icon {
   font-size: 24px;
   width: 24px;
   height: 24px;
+  line-height: 24px;
+  margin-bottom: 2px;
 }
 
+/* Button Variants */
 .btn.accept {
-  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  box-shadow: 
+    0 4px 16px rgba(16, 185, 129, 0.4),
+    inset 0 -2px 8px rgba(0, 0, 0, 0.2),
+    inset 0 1px 2px rgba(255, 255, 255, 0.3);
 }
 
-.btn.decline,
+.btn.accept:hover {
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+  box-shadow: 
+    0 6px 24px rgba(16, 185, 129, 0.5),
+    inset 0 -2px 8px rgba(0, 0, 0, 0.2),
+    inset 0 1px 2px rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px) scale(1.05);
+}
+
+.btn.decline {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  box-shadow: 
+    0 4px 16px rgba(239, 68, 68, 0.4),
+    inset 0 -2px 8px rgba(0, 0, 0, 0.2),
+    inset 0 1px 2px rgba(255, 255, 255, 0.3);
+}
+
+.btn.decline:hover {
+  background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+  box-shadow: 
+    0 6px 24px rgba(239, 68, 68, 0.5),
+    inset 0 -2px 8px rgba(0, 0, 0, 0.2),
+    inset 0 1px 2px rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px) scale(1.05);
+}
+
+.btn.start {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  box-shadow: 
+    0 4px 16px rgba(59, 130, 246, 0.4),
+    inset 0 -2px 8px rgba(0, 0, 0, 0.2),
+    inset 0 1px 2px rgba(255, 255, 255, 0.3);
+}
+
+.btn.start:hover {
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+  box-shadow: 
+    0 6px 24px rgba(59, 130, 246, 0.5),
+    inset 0 -2px 8px rgba(0, 0, 0, 0.2),
+    inset 0 1px 2px rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px) scale(1.05);
+}
+
 .btn.end {
-  background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  box-shadow: 
+    0 4px 16px rgba(220, 38, 38, 0.4),
+    inset 0 -2px 8px rgba(0, 0, 0, 0.2),
+    inset 0 1px 2px rgba(255, 255, 255, 0.3);
 }
 
-.btn:hover {
-  transform: scale(1.1);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+.btn.end:hover {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  box-shadow: 
+    0 6px 24px rgba(220, 38, 38, 0.5),
+    inset 0 -2px 8px rgba(0, 0, 0, 0.2),
+    inset 0 1px 2px rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px) scale(1.05);
 }
 
 .btn:active {
-  transform: scale(1.05);
+  transform: translateY(0) scale(0.98);
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.3),
+    inset 0 -1px 4px rgba(0, 0, 0, 0.2),
+    inset 0 1px 2px rgba(255, 255, 255, 0.3);
+}
+
+/* Ripple Effect */
+.btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+  transform: scale(0);
+  opacity: 0;
+  transition: transform 0.5s ease, opacity 0.5s ease;
+}
+
+.btn:active::after {
+  transform: scale(2);
+  opacity: 1;
+  transition: transform 0s, opacity 0s;
+}
+
+/* Loading/Connecting State */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.btn.connecting {
+  animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  pointer-events: none;
+}
+
+/* Status Indicator */
+.status-indicator {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 8px 16px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(12px);
+  border-radius: 20px;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 10;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.status-indicator::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Modal Adjustments for Your Dialog Config */
+::ng-deep .cdk-overlay-pane {
+  max-width: 95vw !important;
+  max-height: 95vh !important;
+}
+
+::ng-deep .mat-mdc-dialog-container {
+  padding: 0 !important;
+  background: transparent !important;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6) !important;
+  border-radius: 20px !important;
+  overflow: hidden !important;
+}
+
+::ng-deep .mat-mdc-dialog-surface {
+  border-radius: 20px !important;
+  overflow: hidden !important;
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+  .local-video {
+    width: 90px;
+    height: 68px;
+    top: 12px;
+    right: 12px;
+    border-radius: 12px;
+  }
+
+  .controls {
+    padding: 16px 12px;
+    gap: 12px;
+  }
+
+  .btn {
+    min-width: 52px;
+    height: 52px;
+    font-size: 0.65rem;
+  }
+
+  .btn mat-icon {
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
+  }
+
+  .status-indicator {
+    padding: 6px 12px;
+    font-size: 0.7rem;
+  }
 }
