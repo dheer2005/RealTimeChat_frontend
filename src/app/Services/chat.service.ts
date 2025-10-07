@@ -9,12 +9,16 @@ import { AuthenticationService } from './authentication.service';
   providedIn: 'root'
 })
 export class ChatService {
+  private baseUrl = 'https://realtime001.bsite.net/api/';
+  private chatHubUrl = 'https://realtime001.bsite.net/';
+  
+  // private baseUrl = 'https://localhost:7180/api/';
+  // private chatHubUrl = 'https://localhost:7180/';
+  
   private hubConnection!: signalR.HubConnection;
   private connectionPromise: Promise<void> | null = null;
   private isConnectionStarted: boolean = false;
   
-  private baseUrl = 'https://localhost:7180/api/';
-  private chatHubUrl = 'https://localhost:7180/';
   private token: string | null = null;
   private joinedGroupName: string = '';
   private isBrowser: boolean;
