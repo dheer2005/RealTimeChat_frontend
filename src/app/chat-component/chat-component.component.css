@@ -205,25 +205,6 @@
   border-bottom-left-radius: 4px;
 }
 
-.message-text {
-  margin: 0 0 5px 0;
-  color: #333;
-  font-size: 14px;
-  line-height: 1.4;
-}
-
-.message-meta {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  justify-content: flex-end;
-}
-
-.message-time {
-  font-size: 11px;
-  color: #666;
-}
-
 .message-status svg {
   width: 16px;
   height: 16px;

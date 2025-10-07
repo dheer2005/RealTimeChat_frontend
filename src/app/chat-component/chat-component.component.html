@@ -113,7 +113,7 @@
       
       <button 
         (click)="send()" 
-        [disabled]="!message.trim()"
+        [disabled]="!message.trim()  && isSending"
         class="send-btn"
         [class.active]="message.trim()"
       >

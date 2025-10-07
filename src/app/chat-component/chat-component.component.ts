@@ -46,6 +46,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   previewUrl: string | null = null;
   imageCaption: string = '';
   showCaptionInput: boolean = false;
+  isSending: boolean = false;
   
   private typingSubscription?: Subscription;
   private onlineUsersSubscription?: Subscription;
@@ -247,15 +248,13 @@ export class ChatComponent implements OnInit, OnDestroy {
   
 
   send(): void {
-    // Check if sending image or text message
+    this.isSending = true;
     if (this.selectedImage) {
-      // Handle image message
       const formData = new FormData();
       formData.append('file', this.selectedImage);
 
       this.authSvc.uploadImage(formData).subscribe({
         next: (res: any) => {
-          console.log('Image uploaded successfully:', res);
           const mediaUrl = res.url;
           
           this.Receiver = this.UserTo;
@@ -277,13 +276,17 @@ export class ChatComponent implements OnInit, OnDestroy {
           this.clearImage();
           
           setTimeout(() => this.scrollToBottom(), 100);
+
+          this.isSending = false;
         },
         error: (err:any) => {
           console.error('Image upload failed', err);
-          alert('Failed to upload image. Please try again.');
+          this.toastrSvc.warning('Failed to upload image. Please try again.');
+          this.isSending = false;
         }
       });
     } else if (this.message.trim()) {
+      this.isSending = false;
       this.chatService.notifyStopTyping(this.UserTo);
       
       if (this.typingTimeout) {
@@ -307,6 +310,7 @@ export class ChatComponent implements OnInit, OnDestroy {
       
       this.message = '';
       setTimeout(() => this.scrollToBottom(), 100);
+      this.isSending = false;
     }
   }
 

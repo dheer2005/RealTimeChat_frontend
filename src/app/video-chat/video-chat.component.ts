@@ -182,7 +182,6 @@ export class VideoChatComponent implements OnInit, OnDestroy {
 
     this.peerConnection = new RTCPeerConnection(configuration);
 
-    // Handle ICE candidates
     this.peerConnection.onicecandidate = (event) => {
       if (event.candidate) {
         this.signalRService.sendCandidate(
