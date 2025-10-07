@@ -1,14 +1,15 @@
 import { Component, ElementRef, inject, OnInit, OnDestroy, ViewChild, Inject, PLATFORM_ID } from '@angular/core';
-import { isPlatformBrowser, NgIf } from '@angular/common';
+import { CommonModule, isPlatformBrowser, NgIf } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { VideoService } from '../Services/video.service';
 import { MatDialogRef } from '@angular/material/dialog';
 import { Subscription } from 'rxjs';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-video-chat',
   standalone: true,
-  imports: [MatIconModule, NgIf],
+  imports: [MatIconModule, CommonModule, FormsModule],
   templateUrl: './video-chat.component.html',
   styleUrl: './video-chat.component.css'
 })
@@ -126,7 +127,6 @@ export class VideoChatComponent implements OnInit, OnDestroy {
     this.signalRService.incomingCall = false;
     this.signalRService.isCallActive = true;
 
-    // Enable audio tracks
     if (this.stream) {
       this.stream.getAudioTracks().forEach((track) => track.enabled = true);
     }
