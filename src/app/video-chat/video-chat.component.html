@@ -3,6 +3,15 @@
     <video class="remote-video" #remoteVideo autoplay playsinline></video>
     
     <div class="controls">
+
+        <button class="btn accept" (click)="acceptCall()">
+                <mat-icon>call</mat-icon>
+                Accept
+            </button>
+            <button class="btn decline" (click)="declineCall()">
+                <mat-icon>call_end</mat-icon>
+                Decline
+            </button>
         @if(signalRService.incomingCall){
             <button class="btn accept" (click)="acceptCall()">
                 <mat-icon>call</mat-icon>
