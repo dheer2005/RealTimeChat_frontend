@@ -18,15 +18,15 @@ export class AuthenticationService {
   
   
   public UserName:any;
-  // seenUrl: any = "https://realtime001.bsite.net/api/Seen/messages/" 
-  // chatUrl: any = "https://realtime001.bsite.net/api/ChatHub/"
-  // baseUrl: any = "https://realtime001.bsite.net/api/Authentication/"
-  // mediaUrl: any = "https://realtime001.bsite.net/api/Media/"
+  seenUrl: any = "https://realtime001.bsite.net/api/Seen/messages/" 
+  chatUrl: any = "https://realtime001.bsite.net/api/ChatHub/"
+  baseUrl: any = "https://realtime001.bsite.net/api/Authentication/"
+  mediaUrl: any = "https://realtime001.bsite.net/api/Media/"
 
-  seenUrl: any = "https://localhost:7180/api/Seen/messages/" 
-  chatUrl: any = "https://localhost:7180/api/ChatHub/"
-  baseUrl: any = "https://localhost:7180/api/Authentication/"
-  mediaUrl: any = "https://localhost:7180/api/Media/"
+  // seenUrl: any = "https://localhost:7180/api/Seen/messages/" 
+  // chatUrl: any = "https://localhost:7180/api/ChatHub/"
+  // baseUrl: any = "https://localhost:7180/api/Authentication/"
+  // mediaUrl: any = "https://localhost:7180/api/Media/"
   httpOptions:any={
     header: new Headers({
       'content-type': 'application/json'
