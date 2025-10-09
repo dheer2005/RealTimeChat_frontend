@@ -26,6 +26,7 @@
 /* Tabs */
 .tabs {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   align-items: center;
   gap: 12px;
@@ -52,7 +53,6 @@
   color: #555;
   cursor: pointer;
   transition: all 0.25s ease;
-  position: relative;
 }
 
 .tab-button:hover {
@@ -590,20 +590,6 @@
     font-size: 24px;
   }
 
-  .tabs {
-    gap: 5px;
-  }
-
-  .tab-button {
-    padding: 10px 16px;
-    font-size: 14px;
-  }
-
-  .tab-button svg {
-    width: 18px;
-    height: 18px;
-  }
-
   .section-title {
     font-size: 20px;
   }
@@ -642,10 +628,6 @@
     font-size: 20px;
   }
 
-  .tab-button {
-    padding: 8px 12px;
-    font-size: 13px;
-  }
 
   .request-avatar,
   .result-avatar {
@@ -796,4 +778,47 @@
 
 .btn-cancel:hover {
   background: #d32f2f;
+}
+
+
+@media (max-width: 768px) {
+  .tab-button {
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+
+  .tab-button svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .tabs {
+    gap: 6px;
+  }
+
+  .tab-button {
+    padding: 6px 10px;
+    font-size: 13px;
+    flex: 1 1 45%;
+    justify-content: center;
+  }
+
+  .tab-button svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .badge,
+  .badge-secondary {
+    font-size: 10px;
+    padding: 1px 5px;
+  }
+}
+
+@media (max-width: 360px) {
+  .tab-button {
+    flex: 1 1 100%; 
+  }
 }
