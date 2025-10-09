@@ -70,6 +70,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     
     this.activatedRoute.paramMap.subscribe(param => {
       this.UserTo = param.get('name');
+      this.chatService.setCurrentChatUser(this.UserTo);
       this.authSvc.getUserInfo(this.UserTo!).subscribe({
         next: (res) => {
           this.userInfo = res;

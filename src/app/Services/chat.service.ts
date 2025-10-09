@@ -133,7 +133,6 @@ export class ChatService {
       await this.hubConnection.start();
       this.isConnectionStarted = true;
       this.connectionState$.next(signalR.HubConnectionState.Connected);
-      console.log("SignalR Connected successfully");
     } catch (err) {
       console.error("SignalR Connection Error:", err);
       this.isConnectionStarted = false;
@@ -153,7 +152,7 @@ export class ChatService {
       const currentUser = this.getCurrentChatUser();
       const myUsername = this.authSvc.getUserName();
       
-      if (userTo === myUsername && currentUser !== fromUser) {
+      if (userTo === myUsername && this.getCurrentChatUser() !== fromUser) {
         const users = this.onlineUsers$.value;
         const index = users.findIndex(u => u.userName === fromUser);
         if (index !== -1) {
@@ -164,10 +163,8 @@ export class ChatService {
         }
       }
 
-      if (userTo === myUsername && currentUser === fromUser) {
-        setTimeout(() => {
-          this.markAsSeen(fromUser, myUsername);
-        }, 100);
+      if (userTo === myUsername && this.getCurrentChatUser() === fromUser) {
+        this.markAsSeen(fromUser, myUsername);
       }
     });
 
@@ -362,7 +359,6 @@ export class ChatService {
   
   private saveMessage(message: any): void {
     this.http.post(`${this.baseUrl}Chat`, message).subscribe({
-      next: () => console.log("Message saved to database"),
       error: (err) => console.error("Error saving message:", err)
     });
   }

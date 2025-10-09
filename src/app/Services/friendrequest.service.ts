@@ -35,4 +35,8 @@ export class FriendrequestService {
     return this.http.delete(`${this.baseUrl}/unfriend/${currentUserId}/${friendId}`);
   }
 
+  getSentRequests(userId: string) {
+    return this.http.get<any[]>(`${this.baseUrl}/sent-requests/${userId}`);
+  }
+
 }

@@ -41,9 +41,10 @@ export class FriendRequestComponent implements OnInit, OnDestroy {
   friends: User[] = [];
   searchQuery: string = '';
   searchResults: User[] = [];
+  sentFriendRequests: any[] = [];
   isLoading: boolean = false;
   isSearching: boolean = false;
-  activeTab: 'requests' | 'friends' | 'send' = 'requests';
+  activeTab: 'requests' | 'sentRequests' | 'friends' | 'send' = 'requests';
 
   onlineUsersSubscription!: Subscription;
 
@@ -61,17 +62,19 @@ export class FriendRequestComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadFriendRequests();
     this.loadFriends();
+    this.loadSentRequests();
   }
 
   unfriend(userId: string): void {
     this.friendRequestSvc.unfriend(this.currentUserId, userId).subscribe({
       next: () => {
-        this.toastrSvc.success('Unfriended successfully'); 
+        this.toastrSvc.success('Unfriended successfully');
         this.searchUsers();
         this.searchQuery = '';
         this.searchResults = [];
         this.loadFriendRequests();
         this.loadFriends();
+        this.loadSentRequests();
       },
       error: (err) => {
         this.toastrSvc.error('Failed to unfriend');
@@ -80,7 +83,7 @@ export class FriendRequestComponent implements OnInit, OnDestroy {
     });
   }
 
-  setActiveTab(tab: 'requests' | 'friends' | 'send'): void {
+  setActiveTab(tab: 'requests' | 'sentRequests' | 'friends' | 'send'): void {
     this.activeTab = tab;
     if (tab === 'requests') {
       this.loadFriendRequests();
@@ -88,6 +91,10 @@ export class FriendRequestComponent implements OnInit, OnDestroy {
       this.searchResults = [];
     } else if (tab === 'friends') {
       this.loadFriends();
+      this.searchQuery = '';
+      this.searchResults = [];
+    } else if (tab === 'sentRequests') {
+      this.loadSentRequests();
       this.searchQuery = '';
       this.searchResults = [];
     }
@@ -114,12 +121,26 @@ export class FriendRequestComponent implements OnInit, OnDestroy {
     });
   }
 
+  loadSentRequests(): void{
+    this.isLoading = true;
+    this.friendRequestSvc.getSentRequests(this.currentUserId).subscribe({
+      next: (data) => {
+        this.sentFriendRequests = data;
+        this.isLoading = false;
+      },
+      error: (err) => {
+        this.toastrSvc.error('Failed to load sent requests');
+        this.isLoading = false;
+        console.error(err);
+      }
+    });
+  }
+
   loadFriends(): void {
     this.isLoading = true;
     this.friendRequestSvc.getFriendsList(this.currentUserId).subscribe({
       next: (data) => {
         this.friends = data;
-        console.log('Friends List: ', this.friends);
         this.isLoading = false;
       },
       error: (err) => {
@@ -174,6 +195,7 @@ export class FriendRequestComponent implements OnInit, OnDestroy {
         this.searchResults = [];
         this.loadFriendRequests();
         this.loadFriends();
+        this.loadSentRequests();
       },
       error: (err) => {
         this.toastrSvc.error(err.error?.message || 'Failed to send friend request');

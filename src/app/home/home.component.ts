@@ -27,7 +27,6 @@ export class HomeComponent implements OnInit {
   private onlineUsersSubscription?: Subscription;
   private typingUsersSubscription?: Subscription;
 
-  
   private isBrowser: boolean;
   
   public typingUsers: {[key: string]: boolean} = {};
@@ -102,7 +101,6 @@ export class HomeComponent implements OnInit {
               });
             })
             
-            console.log('User List with Unread Counts:', this.userList2);
             this.IsLoader = false;
           }
         }
