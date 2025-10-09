@@ -61,7 +61,7 @@
        [class.received]="msg.fromUser !== fromUser">
     
       <div class="message-bubble">
-        <div *ngIf="msg.isImage" class="image-message">
+        <div *ngIf="msg.isImage" class="image-message" (click)="openImagePreviewViewModal(msg)">
           <img [src]="msg.mediaUrl" alt="Shared image" class="message-image" />
           <p *ngIf="msg.message" class="image-caption">{{ msg.message }}</p>
         </div>
@@ -196,6 +196,23 @@
           </div>
         </div>
       </ng-template>
+    </div>
+  </div>
+
+  <div class="view-image-modal" *ngIf="showImageViewModal" (click)="closeImagePreviewViewModal()">
+    <div class="view-image-content" (click)="$event.stopPropagation()">
+      <button class="close-btn" (click)="closeImagePreviewViewModal()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M18 6L6 18M6 6l12 12" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+
+      <img [src]="selectedImageUrl" alt="Message Image" class="full-image" />
+
+      <div class="image-details">
+        <p class="image-caption text-light" *ngIf="selectedImageCaption">{{ selectedImageCaption }}</p>
+        <p class="image-time">{{ selectedImageTime | date:'medium' }}</p>
+      </div>
     </div>
   </div>
 

@@ -47,6 +47,11 @@ export class ChatComponent implements OnInit, OnDestroy {
   imageCaption: string = '';
   showCaptionInput: boolean = false;
   isSending: boolean = false;
+
+  showImageViewModal = false;
+  selectedImageUrl: string | null = null;
+  selectedImageCaption: string | null = null;
+  selectedImageTime: Date | null = null;
   
   private typingSubscription?: Subscription;
   private onlineUsersSubscription?: Subscription;
@@ -81,6 +86,20 @@ export class ChatComponent implements OnInit, OnDestroy {
       });
     });
     this.fromUser = this.authSvc.getUserName();
+  }
+
+  openImagePreviewViewModal(msg: any) {
+    this.selectedImageUrl = msg.mediaUrl;
+    this.selectedImageCaption = msg.message;
+    this.selectedImageTime = msg.created;
+    this.showImageViewModal = true;
+  }
+
+  closeImagePreviewViewModal() {
+    this.showImageViewModal = false;
+    this.selectedImageUrl = null;
+    this.selectedImageCaption = null;
+    this.selectedImageTime = null;
   }
 
 

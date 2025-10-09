@@ -409,34 +409,6 @@
   }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* Image Modal */
 .image-modal {
   position: fixed;
   inset: 0;
@@ -500,7 +472,6 @@
   color: #1a1a1a;
 }
 
-/* Upload Box */
 .upload-box {
   display: flex;
   flex-direction: column;
@@ -690,7 +661,7 @@
 
 .message-image {
   width: 100%;
-  max-width: 300px;
+  min-width: 200px;
   height: auto;
   border-radius: 8px;
   cursor: pointer;
@@ -704,12 +675,12 @@
 .image-caption {
   margin: 0;
   padding: 4px 0;
+  width: 400px;
   font-size: 14px;
   color: #1a1a1a;
   word-wrap: break-word;
 }
 
-/* Text Message */
 .message-text {
   margin: 0;
   font-size: 14px;
@@ -815,4 +786,66 @@
   .message-bubble {
     max-width: 85%;
   }
+}
+
+
+.view-image-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+  animation: fadeIn 0.3s ease;
+}
+
+.view-image-content {
+  position: relative;
+  background: #111;
+  padding: 1rem;
+  border-radius: 12px;
+  max-width: 90%;
+  max-height: 85%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.view-image-content .close-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+}
+
+.full-image {
+  max-width: 100%;
+  max-height: 70vh;
+  border-radius: 8px;
+  object-fit: contain;
+}
+
+.image-details {
+  margin-top: 1rem;
+  text-align: center;
+  color: #ddd;
+}
+
+.image-caption {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.image-time {
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
