@@ -8,7 +8,14 @@
       </button>
       
       <div class="user-header-info">
-        <div class="user-avatar-small">
+        <div class="user-avatar-small" *ngIf="userInfo?.profileImage == null || userInfo?.profileImage == ''">
+          <!-- {{ userInfo?.userName.charAt(0).toUpperCase() }} -->
+          <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+        </div>
+        <div class="user-avatar-small" *ngIf="userInfo?.profileImage != null && userInfo?.profileImage != ''">
           <img [src]="userInfo?.profileImage" [alt]="userInfo?.userName"/>
         </div>
         <div class="user-details">

@@ -36,7 +36,6 @@ export class LoginComponent implements OnInit {
     this.authSvc.loginUser(this.login).subscribe({
       next: (res:any)=>{
         localStorage.setItem('jwt',res.token);
-        localStorage.setItem('userName', res.userName);
         this.toastr.success("User logged in" , "Success");
         this.authSvc.getUserName();
         this.router.navigateByUrl('/home');

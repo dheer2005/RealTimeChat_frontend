@@ -9,11 +9,11 @@ import { AuthenticationService } from './authentication.service';
   providedIn: 'root'
 })
 export class ChatService {
-  private baseUrl = 'https://realtime001.bsite.net/api/';
-  private chatHubUrl = 'https://realtime001.bsite.net/';
+  // private baseUrl = 'https://realtime001.bsite.net/api/';
+  // private chatHubUrl = 'https://realtime001.bsite.net/';
   
-  // private baseUrl = 'https://localhost:7180/api/';
-  // private chatHubUrl = 'https://localhost:7180/';
+  private baseUrl = 'https://localhost:7180/api/';
+  private chatHubUrl = 'https://localhost:7180/';
   
   private hubConnection!: signalR.HubConnection;
   private connectionPromise: Promise<void> | null = null;
@@ -283,8 +283,6 @@ export class ChatService {
       console.warn("SignalR not connected. Message not sent via SignalR.");
     }
     
-
-    console.log("Saving message to database:", { FromUser, UserTo, message, Created, Status, isImage, mediaUrl });
     this.saveMessage({ FromUser, UserTo, message, Created, Status, isImage, mediaUrl });
   }
 
@@ -381,8 +379,8 @@ export class ChatService {
     return this.http.get<any[]>(`${this.baseUrl}Chat/getGroupMessages/${groupName}`);
   }
 
-  public unreadCount(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}Seen/messages/unread-counts`);
+  public unreadCount(fromUser: string, userTo: string) {
+    return this.http.get<any[]>(`${this.baseUrl}Chat/unread-counts/${fromUser}/${userTo}`);
   }
 
   public lastMessage(userName: string): Observable<any[]> {

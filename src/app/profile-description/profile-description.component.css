@@ -207,7 +207,7 @@
   right: 8px;
   width: 36px;
   height: 36px;
-  background: #10b981;
+  /* background: #10b981; */
   border: 4px solid white;
   border-radius: 50%;
   display: flex;
@@ -215,6 +215,14 @@
   justify-content: center;
   color: white;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.avatar-badge.online{
+  background: #40cfa0;
+}
+
+.avatar-badge.offline{
+  background: #d6d6d6;
 }
 
 .profile-header-info {
@@ -246,12 +254,29 @@
   font-weight: 500;
 }
 
+.profile-status.online{
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.profile-status.offline{
+  background: #b4b7c0;
+  color: #fcfcfc;
+}
+
 .status-dot {
   width: 8px;
   height: 8px;
-  background: #10b981;
   border-radius: 50%;
   animation: pulse 2s infinite;
+}
+
+.status-dot.online{
+  background: #10b981;
+}
+
+.status-dot.offline{
+  background: #f3f3f5;
 }
 
 @keyframes pulse {

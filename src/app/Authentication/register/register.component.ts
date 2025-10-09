@@ -63,7 +63,7 @@ export class RegisterComponent {
 
     this.authSvc.registerUser(formdata).subscribe({
       next: ()=>{
-        alert("User Created");
+        this.toastr.success("New user registered");
         this.router.navigateByUrl('/login');
 
         if(this.fileInputRef){

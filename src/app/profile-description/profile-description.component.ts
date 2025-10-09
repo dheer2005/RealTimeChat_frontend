@@ -4,6 +4,8 @@ import { AuthenticationService } from '../Services/authentication.service';
 import { ToastrService } from 'ngx-toastr';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
+import { ChatService } from '../Services/chat.service';
 
 @Component({
   selector: 'app-profile-description',
@@ -20,21 +22,25 @@ export class ProfileDescriptionComponent {
   isLoading: boolean = false;
   errorMessage: string = '';
 
-  constructor(private activatedRoute: ActivatedRoute, private Router: Router, private authSvc: AuthenticationService, private toastrSvc:ToastrService){
+  private onlineUsersSubscription?: Subscription;
+  isUserOnline: boolean = false;
+
+  constructor(private activatedRoute: ActivatedRoute, private Router: Router, private chatSvc: ChatService, private authSvc: AuthenticationService, private toastrSvc:ToastrService){
     this.activatedRoute.paramMap.subscribe(param=>{
       this.profileName = param.get('name')?? '';
       this.loadUserInfo();
     });
 
-    // this.authSvc.getUserInfo(this.profileName).subscribe({
-    //   next: (res)=>{
-    //     this.userInfo = res;
-    //     console.log(this.userInfo);
-    //   },
-    //   error: (err)=>{
-    //     console.log(err);
-    //   }
-    // });
+    this.onlineUsersSubscription = this.chatSvc.onlineUsers$.subscribe(
+      (users) => {
+        const user = users.find(u => u.userName === this.profileName);
+        this.isUserOnline = user?.isOnline || false;
+      }
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.onlineUsersSubscription?.unsubscribe();
   }
 
   loadUserInfo(): void {
@@ -45,7 +51,6 @@ export class ProfileDescriptionComponent {
       next: (res) => {
         this.userInfo = res;
         this.isLoading = false;
-        console.log(this.userInfo);
       },
       error: (err) => {
         console.log(err);

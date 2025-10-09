@@ -1,5 +1,5 @@
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild, Inject, PLATFORM_ID } from '@angular/core';
-import { isPlatformBrowser, CommonModule } from '@angular/common';
+import { isPlatformBrowser, CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ChatService } from '../Services/chat.service';
@@ -63,6 +63,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     private ngZone: NgZone,
     private toastrSvc: ToastrService,
     public dialog: MatDialog,
+    private location: Location,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
@@ -385,6 +386,6 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   backToHome(){
     this.chatService.setCurrentChatUser(null);
-    this.router.navigate(['/home']);
+    this.location.back();
   }
 }
