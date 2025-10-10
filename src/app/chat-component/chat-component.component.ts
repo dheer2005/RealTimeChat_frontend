@@ -13,6 +13,7 @@ import { Subscription } from 'rxjs';
 import { NgZone } from '@angular/core';
 import { ToastrService } from 'ngx-toastr';
 
+
 @Component({
   selector: 'app-chat-component',
   standalone: true,
@@ -60,6 +61,15 @@ export class ChatComponent implements OnInit, OnDestroy {
   private isBrowser: boolean;
 
   isDragOver: boolean = false;
+  mapStaticImageUrl: any = `https://res.cloudinary.com/ddvzeseip/image/upload/v1760094391/Chatlify/ap_a6v2ac.png`;
+
+
+  showLocationModal: boolean = false;
+  map!: any;
+  marker!: any;
+  selectedLat!: number | null;
+  selectedLon!: number | null;
+  isLoadingLocation: boolean = false;
 
   constructor(
     private activatedRoute: ActivatedRoute,
@@ -88,6 +98,145 @@ export class ChatComponent implements OnInit, OnDestroy {
       });
     });
     this.fromUser = this.authSvc.getUserName();
+  }
+
+  openLocationModal() {
+    this.showLocationModal = true;
+
+    setTimeout(() => { 
+      if (!this.map) {
+        this.initMap();
+      } else {
+        this.map.invalidateSize();
+      }
+    }, 100);
+  }
+
+  destroyMap() {
+    if (this.map) {
+      this.map.remove();
+      this.map = null;
+      this.marker = null;
+    }
+  }
+
+  async initMap() {
+    if(!this.isBrowser)
+      return;
+     if (this.map) {
+        this.map.remove();
+        this.map = null;
+      }
+
+    const L = await  import('leaflet');
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        this.selectedLat = pos.coords.latitude;
+        this.selectedLon = pos.coords.longitude;
+
+        this.map = L.map('map').setView([this.selectedLat, this.selectedLon], 15);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(this.map);
+
+        this.marker = L.marker([this.selectedLat, this.selectedLon], { draggable: true }).addTo(this.map);
+
+        this.marker.on('dragend', (e: any) => {
+          const latLng = e.target.getLatLng();
+          this.selectedLat = latLng.lat;
+          this.selectedLon = latLng.lng;
+        });
+      },
+      (err) => {
+        console.warn('Geolocation failed, using default location');
+        this.selectedLat = 28.6139; 
+        this.selectedLon = 77.2090;
+
+        this.map = L.map('map').setView([this.selectedLat, this.selectedLon], 15);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(this.map);
+
+        this.marker = L.marker([this.selectedLat, this.selectedLon], { draggable: true }).addTo(this.map);
+        this.marker.on('dragend', (e: any) => {
+          const latLng = e.target.getLatLng();
+          this.selectedLat = latLng.lat;
+          this.selectedLon = latLng.lng;
+        });
+      }
+    );
+  }
+
+  sendCurrentLocation() {
+    if (!navigator.geolocation) {
+      this.toastrSvc.warning('Geolocation not supported');
+      return;
+    }
+
+    this.isLoadingLocation = true;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+
+        this.sendLocation(lat, lng, 'Shared current Location');
+        this.isLoadingLocation = false;
+        this.closeLocationModal();
+        this.destroyMap();
+      },
+      (err) => {
+        this.isLoadingLocation = false;
+        this.destroyMap();
+        this.toastrSvc.error('Failed to get current location');
+      },
+      { enableHighAccuracy: true }
+    );
+  }
+
+  sendSelectedLocation() {
+    if (!this.selectedLat || !this.selectedLon) {
+      this.toastrSvc.warning('Please select a location on the map');
+      return;
+    }
+    this.sendLocation(this.selectedLat, this.selectedLon, 'Share selected Location');
+    this.closeLocationModal();
+  }
+
+  sendLocation(lat: number, lng: number, caption: string) {
+    const osmStaticUrl = `https://staticmap.openstreetmap.de/staticmap.php?center=${lat},${lng}&zoom=15&size=400x200&markers=${lat},${lng},red-pushpin`;
+    const now = new Date();
+
+    this.chatService.sendMessage(
+      this.fromUser,
+      this.UserTo,
+      caption,
+      now,
+      'sent',
+      true,
+      osmStaticUrl
+    );
+
+    this.messages.push({
+      fromUser: this.fromUser,
+      userTo: this.UserTo,
+      message: caption,
+      created: now,
+      isImage: true,
+      mediaUrl: osmStaticUrl,
+      status: 'sent'
+    });
+
+    setTimeout(() => this.scrollToBottom(), 100);
+  }
+
+  closeLocationModal() {
+    this.showLocationModal = false;
+    this.selectedLat = null;
+    this.selectedLon = null;
+    this.destroyMap();
   }
 
   onDragOver(event: DragEvent) : void{
@@ -130,7 +279,7 @@ export class ChatComponent implements OnInit, OnDestroy {
         this.showCaptionInput = true;
       };
       reader.readAsDataURL(file);
-      
+
       event.dataTransfer.clearData();
     }
 
@@ -325,6 +474,8 @@ export class ChatComponent implements OnInit, OnDestroy {
       this.authSvc.uploadImage(formData).subscribe({
         next: (res: any) => {
           const mediaUrl = res.url;
+
+          console.log("img url:,", res.url)
           
           this.Receiver = this.UserTo;
           this.currentTime = new Date();

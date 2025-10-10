@@ -65,8 +65,19 @@
         [class.received]="msg.fromUser !== fromUser">
       
         <div class="message-bubble">
-          <div *ngIf="msg.isImage" class="image-message" (click)="openImagePreviewViewModal(msg)">
+          <div *ngIf="msg.isImage && msg.mediaUrl && !msg.mediaUrl.includes('staticmap.openstreetmap.de')" class="image-message" (click)="openImagePreviewViewModal(msg)">
             <img [src]="msg.mediaUrl" alt="Shared image" class="message-image" />
+            <p *ngIf="msg.message" class="image-caption">{{ msg.message }}</p>
+          </div>
+
+          <div *ngIf="msg.isImage && msg.mediaUrl && msg.mediaUrl.includes('staticmap.openstreetmap.de')" class="image-message">
+            <a *ngIf="msg.mediaUrl && msg.mediaUrl.includes('staticmap.openstreetmap.de')"
+              [href]="'https://www.google.com/maps/search/?api=1&query=' + msg.mediaUrl.split('center=')[1].split('&')[0]"
+              target="_blank" rel="noreferrer">
+              <img [src]="mapStaticImageUrl" alt="Shared Location" class="message-image" />
+            </a>
+            <img *ngIf="!msg.mediaUrl.includes('staticmap.openstreetmap.de')"
+                [src]="mapStaticImageUrl" alt="Shared image" class="message-image" />
             <p *ngIf="msg.message" class="image-caption">{{ msg.message }}</p>
           </div>
 
@@ -113,6 +124,16 @@
           </svg>
         </button>
 
+        <button 
+          class="icon-btn"
+          title="Share Location"
+          (click)="openLocationModal()"
+        >
+          <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zM12 11.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z" stroke-width="2"/>
+          </svg>
+        </button>
+
         <textarea
           [(ngModel)]="message"
           (input)="onInputChange()"
@@ -135,9 +156,7 @@
       </div>
     </div>
 
-    <div class="image-modal"
-      *ngIf="showImageModal"
-      [class.visible]="showImageModal"
+    <div class="image-modal" *ngIf="showImageModal" [class.visible]="showImageModal"
       (click)="closeModal($event)"
     >
       <div class="modal-content" (click)="$event.stopPropagation()">
@@ -215,6 +234,18 @@
         <div class="image-details">
           <p class="image-caption view-image text-light" *ngIf="selectedImageCaption">{{ selectedImageCaption }}</p>
           <p class="image-time">{{ selectedImageTime | date:'medium' }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="location-modal" [class.show]="showLocationModal" *ngIf="showLocationModal" (click)="closeLocationModal()">
+      <div class="location-modal-content" (click)="$event.stopPropagation()">
+        <h3>Select Location</h3>
+        <div id="map" class="location-map"></div>
+        <div class="location-actions">
+          <button class="send-location-btn" (click)="sendSelectedLocation()">Send Location</button>
+          <button class="send-location-btn" (click)="sendCurrentLocation()">Send current Location</button>
+          <button class="cancel-btn d-flex justify-content-center align-items-center bg-secondary text-light" (click)="closeLocationModal()">Cancel</button>
         </div>
       </div>
     </div>
