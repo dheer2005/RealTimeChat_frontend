@@ -98,8 +98,17 @@ export class HomeComponent implements OnInit {
                 user.unreadCount += res?.count || 0;
                 user.lastMessage = user.lastMessage ? user.lastMessage : res?.lastMsg || '';
                 user.lastMessageSender = user.lastMessageSender ? user.lastMessageSender : res?.lastMsgSender || '';
+                user.lastMessageTime = res?.lastMsgTime ? new Date(res.lastMsgTime) : null;
               });
             })
+
+            setTimeout(() => {
+              this.userList2.sort((a, b) => {
+                const timeA = a.lastMessageTime ? new Date(a.lastMessageTime).getTime() : 0;
+                const timeB = b.lastMessageTime ? new Date(b.lastMessageTime).getTime() : 0;
+                return timeB - timeA;
+              });
+            }, 1000);
             
             this.IsLoader = false;
           }
