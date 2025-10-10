@@ -16,10 +16,6 @@ export class LayoutComponent {
   constructor(private chatService: ChatService, public authSvc: AuthenticationService, private router: Router, private toastr: ToastrService){}
  
   logout(){
-    // localStorage.removeItem('jwt');
-    // this.authSvc.UserName = null;
-    // this.toastr.warning("User Log out", "Warning");
-    // this.router.navigateByUrl('/login');
 
     try {
       this.chatService.stopConnection();
