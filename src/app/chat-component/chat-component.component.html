@@ -210,7 +210,7 @@
       <img [src]="selectedImageUrl" alt="Message Image" class="full-image" />
 
       <div class="image-details">
-        <p class="image-caption text-light" *ngIf="selectedImageCaption">{{ selectedImageCaption }}</p>
+        <p class="image-caption view-image text-light" *ngIf="selectedImageCaption">{{ selectedImageCaption }}</p>
         <p class="image-time">{{ selectedImageTime | date:'medium' }}</p>
       </div>
     </div>

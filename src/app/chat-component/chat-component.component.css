@@ -675,16 +675,18 @@
 .image-caption {
   margin: 0;
   padding: 4px 0;
-  width: 400px;
   font-size: 14px;
   color: #1a1a1a;
   word-wrap: break-word;
 }
 
+.view-image{
+  max-width: 400px;
+}
+
 .message-text {
   margin: 0;
   font-size: 14px;
-  /* color: #1a1a1a; */
   word-wrap: break-word;
   white-space: pre-wrap;
 }
@@ -835,7 +837,7 @@
   color: #ddd;
 }
 
-.image-caption {
+.image-caption.view-image {
   font-size: 1rem;
   margin-bottom: 0.5rem;
 }
