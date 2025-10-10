@@ -130,6 +130,7 @@ export class ChatComponent implements OnInit, OnDestroy {
         this.showCaptionInput = true;
       };
       reader.readAsDataURL(file);
+      
       event.dataTransfer.clearData();
     }
 
