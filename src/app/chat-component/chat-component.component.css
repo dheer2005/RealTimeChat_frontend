@@ -6,6 +6,26 @@
   position: relative;
 }
 
+.chat-container.drag-over {
+  border: 2px dashed #3f51b5;
+  background-color: rgba(63, 81, 181, 0.05);
+}
+
+.chat-container.drag-over::before {
+  content: "Drop image to upload";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 16px;
+  color: #3f51b5;
+  background: #fff;
+  padding: 12px 20px;
+  border-radius: 8px;
+  z-index: 10;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
 .chat-header {
   display: flex;
   justify-content: space-between;
@@ -189,6 +209,7 @@
 
 .message-bubble {
   max-width: 70%;
+
   padding: 10px 15px;
   border-radius: 12px;
   word-wrap: break-word;
@@ -198,6 +219,7 @@
 .sent .message-bubble {
   background: #dcf8c6;
   border-bottom-right-radius: 4px;
+  ;
 }
 
 .received .message-bubble {
@@ -677,6 +699,7 @@
   padding: 4px 0;
   font-size: 14px;
   color: #1a1a1a;
+  max-width: 400px;
   word-wrap: break-word;
 }
 

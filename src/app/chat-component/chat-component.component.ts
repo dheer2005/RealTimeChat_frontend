@@ -59,6 +59,8 @@ export class ChatComponent implements OnInit, OnDestroy {
   private typingTimeout: any;
   private isBrowser: boolean;
 
+  isDragOver: boolean = false;
+
   constructor(
     private activatedRoute: ActivatedRoute,
     private chatService: ChatService,
@@ -86,6 +88,51 @@ export class ChatComponent implements OnInit, OnDestroy {
       });
     });
     this.fromUser = this.authSvc.getUserName();
+  }
+
+  onDragOver(event: DragEvent) : void{
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragOver = true;
+  }
+
+  onDragLeave(event: DragEvent): void{
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragOver = false;
+  }
+
+  onFileDrop(event: DragEvent) : void{
+    console.log('File dropped');
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragOver = false;
+    this.showImageModal = true;
+
+    if(event.dataTransfer && event.dataTransfer.files.length > 0){
+      const file = event.dataTransfer.files[0];
+
+      if(!file.type.startsWith('image/')){
+        this.toastrSvc.warning('Please drop a valid image file', 'Invalid File');
+        return;
+      }
+
+      if(file.size > 5 * 1024 * 1024){
+        this.toastrSvc.warning('Image size should not exceed 5MB', 'File Too Large');
+        return;
+      }
+
+      this.selectedImage = file;
+      
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        this.previewUrl = e.target.result;
+        this.showCaptionInput = true;
+      };
+      reader.readAsDataURL(file);
+      event.dataTransfer.clearData();
+    }
+
   }
 
   openImagePreviewViewModal(msg: any) {
