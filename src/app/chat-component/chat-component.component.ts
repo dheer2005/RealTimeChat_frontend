@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnDestroy, OnInit, ViewChild, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild, Inject, PLATFORM_ID, HostListener } from '@angular/core';
 import { isPlatformBrowser, CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -12,12 +12,13 @@ import { VideoChatComponent } from '../video-chat/video-chat.component';
 import { Subscription } from 'rxjs';
 import { NgZone } from '@angular/core';
 import { ToastrService } from 'ngx-toastr';
+import { PickerComponent } from '@ctrl/ngx-emoji-mart';
 
 
 @Component({
   selector: 'app-chat-component',
   standalone: true,
-  imports: [FormsModule, CommonModule, ProfileDescriptionComponent, MatIconModule],
+  imports: [FormsModule, CommonModule, ProfileDescriptionComponent, MatIconModule, PickerComponent],
   templateUrl: './chat-component.component.html',
   styleUrl: './chat-component.component.css'
 })
@@ -71,6 +72,9 @@ export class ChatComponent implements OnInit, OnDestroy {
   selectedLon!: number | null;
   isLoadingLocation: boolean = false;
 
+  showEmojiPicker: boolean = false;
+  showAttachmentMenu = false;
+
   constructor(
     private activatedRoute: ActivatedRoute,
     private chatService: ChatService,
@@ -98,6 +102,26 @@ export class ChatComponent implements OnInit, OnDestroy {
       });
     });
     this.fromUser = this.authSvc.getUserName();
+  }
+
+  @HostListener('document:click', ['$event'])
+  closeOnOutsideClick(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.attachment-container')) {
+      this.showAttachmentMenu = false;
+    }
+  }
+  
+  toggleAttachmentMenu() {
+    this.showAttachmentMenu = !this.showAttachmentMenu;
+  }
+
+  toggleEmojiPicker() {
+    this.showEmojiPicker = !this.showEmojiPicker;
+  }
+
+  addEmoji(event: any) {
+    this.message += event.emoji.native;
   }
 
   openLocationModal() {
