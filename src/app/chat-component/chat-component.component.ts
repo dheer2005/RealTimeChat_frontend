@@ -201,7 +201,7 @@ export class ChatComponent implements OnInit, OnDestroy {
       this.toastrSvc.warning('Please select a location on the map');
       return;
     }
-    this.sendLocation(this.selectedLat, this.selectedLon, 'Share selected Location');
+    this.sendLocation(this.selectedLat, this.selectedLon, 'Shared Location');
     this.closeLocationModal();
   }
 
