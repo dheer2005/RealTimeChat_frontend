@@ -41,6 +41,15 @@ export class ChatService {
 
   private reactionRemovedSubject = new Subject<{messageId: number, user: string}>();
   public reactionRemoved$ = this.reactionRemovedSubject.asObservable();
+
+  private friendRequestSubject = new Subject<any>();
+  public friendRequest$ = this.friendRequestSubject.asObservable();
+
+  private friendResponseSubject = new Subject<any>();
+  public friendResponse$ = this.friendResponseSubject.asObservable();
+
+  private unfriendSubject = new Subject<any>();
+  public unfriend$ = this.unfriendSubject.asObservable();
   
   public connectionState$ = new BehaviorSubject<signalR.HubConnectionState>(
     signalR.HubConnectionState.Disconnected
@@ -240,6 +249,17 @@ export class ChatService {
       this.typingUsers$.next({...typing});
     });
 
+
+    this.hubConnection.on("ReceiveFriendRequest", (request:any) => {
+      this.friendRequestSubject.next(request)
+    });
+    this.hubConnection.on("FriendRequestResponse", (response:any) => { 
+      this.friendResponseSubject.next(response);
+    });
+    this.hubConnection.on("Unfriended", (data:any) => { 
+      this.unfriendSubject.next(data);
+    });
+
     
   }
 
@@ -303,7 +323,6 @@ export class ChatService {
       console.warn("SignalR not connected. Message not sent via SignalR.");
     }
     
-    // this.saveMessage({ FromUser, UserTo, message, Created, Status, isImage, mediaUrl });
   }
 
   public notifyTyping(recipientUserName: string): void {

@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit, PLATFORM_ID } from '@angular/core';
+import { Component, Inject, OnDestroy, OnInit, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -15,7 +15,7 @@ import { ToastrService } from 'ngx-toastr';
   templateUrl: './home.component.html',
   styleUrl: './home.component.css'
 })
-export class HomeComponent implements OnInit {
+export class HomeComponent implements OnInit, OnDestroy {
   public usersList: any[] = [];
   public userName: any;
   public currentUserId: any;
@@ -26,6 +26,9 @@ export class HomeComponent implements OnInit {
   
   private onlineUsersSubscription?: Subscription;
   private typingUsersSubscription?: Subscription;
+  friendRequestSubscription!: Subscription;
+  friendResponseSubscription!: Subscription;
+  unfriendSubscription!: Subscription;
 
   private isBrowser: boolean;
   
@@ -50,6 +53,28 @@ export class HomeComponent implements OnInit {
     this.userName = this.authSvc.getUserName();
     this.currentUserId = this.authSvc.getUserId();
     this.loadFriends();
+
+    this.friendRequestSubscription = this.chatService.friendRequest$.subscribe(req=>{
+      if(req.toUserId == this.currentUserId){
+        this.toastrSvc.success("New Friend Request received");
+      }
+    });
+
+    this.friendResponseSubscription = this.chatService.friendResponse$.subscribe(res=>{
+      if(res){
+        this.toastrSvc.success(`Friend request ${res.status}`);
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    if(this.friendRequestSubscription){
+      this.friendRequestSubscription.unsubscribe();
+    }
+
+    if(this.friendResponseSubscription){
+      this.friendResponseSubscription.unsubscribe();
+    }
   }
 
   loadFriends(): void {

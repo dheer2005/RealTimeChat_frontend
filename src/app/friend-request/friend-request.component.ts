@@ -47,6 +47,10 @@ export class FriendRequestComponent implements OnInit, OnDestroy {
   activeTab: 'requests' | 'sentRequests' | 'friends' | 'send' = 'requests';
 
   onlineUsersSubscription!: Subscription;
+  friendRequestSubscription!: Subscription;
+  friendResponseSubscription!: Subscription;
+  unfriendSubscription!: Subscription;
+
 
   constructor(
     private authSvc: AuthenticationService, 
@@ -60,15 +64,42 @@ export class FriendRequestComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    
+    this.chatSvc.startConnection(this.currentUserName, ()=> {}, ()=> {});
+    
     this.loadFriendRequests();
     this.loadFriends();
     this.loadSentRequests();
+
+    this.friendRequestSubscription = this.chatSvc.friendRequest$.subscribe(req=>{
+      if(req.toUserId == this.currentUserId){
+        this.toastrSvc.success("New Friend Request received");
+        this.loadFriendRequests();
+      }
+    });
+
+    this.friendResponseSubscription = this.chatSvc.friendResponse$.subscribe(res=>{
+      if(res){
+        this.toastrSvc.success(`Friend request ${res.status}`);
+        this.searchUsers();
+        this.loadFriends();
+        this.loadSentRequests();
+        this.loadFriendRequests();
+      }
+    });
+
+    this.unfriendSubscription = this.chatSvc.unfriend$.subscribe(ev=>{
+      if(ev && (ev.user1 == this.currentUserId || ev.user2 == this.currentUserId)){
+        this.searchUsers();
+        this.loadFriends();
+      }
+    });
   }
 
   unfriend(userId: string): void {
     this.friendRequestSvc.unfriend(this.currentUserId, userId).subscribe({
       next: () => {
-        this.toastrSvc.success('Unfriended successfully');
+        this.toastrSvc.success('Remove friend successfully');
         this.searchUsers();
         this.searchQuery = '';
         this.searchResults = [];
@@ -157,7 +188,21 @@ export class FriendRequestComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.onlineUsersSubscription?.unsubscribe();
+    if(this.onlineUsersSubscription){
+      this.onlineUsersSubscription?.unsubscribe();
+    }
+
+    if(this.friendRequestSubscription){
+      this.friendRequestSubscription.unsubscribe();
+    }
+
+    if(this.friendResponseSubscription){
+      this.friendResponseSubscription.unsubscribe();
+    }
+
+    if(this.unfriendSubscription){
+      this.unfriendSubscription.unsubscribe();
+    }
   }
 
   searchUsers(): void {
@@ -212,7 +257,7 @@ export class FriendRequestComponent implements OnInit, OnDestroy {
 
     this.friendRequestSvc.getFriendRequestResponse(responseData).subscribe({
       next: () => {
-        this.toastrSvc.success(`Friend request ${action}ed successfully`);
+        // this.toastrSvc.success(`Friend request ${action}ed successfully`);
         this.loadFriendRequests();
         if (action === 'accept') {
           this.loadFriends();

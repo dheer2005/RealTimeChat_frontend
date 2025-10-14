@@ -657,9 +657,9 @@ export class ChatComponent implements OnInit, OnDestroy {
       this.typingSubscription.unsubscribe();
     }
 
-    if (this.onlineUsersSubscription) {
-      this.onlineUsersSubscription.unsubscribe();
-    }
+    // if (this.onlineUsersSubscription) {
+    //   this.onlineUsersSubscription.unsubscribe();
+    // }
 
     if (this.messagesSeenSubscription) {
       this.messagesSeenSubscription.unsubscribe();

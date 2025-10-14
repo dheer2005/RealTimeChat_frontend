@@ -15,7 +15,6 @@ import { ChatService } from '../Services/chat.service';
   styleUrl: './profile-description.component.css'
 })
 export class ProfileDescriptionComponent {
-  // @Input() userName: string = '';
 
   profileName = '';
   userInfo: any;
