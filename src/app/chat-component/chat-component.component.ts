@@ -58,6 +58,9 @@ export class ChatComponent implements OnInit, OnDestroy {
   private typingSubscription?: Subscription;
   private onlineUsersSubscription?: Subscription;
   private messagesSeenSubscription?: Subscription;
+  private reactionAddedSubscription?: Subscription;
+  private reactionRemovedSubscription?: Subscription;
+
   private typingTimeout: any;
   private isBrowser: boolean;
 
@@ -74,6 +77,9 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   showEmojiPicker: boolean = false;
   showAttachmentMenu = false;
+  currentUser = this.authSvc.getUserName();
+
+  reactionOptions = ['❤️', '👍', '😂', '😮', '😢'];
 
   constructor(
     private activatedRoute: ActivatedRoute,
@@ -102,6 +108,120 @@ export class ChatComponent implements OnInit, OnDestroy {
       });
     });
     this.fromUser = this.authSvc.getUserName();
+  }
+
+  ngOnInit(): void {
+    if (!this.isBrowser) {
+      return;
+    }
+
+    this.messagesSeenSubscription = this.chatService.messagesSeen$.subscribe((seenByUser) => {
+      if (this.UserTo === seenByUser) {
+        this.messages = this.messages.map(msg => {
+          if (msg.fromUser === this.authSvc.getUserName() && msg.userTo === this.UserTo) {
+            return { ...msg, status: 'seen' };
+          }
+          return msg;
+        });
+      }
+    });
+
+    this.typingSubscription = this.chatService.typingUsers$.subscribe(
+      (typingUsers) => {
+        this.isUserTyping = typingUsers[this.UserTo] || false;
+      }
+    );
+
+    this.onlineUsersSubscription = this.chatService.onlineUsers$.subscribe(
+      (users) => {
+        const user = users.find(u => u.userName === this.UserTo);
+        this.isUserOnline = user?.isOnline || false;
+      }
+    );
+
+    this.reactionAddedSubscription = this.chatService.reactionAdded$.subscribe(({messageId, emoji, user})=>{
+      const msg = this.messages.find(m=>m.id === messageId);
+      if(msg){
+        msg.reactions = msg.reactions || [];
+        const existing = msg.reactions.find((r:any)=>r.User === user);
+        if(existing) existing.Emoji = emoji;
+        else msg.reactions.push({User: user, Emoji: emoji});
+      }
+    });
+
+    this.reactionRemovedSubscription = this.chatService.reactionRemoved$.subscribe(({ messageId, user }) => {
+      const msg = this.messages.find(m => m.id === messageId);
+      if (msg && msg.reactions) {
+        msg.reactions = msg.reactions.filter((r: any) => r.User !== user);
+      }
+    });
+
+    this.chatService.startConnection(
+      this.fromUser,
+      this.onReceiveMessage.bind(this),
+      () => { }
+    ).then(() => {
+      this.loadMessages();
+    });
+  }
+
+  private loadMessages(showLoader: boolean = true): void {
+    if (showLoader) {
+      this.isLoader = true;
+    }
+
+    this.chatService.getMessages(this.fromUser, this.UserTo).subscribe({
+      next: (res: any) => {
+        this.messages = res.map((msg: any) => ({
+          id: msg.id,
+          fromUser: msg.fromUser,
+          userTo: msg.userTo,
+          message: msg.message,
+          created: new Date(msg.created),
+          status: msg.status,
+          isImage: msg.isImage,
+          mediaUrl: msg.mediaUrl,
+          reactions: msg.reactions ? JSON.parse(msg.reactions) : []
+        })).sort((a: any, b: any) => a.created.getTime() - b.created.getTime());
+
+        if (showLoader) {
+          this.isLoader = false;
+        }
+        setTimeout(() => this.scrollToBottom(), 100);
+        
+        this.chatService.markAsSeen(this.fromUser, this.UserTo);
+      },
+      error: (err) => {
+        console.error('Error loading messages:', err);
+        if (showLoader) {
+          this.isLoader = false;
+        }
+      }
+    });
+  }
+
+  showReactionMenu(msg: any) {
+    msg.showReactions = true;
+  }
+
+  hideReactionMenu(msg: any) {
+    msg.showReactions = false;
+  }
+
+  addReaction(msg: any, emoji: string) {
+    const existing = msg.reactions?.find((r: any) => r.user === this.currentUser);
+    if (existing) {
+      if (existing.emoji != emoji) {
+        this.chatService.addReaction(msg.id, emoji, this.currentUser);
+        return;
+      }
+    } else {
+      this.chatService.addReaction(msg.id, emoji, this.currentUser);
+    }
+  }
+
+  removeReaction(msg: any, react: any) {
+    this.chatService.removeReaction(msg.id, this.currentUser);
   }
 
   @HostListener('document:click', ['$event'])
@@ -371,102 +491,27 @@ export class ChatComponent implements OnInit, OnDestroy {
     }
   }
 
+  
 
-  ngOnInit(): void {
-    if (!this.isBrowser) {
-      return;
-    }
-
-    this.messagesSeenSubscription = this.chatService.messagesSeen$.subscribe((seenByUser) => {
-      if (this.UserTo === seenByUser) {
-        this.messages = this.messages.map(msg => {
-          if (msg.fromUser === this.authSvc.getUserName() && msg.userTo === this.UserTo) {
-            return { ...msg, status: 'seen' };
-          }
-          return msg;
-        });
-      }
-    });
-
-    this.typingSubscription = this.chatService.typingUsers$.subscribe(
-      (typingUsers) => {
-        this.isUserTyping = typingUsers[this.UserTo] || false;
-      }
-    );
-
-    this.onlineUsersSubscription = this.chatService.onlineUsers$.subscribe(
-      (users) => {
-        const user = users.find(u => u.userName === this.UserTo);
-        this.isUserOnline = user?.isOnline || false;
-      }
-    );
-
-    this.chatService.startConnection(
-      this.fromUser,
-      this.onReceiveMessage.bind(this),
-      () => { }
-    ).then(() => {
-      this.loadMessages();
-    });
-  }
-
-  private loadMessages(showLoader: boolean = true): void {
-    if (showLoader) {
-      this.isLoader = true;
-    }
-
-    this.chatService.getMessages(this.fromUser, this.UserTo).subscribe({
-      next: (res: any) => {
-        this.messages = res.map((msg: any) => ({
-          id: msg.id,
-          fromUser: msg.fromUser,
-          userTo: msg.userTo,
-          message: msg.message,
-          created: new Date(msg.created),
-          status: msg.status,
-          isImage: msg.isImage,
-          mediaUrl: msg.mediaUrl
-        })).sort((a: any, b: any) => a.created.getTime() - b.created.getTime());
-
-        if (showLoader) {
-          this.isLoader = false;
-        }
-        setTimeout(() => this.scrollToBottom(), 100);
-        
-        this.chatService.markAsSeen(this.fromUser, this.UserTo);
-      },
-      error: (err) => {
-        console.error('Error loading messages:', err);
-        if (showLoader) {
-          this.isLoader = false;
-        }
-      }
-    });
-  }
-
-  private onReceiveMessage(FromUser: string, userTo: string, message: string, Created: Date, Status: string, isImage: boolean, mediaUrl: string | null): void {
+  private onReceiveMessage(Id: number, FromUser: string, userTo: string, message: string, Created: Date, Status: string, isImage: boolean, mediaUrl: string | null): void {
     if ((this.UserTo === FromUser && this.fromUser === userTo) || 
         (this.fromUser === FromUser && this.UserTo === userTo)) {
-      
-      const exists = this.messages.some(msg => 
-        msg.fromUser === FromUser && 
-        msg.userTo === userTo && 
-        msg.message === message &&
-        msg.mediaUrl === mediaUrl &&
-        Math.abs(new Date(msg.created).getTime() - new Date(Created).getTime()) < 1000
-      );
+
+      const exists = this.messages.some(m=> m.id === Id );
 
       if (!exists) {
         const finalStatus = (this.UserTo === this.fromUser) ? 'seen' : Status;
 
         this.messages.push({ 
+          id: Id,
           fromUser: FromUser, 
           userTo,
           message,
           created: new Date(Created),
           isImage,
           mediaUrl,
-          status: finalStatus
+          status: finalStatus,
+          reactions: []
         });
         this.messages.sort((a, b) => a.created.getTime() - b.created.getTime());
         
@@ -499,8 +544,6 @@ export class ChatComponent implements OnInit, OnDestroy {
         next: (res: any) => {
           const mediaUrl = res.url;
 
-          console.log("img url:,", res.url)
-          
           this.Receiver = this.UserTo;
           this.currentTime = new Date();
           
