@@ -134,13 +134,10 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   onMsgRightClick(event: MouseEvent, msg: any){
-    console.log("contextMenu called");
     event.preventDefault();
     this.selectedMsgId = msg.id;
     this.showMsgContextMenu = true;
     this.selectedMsgId = msg.id
-
-    console.log("selectedId", this.selectedMsgId);
   }
 
   onRightClick(event: MouseEvent, image: any){
