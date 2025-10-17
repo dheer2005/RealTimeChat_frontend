@@ -24,7 +24,7 @@ export class ChatService {
   private isBrowser: boolean;
   private currentChatUser: string | null = null;
 
-  private messageHandlers: Array<(id:number, fromUser: string, userTo: string, message: string, created: Date, status: string, isImage: boolean, mediaUrl: string | null) => void> = [];
+  private messageHandlers: Array<(id:number, fromUser: string, userTo: string, message: string, created: Date, status: string, isImage: boolean, mediaUrl: string | null,  replyTo?: { id: number, message: string, mediaUrl: string | null, isImage: boolean } | null) => void> = [];
   private groupMessageHandlers: Array<(groupName: string, fromUser: string, message: string, created: Date) => void> = [];
   
   public onlineUsers$ = new BehaviorSubject<any[]>([]);
@@ -73,7 +73,7 @@ export class ChatService {
 
   public async startConnection(
     FromUser: string, 
-    onReceive: (id: number, fromUser: string, userTo: string, message: string, created: Date, status: string, isImage: boolean, mediaUrl: string | null) => void,
+    onReceive: (id: number, fromUser: string, userTo: string, message: string, created: Date, status: string, isImage: boolean, mediaUrl: string | null,  replyTo?: { id: number, message: string, mediaUrl: string | null, isImage: boolean } | null) => void,
     onReceiveGroup: (groupName: string, fromUser: string, message: string, created: Date) => void
   ): Promise<void> {
     if (!this.isBrowser) {
@@ -125,7 +125,7 @@ export class ChatService {
 
   private async initializeConnection(
     FromUser: string,
-    onReceive: (id: number, fromUser: string, userTo: string, message: string, created: Date, status: string, isImage: boolean, mediaUrl: string | null) => void,
+    onReceive: (id: number, fromUser: string, userTo: string, message: string, created: Date, status: string, isImage: boolean, mediaUrl: string | null,  replyTo?: { id: number, message: string, mediaUrl: string | null, isImage: boolean } | null) => void,
     onReceiveGroup: (groupName: string, fromUser: string, message: string, created: Date) => void
   ): Promise<void> {
     console.log("Initializing new SignalR connection...");
@@ -158,10 +158,24 @@ export class ChatService {
 
   private setupEventHandlers(): void {
     this.hubConnection.on("ReceiveMessage", (msg:any) => {
+
       const createdDate = new Date(msg.created);
       
       this.messageHandlers.forEach(handler => {
-        handler(msg.id, msg.fromUser, msg.userTo, msg.message, createdDate, msg.status, msg.isImage, msg.mediaUrl);
+        handler(msg.id, 
+          msg.fromUser, 
+          msg.userTo, 
+          msg.message, 
+          createdDate, 
+          msg.status, 
+          msg.isImage, 
+          msg.mediaUrl, 
+          msg.replyTo ? {
+            id: msg.replyTo.id,
+            message: msg.replyTo.message,
+            mediaUrl: msg.replyTo.mediaUrl,
+            isImage: msg.replyTo.isImage
+          } : null);
       });
 
       const myUsername = this.authSvc.getUserName();
@@ -310,19 +324,18 @@ export class ChatService {
     this.hubConnection?.invoke('AddReaction', messageId, emoji, reactingUser);
   }
 
-  public sendMessage(FromUser: string, UserTo: string, message: string, Created: Date, Status: 'seen' | 'sent', isImage: boolean, mediaUrl: string | null): void {
+  public sendMessage(FromUser: string, UserTo: string, message: string, Created: Date, Status: 'seen' | 'sent', isImage: boolean, mediaUrl: string | null, replyToMessageId?: number): void {
     if (!this.isBrowser || !this.hubConnection) {
       console.warn("SignalR not available");
       return;
     }
 
     if (this.hubConnection.state === signalR.HubConnectionState.Connected) {
-      this.hubConnection.invoke("SendMessage", FromUser, UserTo, message, Created, Status, isImage, mediaUrl)
+      this.hubConnection.invoke("SendMessage", FromUser, UserTo, message, Created, Status, isImage, mediaUrl, replyToMessageId)
         .catch(err => console.error("Error sending message:", err));
     } else {
       console.warn("SignalR not connected. Message not sent via SignalR.");
     }
-    
   }
 
   public notifyTyping(recipientUserName: string): void {

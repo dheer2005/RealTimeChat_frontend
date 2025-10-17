@@ -13,10 +13,13 @@ import { ChatService } from '../Services/chat.service';
   styleUrl: './layout.component.css'
 })
 export class LayoutComponent {
-  constructor(private chatService: ChatService, public authSvc: AuthenticationService, private router: Router, private toastr: ToastrService){}
+  currentUserName: string = '';
+
+  constructor(private chatService: ChatService, public authSvc: AuthenticationService, private router: Router, private toastr: ToastrService){
+    this.currentUserName = this.authSvc.getUserName();
+  }
  
   logout(){
-
     try {
       this.chatService.stopConnection();
       

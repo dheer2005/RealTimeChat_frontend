@@ -257,7 +257,6 @@ export class FriendRequestComponent implements OnInit, OnDestroy {
 
     this.friendRequestSvc.getFriendRequestResponse(responseData).subscribe({
       next: () => {
-        // this.toastrSvc.success(`Friend request ${action}ed successfully`);
         this.loadFriendRequests();
         if (action === 'accept') {
           this.loadFriends();

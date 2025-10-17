@@ -25,6 +25,7 @@ import { PickerComponent } from '@ctrl/ngx-emoji-mart';
 export class ChatComponent implements OnInit, OnDestroy {
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
   @ViewChild('chatScroll', { static: false }) chatScrollContainer!: ElementRef;
+  @ViewChild('chatScroll') chatScroll!: ElementRef;
 
   messages: any[] = [];
   UserTo: any;
@@ -81,6 +82,17 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   reactionOptions = ['❤️', '👍', '😂', '😮', '😢'];
 
+  mediaTab: 'info' | 'images' = 'info';
+  chatImagesByDate: { label: string; images: any[] }[] = [];
+
+  showContextMenu = false;
+  selectedImageForScroll: any = null;
+  replyingToMessage: any = null;
+
+  selectedMsgId: number | null = null;
+  showMsgContextMenu: boolean = false;
+
+
   constructor(
     private activatedRoute: ActivatedRoute,
     private chatService: ChatService,
@@ -108,6 +120,114 @@ export class ChatComponent implements OnInit, OnDestroy {
       });
     });
     this.fromUser = this.authSvc.getUserName();
+  }
+
+  replyToMessage(msg: any) {
+    this.replyingToMessage = msg;
+    this.showMsgContextMenu = false;
+  }
+
+  cancelReply() {
+    this.replyingToMessage = null;
+  }
+
+  onMsgRightClick(event: MouseEvent, msg: any){
+    console.log("contextMenu called");
+    event.preventDefault();
+    this.selectedMsgId = msg.id;
+    this.showMsgContextMenu = true;
+    this.selectedMsgId = msg.id
+
+    console.log("selectedId", this.selectedMsgId);
+  }
+
+  onRightClick(event: MouseEvent, image: any){
+    event.preventDefault();
+    this.selectedImageForScroll = image;
+    this.showContextMenu = true;
+  }
+
+  @HostListener('document: click')
+  closeContextMenu(){
+    this.showContextMenu = false;
+    this.selectedMsgId = null;
+    this.showMsgContextMenu = false;
+  }
+
+  goToMessage(messageId: number, image?: any) {
+    this.showContextMenu = false;
+    this.profileClicked = false;
+
+    setTimeout(() => {
+      const chatContainer = document.getElementById('chat-scroll');
+        
+      if (!chatContainer) return;
+
+      const messages = chatContainer.querySelectorAll('.message-wrapper');
+      let targetMessage: HTMLElement | undefined;
+
+      messages.forEach((msg: Element) => {
+          const imgElement = msg.querySelector(`img[src="${image}"]`);
+          if (imgElement) {
+              targetMessage = msg as HTMLElement;
+          }
+      });
+      
+      // Fallback: find by message ID
+      if (!targetMessage) {
+        targetMessage = document.getElementById('msg-' + messageId) as HTMLElement | undefined;
+      }
+
+      if (targetMessage) {
+        targetMessage.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+        });
+
+        targetMessage.style.backgroundColor = 'rgba(255, 255, 0, 0.2)';
+        setTimeout(() => {
+            targetMessage!.style.backgroundColor = '';
+        }, 2000);
+      }
+    }, 300);
+  }
+
+  deleteImage(msgId:number){
+    this.toastrSvc.success("Image deleted");
+    this.showMsgContextMenu = false;
+  }
+
+  private groupImagesByDate(images: any[]){
+    const grouped : {[key: string]: any[]} = {};
+
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate()-1);
+
+    for(const img of images){
+
+      if (img.mediaUrl && img.mediaUrl.includes('staticmap.openstreetmap.de')) continue;
+
+      const date = new Date(img.created || img.Created || img.timestamp || img.createdAt);
+      const dateKey = date.toDateString();
+
+      if (!grouped[dateKey]) grouped[dateKey] = [];
+      grouped[dateKey].push(img);
+    }
+
+    const sortedGroups = Object.keys(grouped)
+      .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
+      .map(dateKey => {
+        const date = new Date(dateKey);
+        let label = date.toDateString() === today.toDateString()
+          ? 'Today'
+          : date.toDateString() === yesterday.toDateString()
+          ? 'Yesterday'
+          : date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+        return { label, images: grouped[dateKey] };
+      });
+
+      this.chatImagesByDate = sortedGroups;
   }
 
   ngOnInit(): void {
@@ -181,8 +301,18 @@ export class ChatComponent implements OnInit, OnDestroy {
           status: msg.status,
           isImage: msg.isImage,
           mediaUrl: msg.mediaUrl,
-          reactions: msg.reactions ? JSON.parse(msg.reactions) : []
+          reactions: msg.reactions ? JSON.parse(msg.reactions) : [],
+          replyTo: msg.replyTo ? {
+            id: msg.replyTo.id,
+            message: msg.replyTo.message,
+            mediaUrl: msg.replyTo.mediaUrl,
+            isImage: msg.replyTo.isImage
+          } : null
         })).sort((a: any, b: any) => a.created.getTime() - b.created.getTime());
+
+        console.log("loaded:", this.messages);
+        const imgs = this.messages.filter((m: any) => m.isImage && m.mediaUrl);
+        this.groupImagesByDate(imgs);
 
         if (showLoader) {
           this.isLoader = false;
@@ -190,6 +320,8 @@ export class ChatComponent implements OnInit, OnDestroy {
         setTimeout(() => this.scrollToBottom(), 100);
         
         this.chatService.markAsSeen(this.fromUser, this.UserTo);
+
+        
       },
       error: (err) => {
         console.error('Error loading messages:', err);
@@ -301,7 +433,6 @@ export class ChatComponent implements OnInit, OnDestroy {
         this.map = L.map('map').setView([this.selectedLat, this.selectedLon], 15);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '&copy; OpenStreetMap contributors'
         }).addTo(this.map);
 
         this.marker = L.marker([this.selectedLat, this.selectedLon], { draggable: true }).addTo(this.map);
@@ -374,6 +505,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
 
     setTimeout(() => this.scrollToBottom(), 100);
+    this.showAttachmentMenu = false;
   }
 
   closeLocationModal() {
@@ -396,7 +528,6 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   onFileDrop(event: DragEvent) : void{
-    console.log('File dropped');
     event.preventDefault();
     event.stopPropagation();
     this.isDragOver = false;
@@ -461,12 +592,12 @@ export class ChatComponent implements OnInit, OnDestroy {
       const file = input.files[0];
       
       if (!file.type.startsWith('image/')) {
-        alert('Please select an image file');
+        this.toastrSvc.warning('Please select an image file');
         return;
       }
 
       if (file.size > 5 * 1024 * 1024) {
-        alert('Image size should not exceed 5MB');
+        this.toastrSvc.warning('Image size should not exceed 5MB');
         return;
       }
 
@@ -493,7 +624,7 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   
 
-  private onReceiveMessage(Id: number, FromUser: string, userTo: string, message: string, Created: Date, Status: string, isImage: boolean, mediaUrl: string | null): void {
+  private onReceiveMessage(Id: number, FromUser: string, userTo: string, message: string, Created: Date, Status: string, isImage: boolean, mediaUrl: string | null, replyTo?: { id: number, message: string, mediaUrl: string | null, isImage: boolean } | null): void {
     if ((this.UserTo === FromUser && this.fromUser === userTo) || 
         (this.fromUser === FromUser && this.UserTo === userTo)) {
 
@@ -501,6 +632,8 @@ export class ChatComponent implements OnInit, OnDestroy {
 
       if (!exists) {
         const finalStatus = (this.UserTo === this.fromUser) ? 'seen' : Status;
+
+        const repliedMsg = this.messages.find(m => m.id === replyTo?.id);
 
         this.messages.push({ 
           id: Id,
@@ -511,10 +644,21 @@ export class ChatComponent implements OnInit, OnDestroy {
           isImage,
           mediaUrl,
           status: finalStatus,
-          reactions: []
+          reactions: [],
+          replyToMessageId: replyTo ? replyTo.id : null,
+          replyTo: replyTo ? {
+            id: replyTo.id,
+            message: replyTo.message,
+            mediaUrl: replyTo.mediaUrl,
+            isImage: replyTo.isImage
+          } : null
         });
         this.messages.sort((a, b) => a.created.getTime() - b.created.getTime());
-        
+
+        if (isImage && mediaUrl) {
+          this.groupImagesByDate([...this.chatImagesByDate.flatMap(x => x.images), { id: Id, mediaUrl, created: Created }]);
+        }
+
         setTimeout(() => this.scrollToBottom(), 100);
       }
     }
@@ -546,6 +690,8 @@ export class ChatComponent implements OnInit, OnDestroy {
 
           this.Receiver = this.UserTo;
           this.currentTime = new Date();
+
+          const replyToId = this.replyingToMessage ? this.replyingToMessage.id : null;
           
           if (this.fromUser != this.UserTo) {
             this.chatService.sendMessage(
@@ -555,15 +701,19 @@ export class ChatComponent implements OnInit, OnDestroy {
               this.currentTime,
               this.status,
               true, 
-              mediaUrl
+              mediaUrl,
+              replyToId
             );
+
           }
+          this.replyingToMessage = null;
           
           this.showImageModal = false;
           this.clearImage();
           
           setTimeout(() => this.scrollToBottom(), 100);
 
+          this.showAttachmentMenu = false;
           this.isSending = false;
         },
         error: (err:any) => {
@@ -583,6 +733,8 @@ export class ChatComponent implements OnInit, OnDestroy {
       this.Receiver = this.UserTo;
       this.currentTime = new Date();
 
+      const replyToId = this.replyingToMessage ? this.replyingToMessage.id : null;
+
       if (this.fromUser != this.UserTo) {
         this.chatService.sendMessage(
           this.fromUser, 
@@ -591,9 +743,12 @@ export class ChatComponent implements OnInit, OnDestroy {
           this.currentTime, 
           this.status,
           this.isImage,
-          this.mediaUrl
+          this.mediaUrl,
+          replyToId
         );
       }
+
+      this.replyingToMessage = null;
       
       this.message = '';
       setTimeout(() => this.scrollToBottom(), 300);
@@ -657,9 +812,9 @@ export class ChatComponent implements OnInit, OnDestroy {
       this.typingSubscription.unsubscribe();
     }
 
-    // if (this.onlineUsersSubscription) {
-    //   this.onlineUsersSubscription.unsubscribe();
-    // }
+    if (this.onlineUsersSubscription) {
+      this.onlineUsersSubscription.unsubscribe();
+    }
 
     if (this.messagesSeenSubscription) {
       this.messagesSeenSubscription.unsubscribe();
