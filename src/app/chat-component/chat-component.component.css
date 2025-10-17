@@ -315,8 +315,8 @@
   height: 40px;
   border-radius: 50%;
   border: none;
-  background: #e0e0e0;
-  color: #999;
+  background: #747070;
+  color: #00000071;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -325,22 +325,10 @@
   flex-shrink: 0;
 }
 
-.send-btn:disabled {
-  cursor: not-allowed;
-}
-
-.send-btn.active {
-  background: darkgreen;
-  color: white;
-}
-
-.send-btn.active:hover {
-  background: darkgreen;
-}
-
-.send-btn svg{
+.send-btn svg {
   margin-left: 2px;
-  color: #000;
+  color: #000000ad;
+  transition: color 0.2s;
 }
 
 .profile-sidebar {
@@ -1402,28 +1390,6 @@
   padding: 8px 12px;
   font-size: 14px;
 }
-
-.send-btn {
-  background: #0084ff;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.send-btn svg {
-  transform: translateX(1px);
-}
-
-.send-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 
 .message-bubble {
   position: relative;

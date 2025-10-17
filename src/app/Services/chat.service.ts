@@ -9,11 +9,11 @@ import { AuthenticationService } from './authentication.service';
   providedIn: 'root'
 })
 export class ChatService {
-  private baseUrl = 'https://realtime001.bsite.net/api/';
-  private chatHubUrl = 'https://realtime001.bsite.net/';
+  // private baseUrl = 'https://realtime001.bsite.net/api/';
+  // private chatHubUrl = 'https://realtime001.bsite.net/';
   
-  // private baseUrl = 'https://localhost:7180/api/';
-  // private chatHubUrl = 'https://localhost:7180/';
+  private baseUrl = 'https://localhost:7180/api/';
+  private chatHubUrl = 'https://localhost:7180/';
   
   private hubConnection!: signalR.HubConnection;
   private connectionPromise: Promise<void> | null = null;
@@ -50,6 +50,9 @@ export class ChatService {
 
   private unfriendSubject = new Subject<any>();
   public unfriend$ = this.unfriendSubject.asObservable();
+
+  private messageDeleteSubject = new Subject<number>();
+  public messageDelete$ = this.messageDeleteSubject.asObservable();
   
   public connectionState$ = new BehaviorSubject<signalR.HubConnectionState>(
     signalR.HubConnectionState.Disconnected
@@ -196,6 +199,10 @@ export class ChatService {
       }
     });
 
+    this.hubConnection.on("MessageDeleted", (messageId:number)=>{
+      this.messageDeleteSubject.next(messageId);
+    })
+
     this.hubConnection.on("MessagesSeen", (seenByUser: string) => {
       this.messagesSeenSubject.next(seenByUser);
     });
@@ -273,8 +280,6 @@ export class ChatService {
     this.hubConnection.on("Unfriended", (data:any) => { 
       this.unfriendSubject.next(data);
     });
-
-    
   }
 
   private setupConnectionHandlers(): void {
@@ -295,6 +300,15 @@ export class ChatService {
       this.messageHandlers = [];
       this.groupMessageHandlers = [];
     });
+  }
+
+  public deleteMessage(messageId: number) : void{
+    if(this.hubConnection.state === signalR.HubConnectionState.Connected){
+      this.hubConnection.invoke("DeleteMessage", messageId)
+        .catch(err=> console.error('Error deleting message: ', err));
+    } else{
+      console.error("Hub connection is not active. Cannot delete message.");
+    }
   }
 
   public markAsSeen(fromUser: string, userTo: string): void {

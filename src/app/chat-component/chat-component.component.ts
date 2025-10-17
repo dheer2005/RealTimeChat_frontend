@@ -62,6 +62,8 @@ export class ChatComponent implements OnInit, OnDestroy {
   private reactionAddedSubscription?: Subscription;
   private reactionRemovedSubscription?: Subscription;
 
+  private deleteMessageSubscription?: Subscription;
+
   private typingTimeout: any;
   private isBrowser: boolean;
 
@@ -172,7 +174,7 @@ export class ChatComponent implements OnInit, OnDestroy {
               targetMessage = msg as HTMLElement;
           }
       });
-      
+
       // Fallback: find by message ID
       if (!targetMessage) {
         targetMessage = document.getElementById('msg-' + messageId) as HTMLElement | undefined;
@@ -192,8 +194,8 @@ export class ChatComponent implements OnInit, OnDestroy {
     }, 300);
   }
 
-  deleteImage(msgId:number){
-    this.toastrSvc.success("Image deleted");
+  deleteMsg(msgId:number){
+    this.chatService.deleteMessage(msgId);
     this.showMsgContextMenu = false;
   }
 
@@ -276,6 +278,10 @@ export class ChatComponent implements OnInit, OnDestroy {
       }
     });
 
+    this.deleteMessageSubscription = this.chatService.messageDelete$.subscribe(msdId =>{
+      this.messages = this.messages.filter(m=>m.id != msdId);
+    })
+
     this.chatService.startConnection(
       this.fromUser,
       this.onReceiveMessage.bind(this),
@@ -310,7 +316,6 @@ export class ChatComponent implements OnInit, OnDestroy {
           } : null
         })).sort((a: any, b: any) => a.created.getTime() - b.created.getTime());
 
-        console.log("loaded:", this.messages);
         const imgs = this.messages.filter((m: any) => m.isImage && m.mediaUrl);
         this.groupImagesByDate(imgs);
 
