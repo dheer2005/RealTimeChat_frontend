@@ -200,7 +200,6 @@ export class VideoChatComponent implements OnInit, OnDestroy {
 
     // Monitor connection state
     this.peerConnection.oniceconnectionstatechange = () => {
-      console.log('ICE connection state:', this.peerConnection.iceConnectionState);
       
       if (this.peerConnection.iceConnectionState === 'failed' || 
           this.peerConnection.iceConnectionState === 'disconnected') {

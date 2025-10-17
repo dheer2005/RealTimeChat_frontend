@@ -58,9 +58,7 @@ export class GroupChatComponent implements OnInit {
         Status: 'sent'
       };
   
-      this.chatSvc.SaveGroupChats(groupMsg).subscribe(() => {
-        console.log("Group message saved.");
-      });
+      this.chatSvc.SaveGroupChats(groupMsg).subscribe();
       this.message = '';
       setTimeout(() => this.scrollToBottom(), 100);
     }

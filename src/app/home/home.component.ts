@@ -4,7 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthenticationService } from '../Services/authentication.service';
 import { ChatService } from '../Services/chat.service';
-import { firstValueFrom, map, Observable, Subscription } from 'rxjs';
+import { firstValueFrom, forkJoin, map, Observable, Subscription } from 'rxjs';
 import { FriendrequestService } from '../Services/friendrequest.service';
 import { ToastrService } from 'ngx-toastr';
 
@@ -75,6 +75,10 @@ export class HomeComponent implements OnInit, OnDestroy {
     if(this.friendResponseSubscription){
       this.friendResponseSubscription.unsubscribe();
     }
+
+    if(this.onlineUsersSubscription){
+      this.onlineUsersSubscription.unsubscribe();
+    }
   }
 
   loadFriends(): void {
@@ -99,46 +103,52 @@ export class HomeComponent implements OnInit, OnDestroy {
         () => {}
       );
 
-      this.onlineUsersSubscription = this.chatService.onlineUsers$.subscribe(
-        (onlineUsers) => {
-          if (onlineUsers.length > 0) {
-            this.userList2 = onlineUsers.map(user => ({
-              userName: user.userName,
-              fullName: user.fullName || '',
-              phoneNumber: user.phoneNumber || '',
-              email: user.email || '',
-              isOnline: user.isOnline || false,
-              profileImage: user.profileImage || '',
-              unreadCount: 0,
-              lastMessage: user.lastMessage || '',
-              lastMessageSender: user.lastMessageSender || ''
-            }))
-            .filter(u=>u.userName != this.authSvc.getUserName());
-
-            const friendUserNames = this.friends.map(f => f.userName.toLowerCase());
-            this.userList2 = this.userList2.filter(u => friendUserNames.includes(u.userName.toLowerCase()));
-
-             this.userList2.forEach(user => {
-              this.getUnreadCountAndLastMessage(user.userName, this.authSvc.getUserName()).subscribe((res:any) => {
-                user.unreadCount += res?.count || 0;
-                user.lastMessage = user.lastMessage ? user.lastMessage : res?.lastMsg || '';
-                user.lastMessageSender = user.lastMessageSender ? user.lastMessageSender : res?.lastMsgSender || '';
-                user.lastMessageTime = res?.lastMsgTime ? new Date(res.lastMsgTime) : null;
-              });
-            })
-
-            setTimeout(() => {
-              this.userList2.sort((a, b) => {
-                const timeA = a.lastMessageTime ? new Date(a.lastMessageTime).getTime() : 0;
-                const timeB = b.lastMessageTime ? new Date(b.lastMessageTime).getTime() : 0;
-                return timeB - timeA;
-              });
-            }, 1000);
-            
-            this.IsLoader = false;
-          }
+      this.onlineUsersSubscription = this.chatService.onlineUsers$.subscribe(onlineUsers => {
+        if (!onlineUsers || onlineUsers.length === 0) {
+          this.userList2 = [];
+          return;
         }
-      );
+
+        const friendUserNames = this.friends.map(f => f.userName.toLowerCase());
+        this.userList2 = onlineUsers
+          .filter(u => u.userName.toLowerCase() !== this.authSvc.getUserName().toLowerCase())
+          .filter(u => friendUserNames.includes(u.userName.toLowerCase()))
+          .map(u => ({
+            userName: u.userName,
+            fullName: u.fullName || '',
+            phoneNumber: u.phoneNumber || '',
+            email: u.email || '',
+            isOnline: u.isOnline || false,
+            profileImage: u.profileImage || '',
+            unreadCount: 0,
+            lastMessage: u.lastMessage || '',
+            lastMessageSender: u.lastMessageSender || '',
+            lastMessageTime: null as Date | null
+          }));
+
+        const observables = this.userList2.map(user =>
+          this.getUnreadCountAndLastMessage(user.userName, this.authSvc.getUserName()).pipe(
+            map((res: any) => {
+              user.unreadCount = res?.count || 0;
+              user.lastMessage = user.lastMessage || res?.lastMsg || '';
+              user.lastMessageSender = user.lastMessageSender || res?.lastMsgSender || '';
+              user.lastMessageTime = res?.lastMsgTime ? new Date(res.lastMsgTime) : null;
+              return user;
+            })
+          )
+        );
+
+        forkJoin(observables).subscribe(updatedUsers => {
+          // Sort by lastMessageTime descending
+          this.userList2 = updatedUsers.sort((a, b) => {
+            const timeA = a.lastMessageTime ? a.lastMessageTime.getTime() : 0;
+            const timeB = b.lastMessageTime ? b.lastMessageTime.getTime() : 0;
+            return timeB - timeA;
+          });
+
+          this.IsLoader = false;
+        });
+      });
 
       this.typingUsersSubscription = this.chatService.typingUsers$.subscribe(
         (typingUsers) => {

@@ -80,7 +80,6 @@ export class ChatService {
     onReceiveGroup: (groupName: string, fromUser: string, message: string, created: Date) => void
   ): Promise<void> {
     if (!this.isBrowser) {
-      console.log("Skipping SignalR connection - not in browser");
       return;
     }
 
@@ -97,7 +96,6 @@ export class ChatService {
     }
 
     if (this.connectionPromise) {
-      console.log("Connection in progress - waiting...");
       await this.connectionPromise;
       
       if (!this.messageHandlers.includes(onReceive)) {
@@ -131,7 +129,6 @@ export class ChatService {
     onReceive: (id: number, fromUser: string, userTo: string, message: string, created: Date, status: string, isImage: boolean, mediaUrl: string | null,  replyTo?: { id: number, message: string, mediaUrl: string | null, isImage: boolean } | null) => void,
     onReceiveGroup: (groupName: string, fromUser: string, message: string, created: Date) => void
   ): Promise<void> {
-    console.log("Initializing new SignalR connection...");
 
     this.messageHandlers.push(onReceive);
     this.groupMessageHandlers.push(onReceiveGroup);
@@ -270,7 +267,6 @@ export class ChatService {
       this.typingUsers$.next({...typing});
     });
 
-
     this.hubConnection.on("ReceiveFriendRequest", (request:any) => {
       this.friendRequestSubject.next(request)
     });
@@ -340,7 +336,6 @@ export class ChatService {
 
   public sendMessage(FromUser: string, UserTo: string, message: string, Created: Date, Status: 'seen' | 'sent', isImage: boolean, mediaUrl: string | null, replyToMessageId?: number): void {
     if (!this.isBrowser || !this.hubConnection) {
-      console.warn("SignalR not available");
       return;
     }
 
@@ -460,7 +455,6 @@ export class ChatService {
         this.connectionState$.next(signalR.HubConnectionState.Disconnected);
         this.messageHandlers = [];
         this.groupMessageHandlers = [];
-        console.log("SignalR connection stopped successfully");
       } catch (err) {
         console.error("Error stopping SignalR connection:", err);
       }

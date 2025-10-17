@@ -56,9 +56,6 @@ export class VideoService {
       .build();
 
     this.hubConnection.start()
-      .then(() => {
-        console.log("videoChat SignalR connected");
-      })
       .catch((err) => {
         console.error("signalRConnectionError", err);
       });
@@ -107,7 +104,6 @@ export class VideoService {
   public stopConnection(): void {
     if (this.isBrowser && this.hubConnection) {
       this.hubConnection.stop()
-        .then(() => console.log("VideoChat SignalR connection stopped"))
         .catch(err => console.error("Error stopping SignalR connection:", err));
     }
   }

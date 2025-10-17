@@ -71,7 +71,7 @@ export class RegisterComponent {
         }
       },
       error: (err:any)=>{
-        console.log(err);
+        console.log("Failed to register");
       }
     })
   }

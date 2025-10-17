@@ -28,9 +28,10 @@ export class LayoutComponent {
       
       this.router.navigate(['/login']);
       
-      console.log('Logout successful');
+      this.toastr.success('Logout successful');
+
     } catch (error) {
-      console.error('Error during logout:', error);
+      this.toastr.error('Error during logout:');
       localStorage.removeItem('jwt');
       localStorage.removeItem('userName');
       this.router.navigate(['/login']);

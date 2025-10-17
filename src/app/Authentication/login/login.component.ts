@@ -42,7 +42,6 @@ export class LoginComponent implements OnInit {
       },
       error: (err:any)=>{
         if(err.status==0){
-          console.log(err);
           this.toastr.error(`Error at server side please try again later: ${err}`);
         }else{
           this.toastr.error("wrong username and password");

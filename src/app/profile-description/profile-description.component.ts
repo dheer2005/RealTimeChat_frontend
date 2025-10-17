@@ -52,7 +52,6 @@ export class ProfileDescriptionComponent {
         this.isLoading = false;
       },
       error: (err) => {
-        console.log(err);
         this.errorMessage = 'Failed to load user information';
         this.isLoading = false;
       }
