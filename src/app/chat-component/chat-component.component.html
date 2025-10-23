@@ -206,6 +206,7 @@
         </div>
 
         <textarea
+          #messageInput
           [(ngModel)]="message"
           (input)="onInputChange()"
           (keydown.enter)="$event.preventDefault(); send()"

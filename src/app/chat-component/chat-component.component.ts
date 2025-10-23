@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnDestroy, OnInit, ViewChild, Inject, PLATFORM_ID, HostListener } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild, Inject, PLATFORM_ID, HostListener, viewChild } from '@angular/core';
 import { isPlatformBrowser, CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -25,7 +25,7 @@ import { PickerComponent } from '@ctrl/ngx-emoji-mart';
 export class ChatComponent implements OnInit, OnDestroy {
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
   @ViewChild('chatScroll', { static: false }) chatScrollContainer!: ElementRef;
-  @ViewChild('chatScroll') chatScroll!: ElementRef;
+  @ViewChild('messageInput') messageInputRef!: ElementRef<HTMLInputElement>;
 
   messages: any[] = [];
   UserTo: any;
@@ -127,6 +127,10 @@ export class ChatComponent implements OnInit, OnDestroy {
   replyToMessage(msg: any) {
     this.replyingToMessage = msg;
     this.showMsgContextMenu = false;
+
+    setTimeout(()=>{
+      this.messageInputRef.nativeElement.focus();
+    }, 0);
   }
 
   cancelReply() {
