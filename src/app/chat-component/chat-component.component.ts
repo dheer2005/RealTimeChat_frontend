@@ -240,11 +240,10 @@ export class ChatComponent implements OnInit, OnDestroy {
 
     this.messagesSeenSubscription = this.chatService.messagesSeen$.subscribe((seenByUser) => {
       if (this.UserTo === seenByUser) {
-        this.messages = this.messages.map(msg => {
+        this.messages.forEach(msg => {
           if (msg.fromUser === this.authSvc.getUserName() && msg.userTo === this.UserTo) {
-            return { ...msg, status: 'seen' };
+            msg.status = 'seen';
           }
-          return msg;
         });
       }
     });

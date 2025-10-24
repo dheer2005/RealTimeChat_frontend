@@ -80,15 +80,17 @@
 }
 
 .profilePreview {
+    position: relative;
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100px;
+    min-height: 120px;
+    cursor: pointer;
 }
 
 .profilePreview img {
-    width: 100px;
-    height: 100px;
+    width: 110px;
+    height: 110px;
     border-radius: 50%;
     object-fit: cover;
     border: 2px solid #45f3ff;
@@ -96,8 +98,26 @@
     transition: 0.3s;
 }
 
-.profilePreview img:hover {
+.profilePreview:hover img{
+    opacity: 0.8;
     transform: scale(1.05);
+}
+
+.profilePreview .overlay-text {
+  position: absolute;
+  bottom: 20px;
+  color: #45f3ff;
+  font-size: 0.75em;
+  padding: 2px 8px;
+  font-size: 12px;
+  width: 100px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: 0.3s;
+}
+
+.profilePreview:hover .overlay-text {
+  opacity: 1;
 }
 
 .box form .inputBox{

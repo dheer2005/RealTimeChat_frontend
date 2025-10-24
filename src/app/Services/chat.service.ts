@@ -158,7 +158,7 @@ export class ChatService {
 
   private setupEventHandlers(): void {
     this.hubConnection.on("ReceiveMessage", (msg:any) => {
-
+      
       const createdDate = new Date(msg.created);
       
       this.messageHandlers.forEach(handler => {

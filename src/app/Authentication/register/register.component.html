@@ -4,8 +4,19 @@
         <form #form="ngForm" (ngSubmit)="onRegister()">
             <h2>Sign Up</h2>
             
-            <div class="profilePreview">
-                <img [src]="previewImageUrl || 'assets/default-avatar.png'" alt="Profile Preview">
+            <div class="profilePreview" (click)="triggerFileInput()">
+                <img [src]="previewImageUrl || 'assets/default-avatar.jpg'" alt="Profile Preview">
+                <input type="file" 
+                    #fileInput 
+                    name="profileImage" 
+                    (change)="onFileSelected($event)" 
+                    accept="image/*" 
+                    hidden
+                    required
+                >
+                <div class="overlay-text d-flex justify-content-center align-items-center flex-column"><div class="fs-3">📷</div> <span class="text-center text-light">Upload Profile image</span> </div>
+
+
             </div>
 
             <div class="inputBox">
@@ -35,12 +46,6 @@
             <div class="inputBox">
                 <input type="password" name="password" [(ngModel)]="register.Password" required autocomplete="new-password">
                 <span>Password</span>
-                <i></i>
-            </div>
-
-            <div class="inputBox">
-                <span>Profile Pic</span>
-                <input type="file" name="profileImage" (change)="onFileSelected($event)" accept="image/*" required>
                 <i></i>
             </div>
             

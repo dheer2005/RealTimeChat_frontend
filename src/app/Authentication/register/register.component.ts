@@ -48,6 +48,10 @@ export class RegisterComponent {
     this.register.ProfileImage = file.name;
   }
 
+  triggerFileInput() {
+    this.fileInputRef.nativeElement.click();
+  }
+
   onRegister(){
     this.isRegister = true;
 
