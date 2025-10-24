@@ -52,16 +52,17 @@ export class HomeComponent implements OnInit, OnDestroy {
     }
     this.userName = this.authSvc.getUserName();
     this.currentUserId = this.authSvc.getUserId();
+
     this.loadFriends();
 
     this.friendRequestSubscription = this.chatService.friendRequest$.subscribe(req=>{
-      if(req.toUserId == this.currentUserId){
+      if(req && req.toUserId == this.currentUserId){
         this.toastrSvc.success("New Friend Request received");
       }
     });
 
     this.friendResponseSubscription = this.chatService.friendResponse$.subscribe(res=>{
-      if(res){
+      if(res && res.status){
         this.toastrSvc.success(`Friend request ${res.status}`);
       }
     });
@@ -79,6 +80,11 @@ export class HomeComponent implements OnInit, OnDestroy {
     if(this.onlineUsersSubscription){
       this.onlineUsersSubscription.unsubscribe();
     }
+
+    if(this.typingUsersSubscription){
+      this.typingUsersSubscription.unsubscribe();
+    }
+
   }
 
   loadFriends(): void {

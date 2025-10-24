@@ -299,6 +299,7 @@ export class ChatComponent implements OnInit, OnDestroy {
 
     this.chatService.getMessages(this.fromUser, this.UserTo).subscribe({
       next: (res: any) => {
+        console.log("messages", res);
         this.messages = res.map((msg: any) => ({
           id: msg.id,
           fromUser: msg.fromUser,
@@ -319,7 +320,7 @@ export class ChatComponent implements OnInit, OnDestroy {
 
         const imgs = this.messages.filter((m: any) => m.isImage && m.mediaUrl);
         this.groupImagesByDate(imgs);
-
+        
         if (showLoader) {
           this.isLoader = false;
         }
