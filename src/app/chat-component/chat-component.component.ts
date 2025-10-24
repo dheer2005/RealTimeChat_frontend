@@ -299,7 +299,6 @@ export class ChatComponent implements OnInit, OnDestroy {
 
     this.chatService.getMessages(this.fromUser, this.UserTo).subscribe({
       next: (res: any) => {
-        console.log("messages", res);
         this.messages = res.map((msg: any) => ({
           id: msg.id,
           fromUser: msg.fromUser,
