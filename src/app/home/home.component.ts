@@ -85,6 +85,9 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.friendRequestSvc.getFriendsList(this.currentUserId).subscribe({
       next: (data) => {
         this.friends = data;
+        if(this.friends.length == 0){
+          this.IsLoader = false;
+        }
         
         this.initializeSignalR();
       },
