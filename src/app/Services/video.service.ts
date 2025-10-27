@@ -35,16 +35,16 @@ export class VideoService {
     this.isBrowser = isPlatformBrowser(this.platformId);
   }
 
-  startConnection(): void {
+  startConnection(): Promise<void> {
     if (!this.isBrowser) {
-      return;
+      return Promise.resolve();
     }
 
     this.token = this.authSvc.getToken();
 
     if (!this.token) {
       console.warn("No token available for VideoChat SignalR connection");
-      return;
+      return Promise.reject('No token');
     }
 
     this.hubConnection = new signalR.HubConnectionBuilder()
@@ -55,11 +55,7 @@ export class VideoService {
       .withAutomaticReconnect()
       .build();
 
-    this.hubConnection.start()
-      .catch((err) => {
-        console.error("signalRConnectionError", err);
-      });
-
+    // Setup listeners BEFORE starting connection
     this.hubConnection.on('ReceiveOffer', (from: string, offer: string) => {
       this.offerReceived.next({from, offer: JSON.parse(offer)});
     });
@@ -71,6 +67,18 @@ export class VideoService {
     this.hubConnection.on('ReceiveCandidate', (from: string, candidate: string) => {
       this.candidateReceived.next({from, candidate: JSON.parse(candidate)});
     });
+
+    this.hubConnection.on('CallEnded', (from: string) => {
+      this.incomingCall = false;
+      this.isCallActive = false;
+      this.remoteUserId = '';
+    });
+
+    return this.hubConnection.start()
+      .catch((err) => {
+        console.error("signalRConnectionError", err);
+        throw err;
+      });
   }
 
   public sendOffer(toUser: string, offer: RTCSessionDescriptionInit): Promise<any> {

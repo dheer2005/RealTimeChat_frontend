@@ -52,14 +52,24 @@ export class VideoChatComponent implements OnInit, OnDestroy {
   private setupSignalListeners(): void {
     if (!this.isBrowser) return;
 
-    // Handle call ended
-    this.signalRService.hubConnection?.on('CallEnded', () => {
-      this.stopLocalVideo();
-      this.signalRService.isCallActive = false;
-      this.signalRService.incomingCall = false;
-      this.signalRService.remoteUserId = '';
-      this.dialogRef.close();
-    });
+    // Wait for connection to be established
+    const setupCallEndedListener = () => {
+      this.signalRService.hubConnection?.on('CallEnded', () => {
+        this.stopLocalVideo();
+        this.signalRService.isCallActive = false;
+        this.signalRService.incomingCall = false;
+        this.signalRService.remoteUserId = '';
+        this.dialogRef.close();
+      });
+    };
+
+    // If connection is already started, setup immediately
+    if (this.signalRService.hubConnection?.state === 'Connected') {
+      setupCallEndedListener();
+    } else {
+      // Wait for connection to start
+      this.signalRService.hubConnection?.onreconnected(() => setupCallEndedListener());
+    }
 
     // Handle answer received
     this.answerSubscription = this.signalRService.answerReceived.subscribe(async (data) => {
@@ -76,7 +86,6 @@ export class VideoChatComponent implements OnInit, OnDestroy {
             await this.peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
             this.remoteDescriptionSet = true;
 
-            // Add pending candidates
             for (const candidate of this.pendingCandidates) {
               await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
             }
