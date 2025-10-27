@@ -16,7 +16,7 @@
         <div class="links ms-auto">
             <a routerLink="/register">Signup</a>
         </div>
-        <input type="submit" id="submit" value="Login">
+        <input type="submit" [disabled]="isLoading" id="submit" value="Login">
     </form>
 </div>
 </section>
