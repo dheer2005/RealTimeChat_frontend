@@ -72,12 +72,65 @@
           <div *ngIf="msg.replyTo" class="reply-preview" (click)="goToMessage(msg.replyTo.id); $event.stopPropagation()">
             <div class="reply-user">{{ msg.fromUser }}</div>
             <div class="reply-text">
-              <ng-container *ngIf="msg.replyTo.mediaUrl; else textReply">
-                <img [src]="msg.replyTo.mediaUrl" class="reply-thumb" />
+
+              <ng-container *ngIf="ImageOrNot(msg.replyTo.mediaUrl)">
+                <img
+                  [src]="msg.replyTo.mediaUrl"
+                  alt="Replied image"
+                  class="reply-thumb"
+                />
+                <span *ngIf="msg.replyTo.message" class="reply-caption">
+                  {{ msg.replyTo.message }}
+                </span>
               </ng-container>
-              <ng-template #textReply>
-                {{ msg.replyTo.message }}
-              </ng-template>
+
+              <ng-container *ngIf="isVideo(msg.replyTo.mediaUrl)">
+                <video
+                  [src]="msg.replyTo.mediaUrl"
+                  class="reply-thumb-video"
+                  muted
+                  preload="metadata"
+                ></video>
+                <span *ngIf="msg.replyTo.message" class="reply-caption">
+                  {{ msg.replyTo.message }}
+                </span>
+              </ng-container>
+
+              <ng-container *ngIf="isFile(msg.replyTo.mediaUrl)">
+                <div class="reply-file">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="reply-file-icon"
+                  >
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                  </svg>
+                  <span class="reply-file-name">
+                    {{ msg.replyTo.mediaUrl.split('/').pop() }}
+                  </span>
+                </div>
+                <span *ngIf="msg.replyTo.message" class="reply-caption">
+                  {{ msg.replyTo.message }}
+                </span>
+              </ng-container>
+              <ng-container
+                *ngIf="
+                  !msg.replyTo.mediaUrl ||
+                  (!ImageOrNot(msg.replyTo.mediaUrl) &&
+                    !isVideo(msg.replyTo.mediaUrl) &&
+                    !isFile(msg.replyTo.mediaUrl))
+                "
+              >
+                <span>{{ msg.replyTo.message }}</span>
+              </ng-container>
             </div>
           </div>
 
@@ -148,6 +201,7 @@
           >
             <ul>
               <li (click)="replyToMessage(msg)">Reply</li>
+              <li (click)="copyMessage(msg.message)">Copy message</li>
               <li (click)="deleteMsg(selectedMsgId!)">Delete</li>
             </ul>
           </div>
@@ -187,7 +241,41 @@
           <span class="replying-text">Replying to:</span>
           <div class="reply-message">
             <p *ngIf="!replyingToMessage.isImage">{{ replyingToMessage.message }}</p>
-            <img *ngIf="replyingToMessage.isImage" [src]="replyingToMessage.mediaUrl" class="reply-image" />
+            <img *ngIf="replyingToMessage.isImage && !isVideo(replyingToMessage.mediaUrl) && !isFile(replyingToMessage.mediaUrl)" [src]="replyingToMessage.mediaUrl" class="reply-image" />
+            <div *ngIf="isVideo(replyingToMessage.mediaUrl)" class="reply-video">
+              <video
+                [src]="replyingToMessage.mediaUrl"
+                muted
+                preload="metadata"
+                (contextmenu)="$event.preventDefault()"
+                controlsList="nodownload nofullscreen noremoteplayback"
+                disablePictureInPicture
+              ></video>
+              <span *ngIf="replyingToMessage.message" class="reply-video-caption">
+                {{ replyingToMessage.message }}
+              </span>
+            </div>
+
+            <div *ngIf="isFile(replyingToMessage.mediaUrl) && !isVideo(replyingToMessage.mediaUrl) && !ImageOrNot(replyingToMessage.mediaUrl)" class="reply-file">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="reply-file-icon"
+              >
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+              </svg>
+              <span class="reply-file-name">
+                {{ replyingToMessage.mediaUrl.split('/').pop() }}
+              </span>
+            </div>
           </div>
         </div>
         <button (click)="cancelReply()" class="cancel-reply-btn">✖</button>

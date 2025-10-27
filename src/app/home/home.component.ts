@@ -148,7 +148,6 @@ export class HomeComponent implements OnInit, OnDestroy {
         );
 
         forkJoin(observables).subscribe(updatedUsers => {
-          // Sort by lastMessageTime descending
           this.userList2 = updatedUsers.sort((a, b) => {
             const timeA = a.lastMessageTime ? a.lastMessageTime.getTime() : 0;
             const timeB = b.lastMessageTime ? b.lastMessageTime.getTime() : 0;
@@ -178,7 +177,6 @@ export class HomeComponent implements OnInit, OnDestroy {
       })
     );
   }
-
 
   onKeyPress(event: any): void {
     this.filter = event.target.value;

@@ -1734,6 +1734,58 @@
   border-radius: 4px;
 }
 
+.reply-video{
+  display: flex;
+  flex-direction: column;
+}
+
+.reply-video video {
+  width: 70px;
+  height: 70px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid #ccc;
+}
+
+.reply-video-caption {
+  font-size: 13px;
+  color: #333;
+}
+
+.reply-file {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff;
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+}
+
+.reply-file-icon {
+  color: #007bff;
+}
+
+.reply-file-name {
+  font-size: 13px;
+  color: #333;
+  word-break: break-all;
+  max-width: 180px;
+}
+
+.cancel-reply-btn {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.cancel-reply-btn:hover {
+  color: #d00;
+}
+
 .cancel-reply-btn {
   border: none;
   background: transparent;
@@ -1757,6 +1809,23 @@
 
 .reply-preview {
   cursor: pointer;
+}
+
+.reply-thumb-video {
+  width: 60px;
+  height: 60px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid #ccc;
+}
+.reply-file {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 4px 6px;
 }
 
 .file-message {

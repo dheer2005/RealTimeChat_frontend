@@ -146,6 +146,16 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.selectedMsgId = msg.id
   }
 
+  copyMessage(msg: any){
+    navigator.clipboard.writeText(msg)
+    .then(()=>{
+      this.toastrSvc.success("Copied");
+    })
+    .catch(err=>{
+      this.toastrSvc.warning("Failed to copy message:", err);
+    })
+  }
+
   onRightClick(event: MouseEvent, image: any){
     event.preventDefault();
     this.selectedImageForScroll = image;
@@ -661,8 +671,6 @@ export class ChatComponent implements OnInit, OnDestroy {
       this.fileInput.nativeElement.value = '';
     }
   }
-
-  
 
   private onReceiveMessage(Id: number, FromUser: string, userTo: string, message: string, Created: Date, Status: string, isImage: boolean, mediaUrl: string | null, replyTo?: { id: number, message: string, mediaUrl: string | null, isImage: boolean } | null): void {
     if ((this.UserTo === FromUser && this.fromUser === userTo) || 
