@@ -275,3 +275,50 @@
 .box form .inputBox input[type="number"] {
     -moz-appearance: textfield;
 }
+.error-messages {
+  background: rgba(255, 0, 0, 0.1);
+  border: 1px solid #ff2770;
+  color: #ff6b81;
+  border-radius: 6px;
+  padding: 10px 15px;
+  margin-bottom: 15px;
+  animation: fadeIn 0.3s ease;
+}
+
+.error-messages ul {
+  list-style-type: disc;
+  padding-left: 20px;
+  margin: 0;
+}
+
+.error-messages li {
+  font-size: 0.85em;
+  margin-bottom: 4px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.remove-icon {
+  position: absolute;
+  top: 6px;
+  right: 34%;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  font-size: 14px;
+  line-height: 16px;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.remove-icon:hover {
+  background: rgba(255, 0, 0, 0.7);
+}

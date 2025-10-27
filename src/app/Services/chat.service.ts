@@ -9,11 +9,11 @@ import { AuthenticationService } from './authentication.service';
   providedIn: 'root'
 })
 export class ChatService {
-  private baseUrl = 'https://realtime001.bsite.net/api/';
-  private chatHubUrl = 'https://realtime001.bsite.net/';
+  // private baseUrl = 'https://realtime001.bsite.net/api/';
+  // private chatHubUrl = 'https://realtime001.bsite.net/';
   
-  // private baseUrl = 'https://localhost:7180/api/';
-  // private chatHubUrl = 'https://localhost:7180/';
+  private baseUrl = 'https://localhost:7180/api/';
+  private chatHubUrl = 'https://localhost:7180/';
   
   private hubConnection!: signalR.HubConnection;
   private connectionPromise: Promise<void> | null = null;
@@ -159,7 +159,7 @@ export class ChatService {
   private setupEventHandlers(): void {
     this.hubConnection.on("ReceiveMessage", (msg:any) => {
       
-      const createdDate = new Date(msg.created);
+      const createdDate = new Date();
       
       this.messageHandlers.forEach(handler => {
         handler(msg.id, 
@@ -179,17 +179,41 @@ export class ChatService {
       });
 
       const myUsername = this.authSvc.getUserName();
-      
-      if (msg.userTo === myUsername && this.getCurrentChatUser() !== msg.fromUser) {
-        const users = this.onlineUsers$.value;
-        const index = users.findIndex(u => u.userName === msg.fromUser);
+      const users = this.onlineUsers$.value;
+
+      let targetUserName: string | null = null;
+
+      if (msg.userTo === myUsername) {
+        targetUserName = msg.fromUser;
+      } else if (msg.fromUser === myUsername) {
+        targetUserName = msg.userTo;
+      }
+
+      if (targetUserName) {
+        const index = users.findIndex(u => u.userName === targetUserName);
         if (index !== -1) {
-          users[index].unreadCount = (users[index].unreadCount || 0) + 1;
           users[index].lastMessage = msg.message;
           users[index].lastMessageSender = msg.fromUser;
+
+          if (msg.userTo === myUsername && this.getCurrentChatUser() !== msg.fromUser) {
+            users[index].unreadCount = (users[index].unreadCount || 0) + 1;
+          }
+
           this.onlineUsers$.next([...users]);
         }
       }
+
+      
+      // if (msg.userTo === myUsername && this.getCurrentChatUser() !== msg.fromUser) {
+      //   const users = this.onlineUsers$.value;
+      //   const index = users.findIndex(u => u.userName === msg.fromUser);
+      //   if (index !== -1) {
+      //     users[index].unreadCount = (users[index].unreadCount || 0) + 1;
+      //     users[index].lastMessage = msg.message;
+      //     users[index].lastMessageSender = msg.fromUser;
+      //     this.onlineUsers$.next([...users]);
+      //   }
+      // }
 
       if (msg.userTo === myUsername && this.getCurrentChatUser() === msg.fromUser) {
         this.markAsSeen(msg.fromUser, myUsername);

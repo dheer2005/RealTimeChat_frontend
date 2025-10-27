@@ -23,6 +23,8 @@ export class LoginComponent implements OnInit {
     Password: ''
   }
 
+  isLoading: boolean = false;
+
 
   ngOnInit(): void {
       if(isPlatformBrowser(this.platformId)){
@@ -33,14 +35,17 @@ export class LoginComponent implements OnInit {
   }
 
   onLogin(){
+    this.isLoading = true;
     this.authSvc.loginUser(this.login).subscribe({
       next: (res:any)=>{
         localStorage.setItem('jwt',res.token);
         this.toastr.success("User logged in" , "Success");
         this.authSvc.getUserName();
         this.router.navigateByUrl('/home');
+        this.isLoading = false;
       },
       error: (err:any)=>{
+        this.isLoading = false;
         if(err.status==0){
           this.toastr.error(`Error at server side please try again later: ${err}`);
         }else{

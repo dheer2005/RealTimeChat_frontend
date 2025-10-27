@@ -14,9 +14,14 @@
                     hidden
                     required
                 >
-                <div class="overlay-text d-flex justify-content-center align-items-center flex-column"><div class="fs-3">📷</div> <span class="text-center text-light">Upload Profile image</span> </div>
+                <div class="overlay-text d-flex justify-content-center align-items-center flex-column">
+                    <div class="fs-3">📷</div> 
+                    <span class="text-center text-light">Upload Profile image</span> 
+                </div>
 
-
+                <div *ngIf="previewImageUrl" class="remove-icon" (click)="removeImage($event)">
+                    ✖
+                </div>
             </div>
 
             <div class="inputBox">
@@ -32,7 +37,7 @@
             </div>
 
             <div class="inputBox">
-                <input type="email" name="email" [(ngModel)]="register.Email" required autocomplete="email">
+                <input type="text" name="email" [(ngModel)]="register.Email" required autocomplete="email">
                 <span>Email</span>
                 <i></i>
             </div>
@@ -53,7 +58,14 @@
                 <a routerLink="/login">Already have an account? Sign In</a>
             </div>
 
-            <input type="submit" id="submit" value="Register">
+            <!-- 🔴 Validation Error Section -->
+            <div *ngIf="errorMessages?.length" class="error-messages">
+                <ul>
+                    <li *ngFor="let error of errorMessages">{{ error }}</li>
+                </ul>
+            </div>
+
+            <input type="submit" [disabled]="isRegister" id="submit" value="Register">
         </form>
     </div>
 </section>

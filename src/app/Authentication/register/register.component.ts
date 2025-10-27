@@ -31,6 +31,16 @@ export class RegisterComponent {
   }
 
   isRegister: boolean = false;
+  errorMessages: any[] = [];
+
+  removeImage(event: Event){
+    event.stopPropagation();
+    this.previewImageUrl = null;
+    this.selectedProfileImage = null;
+    if(this.fileInputRef){
+      this.fileInputRef.nativeElement.value = '';
+    }
+  }
 
   onFileSelected(event: any) {
     const file: File = event.target.files[0];
@@ -69,13 +79,29 @@ export class RegisterComponent {
       next: ()=>{
         this.toastr.success("New user registered");
         this.router.navigateByUrl('/login');
-
+        
         if(this.fileInputRef){
           this.fileInputRef.nativeElement.value = '';
         }
+        this.isRegister = false;
       },
-      error: (err:any)=>{
-        console.log("Failed to register");
+      error: (error:any)=>{
+        this.isRegister = false;
+
+        if(error.status == 400 && error.error && error.error.errors){
+          const validationErrors = error.error.errors;
+          this.errorMessages = [];
+
+          for(const field in validationErrors){
+            if(validationErrors.hasOwnProperty(field)){
+              this.errorMessages.push(...validationErrors[field])
+            }
+          }
+        }else if(error.message){
+          this.errorMessages = [];
+          this.errorMessages.push(error.message);
+        }
+
       }
     })
   }
