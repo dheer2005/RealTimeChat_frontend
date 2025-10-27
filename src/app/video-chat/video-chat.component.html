@@ -1,4 +1,4 @@
-<!-- <div class="video-container">
+<div class="video-container">
     <video class="local-video" #localVideo autoplay playsinline></video>
     <video class="remote-video" #remoteVideo autoplay playsinline></video>
     
@@ -25,36 +25,4 @@
         }
     </div>
 </div>
- -->
 
-
- <div class="video-container">
-    <video class="local-video" #localVideo autoplay playsinline muted></video>
-    <video class="remote-video" #remoteVideo autoplay playsinline></video>
-    
-    <div class="controls">
-        @if(signalRService.incomingCall && !signalRService.isCallActive){
-            <button class="btn accept" (click)="acceptCall()">
-                <mat-icon>call</mat-icon>
-            </button>
-            <button class="btn decline" (click)="declineCall()">
-                <mat-icon>call_end</mat-icon>
-            </button>
-        }
-
-        @if(!signalRService.incomingCall && !signalRService.isCallActive){
-            <button class="btn accept" (click)="startCall()">
-                <mat-icon>call</mat-icon>
-            </button>
-            <button class="btn cancel" (click)="endCall()">
-                <mat-icon>close</mat-icon>
-            </button>
-        }
-
-        @if(signalRService.isCallActive){
-            <button class="btn end" (click)="endCall()">
-                <mat-icon>call_end</mat-icon>
-            </button>
-        }
-    </div>
-</div>
