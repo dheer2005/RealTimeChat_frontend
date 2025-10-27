@@ -82,10 +82,36 @@
           </div>
 
 
-          <div *ngIf="msg.isImage && msg.mediaUrl && !msg.mediaUrl.includes('staticmap.openstreetmap.de')" class="image-message" (click)="openImagePreviewViewModal(msg)">
+          <div *ngIf="ImageOrNot(msg.mediaUrl) && msg.mediaUrl && !msg.mediaUrl.includes('staticmap.openstreetmap.de')" class="image-message" (click)="openImagePreviewViewModal(msg)">
             <img [src]="msg.mediaUrl" alt="Shared image" class="message-image"/>
             <p *ngIf="msg.message" class="image-caption">{{ msg.message }}</p>
           </div>
+
+          <div *ngIf="isVideo(msg.mediaUrl) && msg.mediaUrl && !msg.mediaUrl.includes('staticmap.openstreetmap.de')" class="video-message" >
+            <video [src]="msg.mediaUrl" class="message-video" controls preload="metadata"></video>
+            <p *ngIf="msg.message" class="video-caption">{{ msg.message }}</p>
+          </div>
+
+          <div *ngIf="isFile(msg.mediaUrl) && msg.mediaUrl" class="file-message">
+            <div class="file-info">
+              <a [href]="msg.mediaUrl" target="_blank" class="file-link">
+                📄 {{ msg.mediaUrl.split('/').pop() }}
+              </a>
+
+              <button class="d-block download-btn" (click)="downloadFile(msg.mediaUrl)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" 
+                  viewBox="0 0 24 24" fill="none" stroke="currentColor" 
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg> Download
+              </button>
+            </div>
+
+            <p *ngIf="msg.message" class="file-caption">{{ msg.message }}</p>
+          </div>
+
 
           <div *ngIf="msg.isImage && msg.mediaUrl && msg.mediaUrl.includes('staticmap.openstreetmap.de')" class="image-message">
             <a *ngIf="msg.mediaUrl && msg.mediaUrl.includes('staticmap.openstreetmap.de')"
@@ -195,7 +221,7 @@
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke-width="2"/>
                 <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/>
                 <path d="M21 15l-5-5L5 21" stroke-width="2" stroke-linecap="round"/>
-              </svg> <span class="ms-2">Image</span>
+              </svg> <span class="ms-2">Document</span>
             </button>
             <button class="icon-btn" title="Share Location" (click)="openLocationModal()">
               <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -253,13 +279,12 @@
           </svg>
         </button>
 
-        <h3 class="modal-title">Attach Image</h3>
+        <h3 class="modal-title">Attach Document</h3>
 
         <div *ngIf="!selectedImage; else previewSection" class="upload-box">
           <input 
             type="file" 
             #fileInput 
-            accept="image/*" 
             (change)="onFileSelected($event)" 
             hidden 
           />
@@ -270,13 +295,24 @@
               <path d="M21 15l-5-5L5 21" stroke-width="2" stroke-linecap="round"/>
             </svg>
           </div>
-          <button (click)="fileInput.click()" class="upload-btn">Choose Image</button>
-          <p class="upload-hint">Click to select an image from your device</p>
+          <button (click)="fileInput.click()" class="upload-btn">Choose Document</button>
+          <p class="upload-hint">Click to select an documents from your device</p>
         </div>
 
         <ng-template #previewSection>
           <div class="preview-container">
-            <img [src]="previewUrl" alt="Preview" class="preview-img" />
+
+            <img *ngIf="previewType === 'image'" [src]="previewUrl" class="preview-img" alt="Preview"/>
+
+            <video *ngIf="previewType === 'video'" [src]="previewUrl" controls class="preview-video"></video>
+
+            <div *ngIf="previewType === 'file'" class="preview-file">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
+              <p>{{ previewFileName }}</p>
+            </div>
             
             <div class="caption-section">
               <textarea
@@ -294,9 +330,9 @@
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <path d="M18 6L6 18M6 6l12 12" stroke-width="2" stroke-linecap="round"/>
                 </svg>
-                Change Image
+                Remove
               </button>
-              <button class="send-image-btn" (click)="send()">
+              <button class="send-image-btn" [disabled]="isSending" (click)="send()">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
                 </svg>

@@ -93,6 +93,8 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   selectedMsgId: number | null = null;
   showMsgContextMenu: boolean = false;
+  previewType: string = '';
+  previewFileName: string = '';
 
 
   constructor(
@@ -541,24 +543,27 @@ export class ChatComponent implements OnInit, OnDestroy {
     if(event.dataTransfer && event.dataTransfer.files.length > 0){
       const file = event.dataTransfer.files[0];
 
-      if(!file.type.startsWith('image/')){
-        this.toastrSvc.warning('Please drop a valid image file', 'Invalid File');
-        return;
-      }
-
-      if(file.size > 5 * 1024 * 1024){
-        this.toastrSvc.warning('Image size should not exceed 5MB', 'File Too Large');
-        return;
-      }
+      const type = file.type;
 
       this.selectedImage = file;
-      
-      const reader = new FileReader();
-      reader.onload = (e: any) => {
-        this.previewUrl = e.target.result;
-        this.showCaptionInput = true;
-      };
-      reader.readAsDataURL(file);
+
+      if (type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (e: any) => {
+          this.previewUrl = e.target.result;
+          this.previewType = 'image';
+        };
+        reader.readAsDataURL(file);
+      } else if (type.startsWith('video/')) {
+        this.previewUrl = URL.createObjectURL(file);
+        this.previewType = 'video';
+      } else {
+        this.previewUrl = null;
+        this.previewType = 'file';
+        this.previewFileName = file.name;
+      }
+
+      this.showCaptionInput = true
 
       event.dataTransfer.clearData();
     }
@@ -591,29 +596,59 @@ export class ChatComponent implements OnInit, OnDestroy {
     }
   }
 
+  downloadFile(url: string) {
+    if (!url) return;
+
+    // Force download via Cloudinary transformation
+    const downloadUrl = url.replace('/upload/', '/upload/fl_attachment/');
+
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.target = '_blank';
+    link.click();
+  }
+
+  isFile(url?: string): boolean {
+    if (!url) return false;
+    return url.match(/\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|zip|rar)$/i) !== null;
+  }
+
+  ImageOrNot(url?: string): boolean {
+    if (!url) return false;
+    return url.match(/\.(jpeg|jpg|png|gif|webp)$/i) !== null;
+  }
+
+  isVideo(url?: string): boolean {
+    if (!url) return false;
+    return url.match(/\.(mp4|mov|avi|webm|mkv)$/i) !== null;
+  }
+
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files[0]) {
       const file = input.files[0];
-      
-      if (!file.type.startsWith('image/')) {
-        this.toastrSvc.warning('Please select an image file');
-        return;
-      }
 
-      if (file.size > 5 * 1024 * 1024) {
-        this.toastrSvc.warning('Image size should not exceed 5MB');
-        return;
-      }
+      const type = file.type;
 
       this.selectedImage = file;
-      
-      const reader = new FileReader();
-      reader.onload = (e: any) => {
-        this.previewUrl = e.target.result;
-        this.showCaptionInput = true;
-      };
-      reader.readAsDataURL(file);
+
+      if (type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (e: any) => {
+          this.previewUrl = e.target.result;
+          this.previewType = 'image';
+        };
+        reader.readAsDataURL(file);
+      } else if (type.startsWith('video/')) {
+        this.previewUrl = URL.createObjectURL(file);
+        this.previewType = 'video';
+      } else {
+        this.previewUrl = null;
+        this.previewType = 'file';
+        this.previewFileName = file.name;
+      }
+
+      this.showCaptionInput = true;
     }
   }
 
