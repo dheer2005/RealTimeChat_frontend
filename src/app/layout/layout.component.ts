@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ElementRef, HostListener } from '@angular/core';
 import { AuthenticationService } from '../Services/authentication.service';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule, UpperCasePipe } from '@angular/common';
@@ -14,11 +14,27 @@ import { ChatService } from '../Services/chat.service';
 })
 export class LayoutComponent {
   currentUserName: string = '';
+  isNavbarOpen = false;
 
-  constructor(private chatService: ChatService, public authSvc: AuthenticationService, private router: Router, private toastr: ToastrService){
+  constructor(private eRef: ElementRef, private chatService: ChatService, public authSvc: AuthenticationService, private router: Router, private toastr: ToastrService){
     this.currentUserName = this.authSvc.getUserName();
   }
- 
+
+  toggleNavbar() {
+    this.isNavbarOpen = !this.isNavbarOpen;
+  }
+  
+  closeNavbar() {
+    this.isNavbarOpen = false;
+  }
+
+  @HostListener('document:click', ['$event'])
+  onClickOutside(event: Event) {
+    if (this.isNavbarOpen && !this.eRef.nativeElement.contains(event.target)) {
+      this.isNavbarOpen = false;
+    }
+  }
+
   logout(){
     try {
       this.chatService.stopConnection();

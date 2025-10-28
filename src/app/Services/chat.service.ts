@@ -203,18 +203,6 @@ export class ChatService {
         }
       }
 
-      
-      // if (msg.userTo === myUsername && this.getCurrentChatUser() !== msg.fromUser) {
-      //   const users = this.onlineUsers$.value;
-      //   const index = users.findIndex(u => u.userName === msg.fromUser);
-      //   if (index !== -1) {
-      //     users[index].unreadCount = (users[index].unreadCount || 0) + 1;
-      //     users[index].lastMessage = msg.message;
-      //     users[index].lastMessageSender = msg.fromUser;
-      //     this.onlineUsers$.next([...users]);
-      //   }
-      // }
-
       if (msg.userTo === myUsername && this.getCurrentChatUser() === msg.fromUser) {
         this.markAsSeen(msg.fromUser, myUsername);
       }

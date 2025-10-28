@@ -84,11 +84,15 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   reactionOptions = ['❤️', '👍', '😂', '😮', '😢'];
 
-  mediaTab: 'info' | 'images' = 'info';
+  mediaTab: 'info' | 'media' = 'info';
+  mediaInnerTab: 'images' | 'videos' | 'files' = 'images';
   chatImagesByDate: { label: string; images: any[] }[] = [];
+  chatVideosByDate: { label: string; videos: any[] }[] = [];
+  chatFilesByDate: { label: string; files: any[] }[] = [];
 
   showContextMenu = false;
-  selectedImageForScroll: any = null;
+  selectedMediaUrl: string | null = null;
+  selectedMediaType: 'image' | 'video' | 'file' | null = null;
   replyingToMessage: any = null;
 
   selectedMsgId: number | null = null;
@@ -103,7 +107,6 @@ export class ChatComponent implements OnInit, OnDestroy {
     private authSvc: AuthenticationService,
     private signalRService: VideoService,
     public router: Router,
-    private ngZone: NgZone,
     private toastrSvc: ToastrService,
     public dialog: MatDialog,
     private location: Location,
@@ -156,10 +159,26 @@ export class ChatComponent implements OnInit, OnDestroy {
     })
   }
 
-  onRightClick(event: MouseEvent, image: any){
+  onRightClick(event: MouseEvent, mediaUrl: string, id: number, type: 'image' | 'video' | 'file') {
     event.preventDefault();
-    this.selectedImageForScroll = image;
+    this.selectedMediaUrl = mediaUrl;
+    this.selectedMediaType = type;
     this.showContextMenu = true;
+
+    // Close menu when clicked outside
+    // document.addEventListener('click', this.closeContextMenu.bind(this), { once: true });
+  }
+  viewMedia(type: 'image' | 'video', item: any) {
+    this.showContextMenu = false;
+    if (type === 'image') {
+      this.openImagePreviewViewModal(item);
+    } else if (type === 'video') {
+      this.openVideoPreview(item);
+    }
+  }
+
+  openVideoPreview(item: any){
+    
   }
 
   @HostListener('document: click')
@@ -188,7 +207,6 @@ export class ChatComponent implements OnInit, OnDestroy {
           }
       });
 
-      // Fallback: find by message ID
       if (!targetMessage) {
         targetMessage = document.getElementById('msg-' + messageId) as HTMLElement | undefined;
       }
@@ -212,22 +230,32 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.showMsgContextMenu = false;
   }
 
-  private groupImagesByDate(images: any[]){
+  private groupMediaByDate<T extends 'image' | 'video' | 'file'>( media: any[], type: T): T extends 'image' ? { label: string; images: any[] }[] 
+  : T extends 'video' ? { label: string; videos: any[] }[] : { label: string; files: any[] }[] {
     const grouped : {[key: string]: any[]} = {};
 
     const today = new Date();
     const yesterday = new Date();
     yesterday.setDate(today.getDate()-1);
 
-    for(const img of images){
+    for(const item of media){
 
-      if (img.mediaUrl && img.mediaUrl.includes('staticmap.openstreetmap.de')) continue;
+      if (item.mediaUrl && item.mediaUrl.includes('staticmap.openstreetmap.de')) continue;
+      
+      if(type === 'image' && !item.mediaUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i)) continue;
+      if(type === 'video' && !item.mediaUrl.match(/\.(mp4|mov|avi|mkv|webm)$/i)) continue;
+      if(type === 'file' && item.mediaUrl.match(/\.(jpg|jpeg|png|gif|webp|mp4|mov|avi|mkv|webm)$/i)) continue;
 
-      const date = new Date(img.created || img.Created || img.timestamp || img.createdAt);
+      let fileName: string | undefined;
+      if(type == 'file'){
+        fileName = item.fileName || decodeURIComponent(item.mediaUrl.split('/').pop() || 'Unknown File');
+      }
+
+      const date = new Date(item.created || item.Created || item.timestamp || item.createdAt);
       const dateKey = date.toDateString();
 
       if (!grouped[dateKey]) grouped[dateKey] = [];
-      grouped[dateKey].push(img);
+      grouped[dateKey].push(type === 'file' ? { ...item, fileName} : item);
     }
 
     const sortedGroups = Object.keys(grouped)
@@ -239,10 +267,18 @@ export class ChatComponent implements OnInit, OnDestroy {
           : date.toDateString() === yesterday.toDateString()
           ? 'Yesterday'
           : date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
-        return { label, images: grouped[dateKey] };
+        
+
+        if (type === 'image') {
+          return { label, images: grouped[dateKey] };
+        } else if (type === 'video') {
+          return { label, videos: grouped[dateKey] };
+        } else {
+          return { label, files: grouped[dateKey] };
+        }
       });
 
-      this.chatImagesByDate = sortedGroups;
+      return sortedGroups as any;
   }
 
   ngOnInit(): void {
@@ -328,8 +364,10 @@ export class ChatComponent implements OnInit, OnDestroy {
           } : null
         })).sort((a: any, b: any) => a.created.getTime() - b.created.getTime());
 
-        const imgs = this.messages.filter((m: any) => m.isImage && m.mediaUrl);
-        this.groupImagesByDate(imgs);
+        const allMedia = this.messages.filter((m: any) => m.mediaUrl);
+        this.chatImagesByDate = this.groupMediaByDate(allMedia, 'image');
+        this.chatVideosByDate = this.groupMediaByDate(allMedia, 'video');
+        this.chatFilesByDate = this.groupMediaByDate(allMedia, 'file');
         
         if (showLoader) {
           this.isLoader = false;
@@ -337,7 +375,6 @@ export class ChatComponent implements OnInit, OnDestroy {
         setTimeout(() => this.scrollToBottom(), 100);
         
         this.chatService.markAsSeen(this.fromUser, this.UserTo);
-
         
       },
       error: (err) => {
@@ -703,8 +740,16 @@ export class ChatComponent implements OnInit, OnDestroy {
         });
         this.messages.sort((a, b) => a.created.getTime() - b.created.getTime());
 
-        if (isImage && mediaUrl) {
-          this.groupImagesByDate([...this.chatImagesByDate.flatMap(x => x.images), { id: Id, mediaUrl, created: Created }]);
+        if (mediaUrl) {
+          if(mediaUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i)){
+            this.chatImagesByDate = this.groupMediaByDate([...this.chatImagesByDate.flatMap(x => x.images), { id: Id, mediaUrl, created: Created }], 'image');
+          }else if(mediaUrl.match(/\.(mp4|mov|avi|mkv|webm)$/i)){
+            this.chatVideosByDate = this.groupMediaByDate([...this.chatVideosByDate.flatMap(x=>x.videos), {id: Id, mediaUrl, created: Created}], 'video')
+          }else{
+            const fileName = mediaUrl ? decodeURIComponent(mediaUrl.split('/').pop() || 'Unknown File') : 'Unknown File';
+            this.chatFilesByDate = this.groupMediaByDate([...this.chatFilesByDate.flatMap(x=>x.files), {id: Id, mediaUrl, fileName, created: Created}], 'file')
+
+          }
         }
 
         setTimeout(() => this.scrollToBottom(), 100);
@@ -727,6 +772,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   
 
   send(): void {
+    if (this.isSending) return;
     this.isSending = true;
     if (this.selectedImage) {
       const formData = new FormData();
