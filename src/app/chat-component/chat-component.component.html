@@ -322,7 +322,7 @@
         <textarea
           #messageInput
           [(ngModel)]="message"
-          (input)="onInputChange()"
+          (input)="handleInputChange()"
           (keydown.enter)="$event.preventDefault(); send()"
           placeholder="Type a message..."
           class="message-input"

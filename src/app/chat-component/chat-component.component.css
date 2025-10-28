@@ -305,9 +305,11 @@
   outline: none;
   font-size: 14px;
   line-height: 1.5;
-  max-height: 100px;
-  overflow-y: auto;
+  overflow-y: auto; /* hide scrollbar */
   font-family: inherit;
+  min-height: 40px; /* starting height */
+  max-height: 150px; /* optional limit */
+  transition: height 0.2s ease; /* smooth growth */
 }
 
 .send-btn {

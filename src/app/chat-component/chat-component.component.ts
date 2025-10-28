@@ -26,6 +26,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
   @ViewChild('chatScroll', { static: false }) chatScrollContainer!: ElementRef;
   @ViewChild('messageInput') messageInputRef!: ElementRef<HTMLInputElement>;
+  
 
   messages: any[] = [];
   UserTo: any;
@@ -127,6 +128,19 @@ export class ChatComponent implements OnInit, OnDestroy {
       });
     });
     this.fromUser = this.authSvc.getUserName();
+  }
+
+  handleInputChange(): void {
+    this.autoResize();
+    this.onInputChange();
+  }
+
+  autoResize(): void {
+    const textarea = this.messageInputRef?.nativeElement;
+    if (!textarea) return;
+
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
   }
 
   replyToMessage(msg: any) {
@@ -458,7 +472,7 @@ export class ChatComponent implements OnInit, OnDestroy {
         this.map = null;
       }
 
-    const L = await  import('leaflet');
+    const L = await import('leaflet');
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -804,7 +818,7 @@ export class ChatComponent implements OnInit, OnDestroy {
           
           this.showImageModal = false;
           this.clearImage();
-          
+
           setTimeout(() => this.scrollToBottom(), 100);
 
           this.showAttachmentMenu = false;
@@ -845,7 +859,16 @@ export class ChatComponent implements OnInit, OnDestroy {
       this.replyingToMessage = null;
       
       this.message = '';
+
+      const textarea = this.messageInputRef?.nativeElement;
+      if(textarea){
+        textarea.style.height = 'auto';
+      }
+
       setTimeout(() => this.scrollToBottom(), 300);
+      this.isSending = false;
+    }
+    else{
       this.isSending = false;
     }
   }
@@ -854,7 +877,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     if (!this.isBrowser) {
       return;
     }
-
+    
     this.signalRService.remoteUserId = Userto;
     this.signalRService.isOpen = true;
     
