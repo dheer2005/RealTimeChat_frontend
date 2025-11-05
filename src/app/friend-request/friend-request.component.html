@@ -1,7 +1,6 @@
 <div class="friend-request-container">
   <div class="header">
     <h2>Friends & Requests</h2>
-    <p class="welcome-text text-light ">Welcome, <strong>{{ currentUserName }}</strong></p>
   </div>
 
   <div class="tabs">
@@ -289,10 +288,23 @@
               Unfriend
             </button>
 
-            <!-- PENDING -->
-            <button class="btn-requested" *ngIf="user.relationshipStatus === 'pending'" disabled>
+            <!-- YOU SENT REQUEST -->
+            <button class="btn-requested" *ngIf="user.relationshipStatus === 'requested'" disabled>
               Requested
             </button>
+
+            <!-- YOU RECEIVED REQUEST -->
+            <div *ngIf="user.relationshipStatus === 'incoming'" class="request-actions">
+              <button class="btn-accept" (click)="acceptRequest(user.id)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>Accept</button>
+              <button class="btn-reject" (click)="unfriend(user.id)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>Reject</button>
+            </div>
 
             <!-- NONE -->
             <button class="btn-send-request" *ngIf="user.relationshipStatus === 'none'" (click)="sendFriendRequest(user.id)">

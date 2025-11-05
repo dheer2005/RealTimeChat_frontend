@@ -135,6 +135,22 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.onInputChange();
   }
 
+  getDateLabel(date: Date): string {
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+
+    const sameDay = (a: Date, b: Date) =>
+      a.getDate() === b.getDate() &&
+      a.getMonth() === b.getMonth() &&
+      a.getFullYear() === b.getFullYear();
+
+    if (sameDay(date, today)) return 'Today';
+    if (sameDay(date, yesterday)) return 'Yesterday';
+
+    return date.toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+  }
+
   autoResize(): void {
     const textarea = this.messageInputRef?.nativeElement;
     if (!textarea) return;

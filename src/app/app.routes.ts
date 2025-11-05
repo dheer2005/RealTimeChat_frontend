@@ -17,5 +17,6 @@ export const routes: Routes = [
     { path: 'profile', component: ProfileDescriptionComponent, canActivate: [authGuard] },
     { path: 'profile/:name', component: ProfileDescriptionComponent, canActivate: [authGuard] },
     { path: 'friend-request', loadComponent: () => import('./friend-request/friend-request.component').then(m => m.FriendRequestComponent), canActivate: [authGuard] },
-    { path: '', redirectTo: 'login', pathMatch: 'full' }
+    { path: '', redirectTo: 'login', pathMatch: 'full' },
+    { path: '**', redirectTo: 'login', pathMatch: 'full' }
 ];

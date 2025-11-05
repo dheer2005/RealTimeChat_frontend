@@ -1,8 +1,9 @@
 import { isPlatformBrowser } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { Router } from '@angular/router';
 import { JwtHelperService } from '@auth0/angular-jwt';
+import { get } from 'jquery';
 import { jwtDecode } from 'jwt-decode';
 import { BehaviorSubject, Observable } from 'rxjs';
 
@@ -42,19 +43,11 @@ export class AuthenticationService {
   }
 
   getAllUsers(userId: string){
-    return this.http.get<any[]>(`${this.baseUrl}GetAllUsers/${userId}`, this.httpOptions);
-  }
-
-  sendMsg(data:any){
-    return this.http.post(this.chatUrl+"SendChatData", data);
-  }
-
-  markMessagesAsSeen(fromUser: string, toUser: string) {
-    return this.http.post(this.seenUrl+"mark-seen", { fromUser, toUser });
+    return this.http.get<any[]>(`${this.baseUrl}GetAllUsers/${userId}`, this.getHttpOptions());
   }
 
   getUserInfo(userName: string){
-    return this.http.get<any>(`${this.baseUrl}get-user-info-by-userName/${userName}`, this.httpOptions);
+    return this.http.get<any>(`${this.baseUrl}get-user-info-by-userName/${userName}`, this.getHttpOptions());
   }
 
   uploadImage(formData: FormData): Observable<any> {
@@ -103,6 +96,15 @@ export class AuthenticationService {
       return localStorage.getItem('jwt');
     }
     return null;
+  }
+
+  public getHttpOptions(): { headers:HttpHeaders } {
+    const token = this.getToken(); 
+    let headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+    return {headers: headers};
   }
 
 }

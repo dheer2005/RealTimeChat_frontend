@@ -58,170 +58,184 @@
     </div>
 
     <div *ngIf="!isLoader" class="messages-container" #chatScroll id="chat-scroll">
-      <div *ngFor="let msg of messages" 
-        class="message-wrapper"
-        [class.sent]="msg.fromUser === fromUser"
-        [class.received]="msg.fromUser !== fromUser">
       
-        <div class="message-bubble" [id]="'msg-'+msg.id" 
-          (mouseenter)="showReactionMenu(msg)" 
-          (mouseleave)="hideReactionMenu(msg)" 
-          (contextmenu)="onMsgRightClick($event,msg)"
-          [ngClass]="{'sentReaction': msg.fromUser == currentUser, 'receivedReaction': msg.fromUser != currentUser}">
-           
-          <div *ngIf="msg.replyTo" class="reply-preview" (click)="goToMessage(msg.replyTo.id); $event.stopPropagation()">
-            <div class="reply-user">{{ msg.fromUser }}</div>
-            <div class="reply-text">
+      <div *ngFor="let msg of messages; let i =index">
 
-              <ng-container *ngIf="ImageOrNot(msg.replyTo.mediaUrl)">
-                <img
-                  [src]="msg.replyTo.mediaUrl"
-                  alt="Replied image"
-                  class="reply-thumb"
-                />
-                <span *ngIf="msg.replyTo.message" class="reply-caption">
-                  {{ msg.replyTo.message }}
-                </span>
-              </ng-container>
-
-              <ng-container *ngIf="isVideo(msg.replyTo.mediaUrl)">
-                <video
-                  [src]="msg.replyTo.mediaUrl"
-                  class="reply-thumb-video"
-                  muted
-                  preload="metadata"
-                ></video>
-                <span *ngIf="msg.replyTo.message" class="reply-caption">
-                  {{ msg.replyTo.message }}
-                </span>
-              </ng-container>
-
-              <ng-container *ngIf="isFile(msg.replyTo.mediaUrl)">
-                <div class="reply-file">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    class="reply-file-icon"
-                  >
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                    <polyline points="14 2 14 8 20 8" />
-                  </svg>
-                  <span class="reply-file-name">
-                    {{ msg.replyTo.mediaUrl.split('/').pop() }}
+         <!-- DATE SEPARATOR -->
+        <div class="main-separator">
+          <div class="date-separator" *ngIf="
+              i === 0 ||
+              (messages[i].created | date:'yyyy-MM-dd') !== (messages[i-1].created | date:'yyyy-MM-dd')
+          ">
+            {{ getDateLabel(msg.created) }}
+          </div>
+        </div>
+        <div 
+          class="message-wrapper"
+          [class.sent]="msg.fromUser === fromUser"
+          [class.received]="msg.fromUser !== fromUser">
+        
+          <div class="message-bubble" [id]="'msg-'+msg.id" 
+            (mouseenter)="showReactionMenu(msg)" 
+            (mouseleave)="hideReactionMenu(msg)" 
+            (contextmenu)="onMsgRightClick($event,msg)"
+            [ngClass]="{'sentReaction': msg.fromUser == currentUser, 'receivedReaction': msg.fromUser != currentUser}">
+             
+            <div *ngIf="msg.replyTo" class="reply-preview" (click)="goToMessage(msg.replyTo.id); $event.stopPropagation()">
+              <div class="reply-user">{{ msg.fromUser }}</div>
+              <div class="reply-text">
+  
+                <ng-container *ngIf="ImageOrNot(msg.replyTo.mediaUrl)">
+                  <img
+                    [src]="msg.replyTo.mediaUrl"
+                    alt="Replied image"
+                    class="reply-thumb"
+                  />
+                  <span *ngIf="msg.replyTo.message" class="reply-caption">
+                    {{ msg.replyTo.message }}
                   </span>
-                </div>
-                <span *ngIf="msg.replyTo.message" class="reply-caption">
-                  {{ msg.replyTo.message }}
-                </span>
-              </ng-container>
-              <ng-container
-                *ngIf="
-                  !msg.replyTo.mediaUrl ||
-                  (!ImageOrNot(msg.replyTo.mediaUrl) &&
-                    !isVideo(msg.replyTo.mediaUrl) &&
-                    !isFile(msg.replyTo.mediaUrl))
-                "
-              >
-                <span>{{ msg.replyTo.message }}</span>
-              </ng-container>
+                </ng-container>
+  
+                <ng-container *ngIf="isVideo(msg.replyTo.mediaUrl)">
+                  <video
+                    [src]="msg.replyTo.mediaUrl"
+                    class="reply-thumb-video"
+                    muted
+                    preload="metadata"
+                  ></video>
+                  <span *ngIf="msg.replyTo.message" class="reply-caption">
+                    {{ msg.replyTo.message }}
+                  </span>
+                </ng-container>
+  
+                <ng-container *ngIf="isFile(msg.replyTo.mediaUrl)">
+                  <div class="reply-file">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="reply-file-icon"
+                    >
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                      <polyline points="14 2 14 8 20 8" />
+                    </svg>
+                    <span class="reply-file-name">
+                      {{ msg.replyTo.mediaUrl.split('/').pop() }}
+                    </span>
+                  </div>
+                  <span *ngIf="msg.replyTo.message" class="reply-caption">
+                    {{ msg.replyTo.message }}
+                  </span>
+                </ng-container>
+                <ng-container
+                  *ngIf="
+                    !msg.replyTo.mediaUrl ||
+                    (!ImageOrNot(msg.replyTo.mediaUrl) &&
+                      !isVideo(msg.replyTo.mediaUrl) &&
+                      !isFile(msg.replyTo.mediaUrl))
+                  "
+                >
+                  <span>{{ msg.replyTo.message }}</span>
+                </ng-container>
+              </div>
             </div>
-          </div>
-
-
-          <div *ngIf="ImageOrNot(msg.mediaUrl) && msg.mediaUrl && !msg.mediaUrl.includes('staticmap.openstreetmap.de')" class="image-message" (click)="openImagePreviewViewModal(msg)">
-            <img [src]="msg.mediaUrl" alt="Shared image" class="message-image"/>
-            <p *ngIf="msg.message" class="image-caption">{{ msg.message }}</p>
-          </div>
-
-          <div *ngIf="isVideo(msg.mediaUrl) && msg.mediaUrl && !msg.mediaUrl.includes('staticmap.openstreetmap.de')" class="video-message" >
-            <video [src]="msg.mediaUrl" class="message-video" controls preload="metadata"></video>
-            <p *ngIf="msg.message" class="video-caption">{{ msg.message }}</p>
-          </div>
-
-          <div *ngIf="isFile(msg.mediaUrl) && msg.mediaUrl" class="file-message">
-            <div class="file-info">
-              <a [href]="msg.mediaUrl" target="_blank" class="file-link">
-                📄 {{ msg.mediaUrl.split('/').pop() }}
+  
+  
+            <div *ngIf="ImageOrNot(msg.mediaUrl) && msg.mediaUrl && !msg.mediaUrl.includes('staticmap.openstreetmap.de')" class="image-message" (click)="openImagePreviewViewModal(msg)">
+              <img [src]="msg.mediaUrl" alt="Shared image" class="message-image"/>
+              <p *ngIf="msg.message" class="image-caption">{{ msg.message }}</p>
+            </div>
+  
+            <div *ngIf="isVideo(msg.mediaUrl) && msg.mediaUrl && !msg.mediaUrl.includes('staticmap.openstreetmap.de')" class="video-message" >
+              <video [src]="msg.mediaUrl" class="message-video" controls preload="metadata"></video>
+              <p *ngIf="msg.message" class="video-caption">{{ msg.message }}</p>
+            </div>
+  
+            <div *ngIf="isFile(msg.mediaUrl) && msg.mediaUrl" class="file-message">
+              <div class="file-info">
+                <a [href]="msg.mediaUrl" target="_blank" class="file-link">
+                  📄 {{ msg.mediaUrl.split('/').pop() }}
+                </a>
+  
+                <button class="d-block download-btn" (click)="downloadFile(msg.mediaUrl)">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" 
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" 
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg> Download
+                </button>
+              </div>
+  
+              <p *ngIf="msg.message" class="file-caption">{{ msg.message }}</p>
+            </div>
+  
+  
+            <div *ngIf="msg.isImage && msg.mediaUrl && msg.mediaUrl.includes('staticmap.openstreetmap.de')" class="image-message">
+              <a *ngIf="msg.mediaUrl && msg.mediaUrl.includes('staticmap.openstreetmap.de')"
+                [href]="'https://www.google.com/maps/search/?api=1&query=' + msg.mediaUrl.split('center=')[1].split('&')[0]"
+                target="_blank" rel="noreferrer">
+                <img [src]="mapStaticImageUrl" alt="Shared Location" class="message-image" />
               </a>
-
-              <button class="d-block download-btn" (click)="downloadFile(msg.mediaUrl)">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" 
-                  viewBox="0 0 24 24" fill="none" stroke="currentColor" 
-                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="7 10 12 15 17 10"/>
-                <line x1="12" y1="15" x2="12" y2="3"/>
-              </svg> Download
-              </button>
+              <img *ngIf="!msg.mediaUrl.includes('staticmap.openstreetmap.de')"
+                  [src]="mapStaticImageUrl" alt="Shared image" class="message-image" />
+              <p *ngIf="msg.message" class="image-caption">{{ msg.message }}</p>
             </div>
-
-            <p *ngIf="msg.message" class="file-caption">{{ msg.message }}</p>
-          </div>
-
-
-          <div *ngIf="msg.isImage && msg.mediaUrl && msg.mediaUrl.includes('staticmap.openstreetmap.de')" class="image-message">
-            <a *ngIf="msg.mediaUrl && msg.mediaUrl.includes('staticmap.openstreetmap.de')"
-              [href]="'https://www.google.com/maps/search/?api=1&query=' + msg.mediaUrl.split('center=')[1].split('&')[0]"
-              target="_blank" rel="noreferrer">
-              <img [src]="mapStaticImageUrl" alt="Shared Location" class="message-image" />
-            </a>
-            <img *ngIf="!msg.mediaUrl.includes('staticmap.openstreetmap.de')"
-                [src]="mapStaticImageUrl" alt="Shared image" class="message-image" />
-            <p *ngIf="msg.message" class="image-caption">{{ msg.message }}</p>
-          </div>
-
-          <p *ngIf="!msg.isImage" class="message-text">{{ msg.message }}</p>
-          
-          <div class="message-meta">
-            <span class="message-time">
-              {{ msg.created | date:'shortTime' }}
-            </span>
-            <span *ngIf="msg.fromUser === fromUser" class="message-status">
-              <svg *ngIf="msg.status === 'sent'" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                <path d="M13.5 2L6 9.5 2.5 6" stroke="currentColor" stroke-width="2" fill="none"/>
-              </svg>
-              <svg *ngIf="msg.status === 'seen'" width="16" height="16" viewBox="0 0 16 16" fill="currentColor" class="seen">
-                <path d="M13.5 2L6 9.5 2.5 6M10.5 2L3 9.5" stroke="#4CAF50" stroke-width="2" fill="none"/>
-              </svg>
-            </span>
-          </div>
-
-          <div *ngIf="showMsgContextMenu && selectedMsgId == msg.id" class="msg-context-menu" 
-          [ngClass]="{
-            'sentReply' : msg.fromUser == currentUser,
-            'receivedReply' : msg.fromUser != currentUser
-            }"
-          >
-            <ul>
-              <li (click)="replyToMessage(msg)">Reply</li>
-              <li *ngIf="msg.message != ''" (click)="copyMessage(msg.message)">Copy message</li>
-              <li (click)="deleteMsg(selectedMsgId!)">Delete</li>
-            </ul>
-          </div>
-          
-          <div class="message-reactions" *ngIf="msg.reactions?.length">
-            <span 
-              *ngFor="let react of msg.reactions" 
-              [class.my-reaction]="react.User === currentUser" 
-              (click)="react.User === currentUser ? removeReaction(msg, react) : null">
-              {{ react.Emoji }}
-            </span>
-          </div>
-
-          <div class="reaction-menu" *ngIf="msg.showReactions">
-            <span *ngFor="let emoji of reactionOptions" (click)="addReaction(msg, emoji)">
-              {{ emoji }}
-            </span>
+  
+            <p *ngIf="!msg.isImage" class="message-text">{{ msg.message }}</p>
+            
+            <div class="message-meta">
+              <span class="message-time">
+                {{ msg.created | date:'shortTime' }}
+              </span>
+              <span *ngIf="msg.fromUser === fromUser" class="message-status">
+                <svg *ngIf="msg.status === 'sent'" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                  <path d="M13.5 2L6 9.5 2.5 6" stroke="currentColor" stroke-width="2" fill="none"/>
+                </svg>
+                <svg *ngIf="msg.status === 'seen'" width="16" height="16" viewBox="0 0 16 16" fill="currentColor" class="seen">
+                  <path d="M13.5 2L6 9.5 2.5 6M10.5 2L3 9.5" stroke="#4CAF50" stroke-width="2" fill="none"/>
+                </svg>
+              </span>
+            </div>
+  
+            <div *ngIf="showMsgContextMenu && selectedMsgId == msg.id" class="msg-context-menu" 
+            [ngClass]="{
+              'sentReply' : msg.fromUser == currentUser,
+              'receivedReply' : msg.fromUser != currentUser
+              }"
+            >
+              <ul>
+                <li (click)="replyToMessage(msg)">Reply</li>
+                <li *ngIf="msg.message != ''" (click)="copyMessage(msg.message)">Copy message</li>
+                <li (click)="deleteMsg(selectedMsgId!)">Delete</li>
+              </ul>
+            </div>
+            
+            <div class="message-reactions" *ngIf="msg.reactions?.length">
+              <span 
+                *ngFor="let react of msg.reactions" 
+                [class.my-reaction]="react.User === currentUser" 
+                (click)="react.User === currentUser ? removeReaction(msg, react) : null">
+                {{ react.Emoji }}
+              </span>
+            </div>
+  
+            <div class="reaction-menu" *ngIf="msg.showReactions">
+              <span *ngFor="let emoji of reactionOptions" (click)="addReaction(msg, emoji)">
+                {{ emoji }}
+              </span>
+            </div>
           </div>
         </div>
       </div>
+      
 
       <div *ngIf="isUserTyping" class="message-wrapper received typing-indicator-wrapper">
         <div class="message-bubble typing-bubble">

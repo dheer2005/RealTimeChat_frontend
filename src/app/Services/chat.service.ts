@@ -432,31 +432,25 @@ export class ChatService {
       error: (err) => console.error("Error saving group message:", err)
     });
   }
-  
-  private saveMessage(message: any): void {
-    this.http.post(`${this.baseUrl}Chat`, message).subscribe({
-      error: (err) => console.error("Error saving message:", err)
-    });
-  }
 
   public getMessages(fromUser: string, userTo: string): Observable<any> {
-    return this.http.get(`${this.baseUrl}Chat/${fromUser}/${userTo}`);
+    return this.http.get(`${this.baseUrl}Chat/${fromUser}/${userTo}`, this.authSvc.getHttpOptions());
   }
   
   public SaveGroupChats(grpMessage: any): Observable<any> {
-    return this.http.post(`${this.baseUrl}Chat/groupChat`, grpMessage);
+    return this.http.post(`${this.baseUrl}Chat/groupChat`, grpMessage, this.authSvc.getHttpOptions());
   }
 
   public getGroupMessages(groupName: string): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}Chat/getGroupMessages/${groupName}`);
+    return this.http.get<any[]>(`${this.baseUrl}Chat/getGroupMessages/${groupName}`, this.authSvc.getHttpOptions());
   }
 
   public unreadCount(fromUser: string, userTo: string) {
-    return this.http.get<any[]>(`${this.baseUrl}Chat/unread-counts/${fromUser}/${userTo}`);
+    return this.http.get<any[]>(`${this.baseUrl}Chat/unread-counts/${fromUser}/${userTo}`, this.authSvc.getHttpOptions());
   }
 
   public lastMessage(userName: string): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}Chat/lastMessages/${userName}`);
+    return this.http.get<any[]>(`${this.baseUrl}Chat/lastMessages/${userName}`, this.authSvc.getHttpOptions());
   }
 
   public async stopConnection(): Promise<void> {
