@@ -374,7 +374,7 @@ export class ChatComponent implements OnInit, OnDestroy {
       this.isLoader = true;
     }
 
-    this.chatService.getMessages(this.fromUser, this.UserTo).subscribe({
+    this.chatService.getMessages(this.UserTo).subscribe({
       next: (res: any) => {
         this.messages = res.map((msg: any) => ({
           id: msg.id,

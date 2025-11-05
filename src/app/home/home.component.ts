@@ -136,7 +136,7 @@ export class HomeComponent implements OnInit, OnDestroy {
           }));
 
         const observables = this.userList2.map(user =>
-          this.getUnreadCountAndLastMessage(user.userName, this.authSvc.getUserName()).pipe(
+          this.getUnreadCountAndLastMessage(user.userName).pipe(
             map((res: any) => {
               user.unreadCount = res?.count || 0;
               user.lastMessage = user.lastMessage || res?.lastMsg || '';
@@ -155,6 +155,8 @@ export class HomeComponent implements OnInit, OnDestroy {
           });
 
           this.IsLoader = false;
+
+          console.log("Final User List:", this.userList2);
         });
       });
 
@@ -170,8 +172,8 @@ export class HomeComponent implements OnInit, OnDestroy {
     }
   }
 
-  getUnreadCountAndLastMessage(fromUser: string, userTo: string): Observable<any[] | null> {
-    return this.chatService.unreadCount(fromUser, userTo).pipe(
+  getUnreadCountAndLastMessage(userTo: string): Observable<any[] | null> {
+    return this.chatService.unreadCount(userTo).pipe(
       map((res: any) => {
         return res;
       })

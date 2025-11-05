@@ -433,8 +433,8 @@ export class ChatService {
     });
   }
 
-  public getMessages(fromUser: string, userTo: string): Observable<any> {
-    return this.http.get(`${this.baseUrl}Chat/${fromUser}/${userTo}`, this.authSvc.getHttpOptions());
+  public getMessages(userTo: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}Chat/${userTo}`, this.authSvc.getHttpOptions());
   }
   
   public SaveGroupChats(grpMessage: any): Observable<any> {
@@ -445,8 +445,8 @@ export class ChatService {
     return this.http.get<any[]>(`${this.baseUrl}Chat/getGroupMessages/${groupName}`, this.authSvc.getHttpOptions());
   }
 
-  public unreadCount(fromUser: string, userTo: string) {
-    return this.http.get<any[]>(`${this.baseUrl}Chat/unread-counts/${fromUser}/${userTo}`, this.authSvc.getHttpOptions());
+  public unreadCount(userTo: string) {
+    return this.http.get<any[]>(`${this.baseUrl}Chat/unread-counts/${userTo}`, this.authSvc.getHttpOptions());
   }
 
   public lastMessage(userName: string): Observable<any[]> {

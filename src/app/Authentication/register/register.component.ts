@@ -1,5 +1,5 @@
-import { CommonModule } from '@angular/common';
-import { Component, ElementRef, ViewChild } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { Component, ElementRef, Inject, OnInit, PLATFORM_ID, ViewChild } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthenticationService } from '../../Services/authentication.service';
@@ -13,13 +13,13 @@ import { ToastrService } from 'ngx-toastr';
   templateUrl: './register.component.html',
   styleUrl: './register.component.css'
 })
-export class RegisterComponent {
+export class RegisterComponent implements OnInit {
   @ViewChild('fileInput') fileInputRef!: ElementRef;
 
   selectedProfileImage: File | null = null;
   previewImageUrl: string | null = null;
 
-  constructor(private authSvc: AuthenticationService, private router: Router, private toastr: ToastrService) {}
+  constructor(private authSvc: AuthenticationService, private router: Router, private toastr: ToastrService, @Inject(PLATFORM_ID) private platformId: any) {}
 
   register:RegisterModel={
     UserName: '',
@@ -39,6 +39,14 @@ export class RegisterComponent {
     this.selectedProfileImage = null;
     if(this.fileInputRef){
       this.fileInputRef.nativeElement.value = '';
+    }
+  }
+
+  ngOnInit(): void {
+    if(isPlatformBrowser(this.platformId)){
+      if(localStorage.getItem('jwt') && this.authSvc.checkAuthentication()){
+        this.router.navigateByUrl('/home');
+      }
     }
   }
 
@@ -87,21 +95,26 @@ export class RegisterComponent {
       },
       error: (error:any)=>{
         this.isRegister = false;
+        this.errorMessages = [];
 
-        if(error.status == 400 && error.error && error.error.errors){
+        if (error.status === 400 && error.error && error.error.errors) {
           const validationErrors = error.error.errors;
-          this.errorMessages = [];
-
-          for(const field in validationErrors){
-            if(validationErrors.hasOwnProperty(field)){
-              this.errorMessages.push(...validationErrors[field])
+          for (const field in validationErrors) {
+            if (validationErrors.hasOwnProperty(field)) {
+              this.errorMessages.push(...validationErrors[field]);
             }
           }
-        }else if(error.message){
-          this.errorMessages = [];
-          this.errorMessages.push(error.message);
         }
 
+        else if (error.status === 400 && error.error && error.error.message) {
+          this.errorMessages.push(error.error.message);
+        }
+
+        else if (error.message) {
+          this.errorMessages.push(error.message);
+        } else {
+          this.errorMessages.push("Something went wrong. Please try again later.");
+        }
       }
     })
   }
