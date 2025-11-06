@@ -4,6 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { CommonModule, UpperCasePipe } from '@angular/common';
 import { ToastrService } from 'ngx-toastr';
 import { ChatService } from '../Services/chat.service';
+import { SessionService } from '../Services/session.service';
 
 @Component({
   selector: 'app-layout',
@@ -16,7 +17,7 @@ export class LayoutComponent {
   currentUserName: string = '';
   isNavbarOpen = false;
 
-  constructor(private eRef: ElementRef, private chatService: ChatService, public authSvc: AuthenticationService, private router: Router, private toastr: ToastrService){
+  constructor(private eRef: ElementRef, private sessionSvc: SessionService, private chatService: ChatService, public authSvc: AuthenticationService, private router: Router, private toastr: ToastrService){
     this.currentUserName = this.authSvc.getUserName();
   }
 
@@ -36,21 +37,13 @@ export class LayoutComponent {
   }
 
   logout(){
-    try {
-      this.chatService.stopConnection();
-      
-      localStorage.removeItem('jwt');
-      localStorage.removeItem('userName');
-      
-      this.router.navigate(['/login']);
-      
-      this.toastr.success('Logout successful');
+    this.chatService.stopConnection();
+    this.authSvc.logoutCurrentUser();
+    this.sessionSvc.logoutCurrentDevice().subscribe({
+      next: (res)=>{
+        this.toastr.success('Logged out from current device successfully');
+      }
+    });
 
-    } catch (error) {
-      this.toastr.error('Error during logout:');
-      localStorage.removeItem('jwt');
-      localStorage.removeItem('userName');
-      this.router.navigate(['/login']);
-    }
   }
 }

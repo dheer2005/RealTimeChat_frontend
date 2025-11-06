@@ -21,7 +21,10 @@
           <a class="nav-link" routerLink="/friend-request" (click)="closeNavbar()">Friend Request</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" [routerLink]="['/profile']" (click)="closeNavbar()">Profile</a>
+          <a class="nav-link" routerLink="'/profile'" (click)="closeNavbar()">Profile</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/sessions" (click)="closeNavbar()">Manage Sessions</a>
         </li>
 
         <ng-container *ngIf="authSvc?.UserName">

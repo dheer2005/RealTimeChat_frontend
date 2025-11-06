@@ -7,6 +7,7 @@ import { LoginModel } from '../../Models/LoginModel.model';
 import { FormsModule } from '@angular/forms';
 
 import { ToastrService } from 'ngx-toastr';
+import { ChatService } from '../../Services/chat.service';
 
 @Component({
   selector: 'app-login',
@@ -16,7 +17,7 @@ import { ToastrService } from 'ngx-toastr';
   styleUrl: './login.component.css'
 })
 export class LoginComponent implements OnInit {
-  constructor(private http:HttpClient, private authSvc: AuthenticationService,private toastr: ToastrService,private router: Router, @Inject(PLATFORM_ID) private platformId: any){}
+  constructor(private http:HttpClient, private chatSvc: ChatService,private authSvc: AuthenticationService,private toastr: ToastrService,private router: Router, @Inject(PLATFORM_ID) private platformId: any){}
 
   login:LoginModel={
     UserName: '',
@@ -38,7 +39,7 @@ export class LoginComponent implements OnInit {
     this.isLoading = true;
     this.authSvc.loginUser(this.login).subscribe({
       next: (res:any)=>{
-        localStorage.setItem('jwt',res.token);
+        this.authSvc.saveToken(res.token);
         this.toastr.success("User logged in" , "Success");
         this.authSvc.getUserName();
         this.router.navigateByUrl('/home');

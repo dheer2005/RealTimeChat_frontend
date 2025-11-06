@@ -4,6 +4,7 @@ import { isPlatformBrowser } from '@angular/common';
 import * as signalR from '@microsoft/signalr';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { AuthenticationService } from './authentication.service';
+import { Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root'
@@ -14,7 +15,7 @@ export class ChatService {
   
   // private baseUrl = 'https://localhost:7180/api/';
   // private chatHubUrl = 'https://localhost:7180/';
-  
+
   private hubConnection!: signalR.HubConnection;
   private connectionPromise: Promise<void> | null = null;
   private isConnectionStarted: boolean = false;
@@ -53,6 +54,9 @@ export class ChatService {
 
   private messageDeleteSubject = new Subject<number>();
   public messageDelete$ = this.messageDeleteSubject.asObservable();
+
+  private sessionChangedSubject = new Subject<string>();
+  public sessionChanged$ = this.sessionChangedSubject.asObservable();
   
   public connectionState$ = new BehaviorSubject<signalR.HubConnectionState>(
     signalR.HubConnectionState.Disconnected
@@ -61,7 +65,8 @@ export class ChatService {
   constructor(
     private http: HttpClient,
     private authSvc: AuthenticationService,
-    @Inject(PLATFORM_ID) private platformId: Object
+    @Inject(PLATFORM_ID) private platformId: Object,
+    private router: Router
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
   }
@@ -148,6 +153,12 @@ export class ChatService {
       await this.hubConnection.start();
       this.isConnectionStarted = true;
       this.connectionState$.next(signalR.HubConnectionState.Connected);
+
+      const jti = this.authSvc.getJti();
+      if (jti) {
+        this.hubConnection.invoke("JoinJwtGroup", jti);
+      }
+      
     } catch (err) {
       console.error("SignalR Connection Error:", err);
       this.isConnectionStarted = false;
@@ -157,6 +168,18 @@ export class ChatService {
   }
 
   private setupEventHandlers(): void {
+    this.hubConnection.on("ForceLogout", () => {
+      console.warn("🔴 ForceLogout received: logging out now");
+      this.authSvc.clearToken();
+      this.router.navigate(['/login']);
+    });
+
+    this.hubConnection.on("SessionChanged", (userId:string) => {
+      console.log("📢 SessionChanged received for userId:", userId);
+      this.sessionChangedSubject.next(userId);
+    });
+
+
     this.hubConnection.on("ReceiveMessage", (msg:any) => {
       
       const createdDate = new Date();

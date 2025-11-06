@@ -7,6 +7,7 @@ import { authGuard } from './Guards/auth.guard';
 import { ProfileDescriptionComponent } from './profile-description/profile-description.component';
 import { GroupChatComponent } from './group-chat/group-chat.component';
 import { chatUserGuardGuard } from './Guards/chat-user-guard.guard';
+import { SessionsComponent } from './sessions/sessions.component';
 
 export const routes: Routes = [
     { path: 'login', component: LoginComponent },
@@ -16,6 +17,7 @@ export const routes: Routes = [
     { path: 'chats', component: ChatComponent, canActivate: [authGuard] },
     { path: 'chats/:name', component: ChatComponent, canActivate: [authGuard, chatUserGuardGuard] },
     { path: 'profile', component: ProfileDescriptionComponent, canActivate: [authGuard] },
+    { path: 'sessions', component: SessionsComponent, canActivate: [authGuard] },
     { path: 'friend-request', loadComponent: () => import('./friend-request/friend-request.component').then(m => m.FriendRequestComponent), canActivate: [authGuard] },
     { path: '', redirectTo: 'login', pathMatch: 'full' },
     { path: '**', redirectTo: 'login', pathMatch: 'full' }

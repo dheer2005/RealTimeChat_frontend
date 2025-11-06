@@ -3,20 +3,18 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { Router } from '@angular/router';
 import { JwtHelperService } from '@auth0/angular-jwt';
-import { get } from 'jquery';
 import { jwtDecode } from 'jwt-decode';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { Observable } from 'rxjs';
+import { ToastrService } from 'ngx-toastr';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthenticationService {
 
-  constructor(private http:HttpClient, private jwtHelper: JwtHelperService, private router: Router, @Inject(PLATFORM_ID) private platformId: any) { }
+  constructor(private http:HttpClient, private jwtHelper: JwtHelperService, private router: Router, @Inject(PLATFORM_ID) private platformId: any, private toastrSvc: ToastrService) { }
 
-  public chatList = new BehaviorSubject<boolean>(false); 
-  public chatList$ = this.chatList.asObservable();
-  
+  private tokenKey = 'jwt';
   
   public UserName:any;
   seenUrl: any = "https://realtime001.bsite.net/api/Seen/messages/" 
@@ -33,6 +31,19 @@ export class AuthenticationService {
       'content-type': 'application/json'
     })
   };
+
+  saveToken(token: string) {
+    if(isPlatformBrowser(this.platformId)){
+      localStorage.setItem(this.tokenKey, token);
+    }
+  }
+
+  clearToken() {
+    if(isPlatformBrowser(this.platformId)){
+      localStorage.removeItem(this.tokenKey);
+      localStorage.removeItem('userName');
+    }
+  }
 
   loginUser(data:any){
     return this.http.post(this.baseUrl+"Login", data, this.httpOptions);
@@ -98,6 +109,17 @@ export class AuthenticationService {
     return null;
   }
 
+  getJti() {
+    if(isPlatformBrowser(this.platformId)){
+      const token = localStorage.getItem('jwt');
+      if(token != null){
+        const decodeToken:any = jwtDecode(token);
+        const jti =decodeToken ? decodeToken.jti : null;
+        return jti;
+      }
+    }
+  }
+
   public getHttpOptions(): { headers:HttpHeaders } {
     const token = this.getToken(); 
     let headers = new HttpHeaders({ 'Content-Type': 'application/json' });
@@ -106,5 +128,19 @@ export class AuthenticationService {
     }
     return {headers: headers};
   }
+
+  logoutCurrentUser(){
+    try {
+      this.clearToken();
+      this.router.navigate(['/login']);
+      this.toastrSvc.success('Logout successful');
+
+    } catch (error) {
+      console.error('Logout error:', error);
+      this.toastrSvc.error('Error during logout:');
+    }
+  }
+  
+
 
 }
