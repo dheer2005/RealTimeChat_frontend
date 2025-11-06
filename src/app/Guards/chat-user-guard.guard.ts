@@ -7,7 +7,7 @@ import { Location } from '@angular/common';
 import { firstValueFrom, map } from 'rxjs';
 import { FriendrequestService } from '../Services/friendrequest.service';
 
-export const chatUserGuardGuard: CanActivateFn = (route, state) => {
+export const chatUserGuardGuard: CanActivateFn = async (route, state) => {
   const authSvc = inject(AuthenticationService);
   const toastr = inject(ToastrService);
   const router = inject(Router);
@@ -22,23 +22,27 @@ export const chatUserGuardGuard: CanActivateFn = (route, state) => {
   if(loggedInUser && targetUser && loggedInUser.toLowerCase() === targetUser.toLowerCase()){
     toastr.error("You cannot chat with yourself");
     location.back();
+    return false;
   }
 
   try{
-    const friends = firstValueFrom(friendRequestSvc.getFriendsList(authSvc.getUserId()).pipe(
-      map((friendsList:any) => friendsList.map((f: any) => f.userName.toLowerCase()))
-    ));
+    const friendsList: any = await firstValueFrom(
+      friendRequestSvc.getFriendsList(authSvc.getUserId()).pipe(
+        map((friends: any[]) => friends.map(f => f.userName.toLowerCase()))
+      )
+    );
 
-    const isFriend = friends.then((list:any) => list.includes(targetUser?.toLowerCase() || ''));
+    const isFriend = friendsList.includes(targetUser?.toLowerCase() || '');
 
     if (!isFriend) {
       toastr.warning('You can only chat with your friends!');
       return router.parseUrl('/home');
     }
+
+    return true;
   }
   catch(err){
     toastr.error('Unable to verify chat access.');
     return router.parseUrl('/home');
   }
-  return true;
 };

@@ -27,8 +27,13 @@ export class ProfileDescriptionComponent {
   constructor(private activatedRoute: ActivatedRoute, private Router: Router, private chatSvc: ChatService, private authSvc: AuthenticationService, private toastrSvc:ToastrService){
     this.activatedRoute.paramMap.subscribe(param=>{
       this.profileName = param.get('name')?? '';
-      this.loadUserInfo();
     });
+
+    if(this.profileName==null || this.profileName==''){
+      this.profileName = this.authSvc.getUserName();
+    }
+
+    this.loadUserInfo();
 
     this.onlineUsersSubscription = this.chatSvc.onlineUsers$.subscribe(
       (users) => {

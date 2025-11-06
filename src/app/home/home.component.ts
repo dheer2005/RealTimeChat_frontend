@@ -155,8 +155,6 @@ export class HomeComponent implements OnInit, OnDestroy {
           });
 
           this.IsLoader = false;
-
-          console.log("Final User List:", this.userList2);
         });
       });
 

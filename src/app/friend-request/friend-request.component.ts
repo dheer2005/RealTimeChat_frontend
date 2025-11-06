@@ -5,8 +5,9 @@ import { AuthenticationService } from '../Services/authentication.service';
 import { ChatService } from '../Services/chat.service';
 import { FriendrequestService } from '../Services/friendrequest.service';
 import { ToastrService } from 'ngx-toastr';
-import { Subscription } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, of, Subject, Subscription, switchMap, tap } from 'rxjs';
 import { Router } from '@angular/router';
+import { query } from 'express';
 
 interface FriendRequest {
   id: string;
@@ -41,6 +42,7 @@ export class FriendRequestComponent implements OnInit, OnDestroy {
   friends: User[] = [];
   searchQuery: string = '';
   searchResults: User[] = [];
+  private searchSubject = new Subject<string>();
   sentFriendRequests: any[] = [];
   isLoading: boolean = false;
   isSearching: boolean = false;
@@ -64,6 +66,34 @@ export class FriendRequestComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+
+    this.searchSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      tap({
+        next: () => (this.isSearching = true)
+      }),
+      switchMap((query) => {
+        if(!query.trim()){
+          this.isSearching = false;
+          this.searchResults = [];
+          return of([]);
+        }
+
+        return this.friendRequestSvc.searchUsers(query, this.currentUserId).pipe(
+          catchError(err =>{
+            console.error(err);
+            this.isSearching = false;
+            this.toastrSvc.error('Failed to search users');
+            return of([]);
+          })
+        );
+      })
+    ).subscribe((res:any)=>{
+      this.searchResults = res.filter((u: User) => u.id !== this.currentUserId);
+      this.isSearching = false;
+    })
+
     
     this.chatSvc.startConnection(this.currentUserName, ()=> {}, ()=> {});
     
@@ -206,23 +236,25 @@ export class FriendRequestComponent implements OnInit, OnDestroy {
   }
 
   searchUsers(): void {
-    if (!this.searchQuery.trim()) {
-      this.searchResults = [];
-      return;
-    }
+    // if (!this.searchQuery.trim()) {
+    //   this.searchResults = [];
+    //   return;
+    // }
 
-    this.isSearching = true;
-    this.friendRequestSvc.searchUsers(this.searchQuery, this.currentUserId).subscribe({
-      next: (data: any) => {
-        this.searchResults = data.filter((user: User) => user.id !== this.currentUserId);
-        this.isSearching = false;
-      },
-      error: (err:any) => {
-        this.toastrSvc.error('Failed to search users');
-        this.isSearching = false;
-        console.error(err);
-      }
-    });
+    // this.isSearching = true;
+    // this.friendRequestSvc.searchUsers(this.searchQuery, this.currentUserId).subscribe({
+    //   next: (data: any) => {
+    //     this.searchResults = data.filter((user: User) => user.id !== this.currentUserId);
+    //     this.isSearching = false;
+    //   },
+    //   error: (err:any) => {
+    //     this.toastrSvc.error('Failed to search users');
+    //     this.isSearching = false;
+    //     console.error(err);
+    //   }
+    // });
+
+    this.searchSubject.next(this.searchQuery);
   }
 
   sendFriendRequest(toUserId: string): void {
