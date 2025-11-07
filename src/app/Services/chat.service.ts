@@ -169,13 +169,11 @@ export class ChatService {
 
   private setupEventHandlers(): void {
     this.hubConnection.on("ForceLogout", () => {
-      console.warn("🔴 ForceLogout received: logging out now");
       this.authSvc.clearToken();
       this.router.navigate(['/login']);
     });
 
     this.hubConnection.on("SessionChanged", (userId:string) => {
-      console.log("📢 SessionChanged received for userId:", userId);
       this.sessionChangedSubject.next(userId);
     });
 
