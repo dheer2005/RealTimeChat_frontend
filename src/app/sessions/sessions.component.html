@@ -35,7 +35,7 @@
         <button 
           class="logout-btn"
           [disabled]="s.jwtId === authSvc.getJwtId()"
-          (click)="logoutDevice(s.jwtId)">
+          (click)="logoutDevice(s.id)">
           Logout
         </button>
         <span *ngIf="s.jwtId === authSvc.getJwtId()" class="badge">This Device</span>
