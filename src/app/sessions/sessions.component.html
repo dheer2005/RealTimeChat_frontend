@@ -15,7 +15,7 @@
       
       <div class="session-header">
         <div class="device-icon">
-          <i class="fas fa-laptop"></i>
+          <i class="fas" [ngClass]="getDeviceIcon(s.deviceInfo)"></i>
         </div>
         <div class="device-info">
           <h3>{{ s.deviceInfo }}</h3>

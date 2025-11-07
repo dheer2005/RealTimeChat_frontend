@@ -1,7 +1,7 @@
 .sessions-container {
   padding: 2rem;
   background: linear-gradient(135deg, #1a1c2c 0%, #2b2f5c 100%);
-  min-height: 100vh;
+  min-height: 86vh;
   color: #f2f4ff;
   font-family: 'Inter', sans-serif;
 }

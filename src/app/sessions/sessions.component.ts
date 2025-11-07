@@ -44,6 +44,18 @@ export class SessionsComponent implements OnInit, OnDestroy {
     }
   }
 
+  getDeviceIcon(deviceInfo: string): string {
+    const info = deviceInfo.toLowerCase();
+
+    if (info.includes('android')) return 'fa-mobile-screen';
+    if (info.includes('ios') || info.includes('iphone')) return 'fa-mobile';
+    if (info.includes('mac')) return 'fa-laptop';
+    if (info.includes('windows')) return 'fa-laptop';
+    if (info.includes('linux')) return 'fa-desktop';
+    
+    return 'fa-question-circle';
+  }
+
   loadSessions(){
     this.sessionSvc.getAllActiveSession().subscribe({
       next: (res) => {
