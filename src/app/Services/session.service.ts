@@ -17,6 +17,10 @@ export class SessionService {
     return this.http.get(`${this.baseUrl}/active-session`, this.authSvc.getHttpOptions());
   }
 
+  getClientIp(){
+    return this.http.get('https://api.ipify.org?format=json');
+  }
+
   logoutFromAllDevices(){
     return this.http.post(`${this.baseUrl}/logout/all`, {}, this.authSvc.getHttpOptions());
   }

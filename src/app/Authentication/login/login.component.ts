@@ -8,6 +8,8 @@ import { FormsModule } from '@angular/forms';
 
 import { ToastrService } from 'ngx-toastr';
 import { ChatService } from '../../Services/chat.service';
+import { SessionService } from '../../Services/session.service';
+import { log } from 'node:console';
 
 @Component({
   selector: 'app-login',
@@ -17,22 +19,26 @@ import { ChatService } from '../../Services/chat.service';
   styleUrl: './login.component.css'
 })
 export class LoginComponent implements OnInit {
-  constructor(private http:HttpClient, private chatSvc: ChatService,private authSvc: AuthenticationService,private toastr: ToastrService,private router: Router, @Inject(PLATFORM_ID) private platformId: any){}
+  constructor(private http:HttpClient, private sessionSvc: SessionService,private chatSvc: ChatService,private authSvc: AuthenticationService,private toastr: ToastrService,private router: Router, @Inject(PLATFORM_ID) private platformId: any){}
 
   login:LoginModel={
     UserName: '',
-    Password: ''
+    Password: '',
+    ClientIp: ''
   }
 
   isLoading: boolean = false;
 
 
   ngOnInit(): void {
-      if(isPlatformBrowser(this.platformId)){
-        if(localStorage.getItem('jwt') && this.authSvc.checkAuthentication()){
-          this.router.navigateByUrl('/home');
-        }
+    if(isPlatformBrowser(this.platformId)){
+      if(localStorage.getItem('jwt') && this.authSvc.checkAuthentication()){
+        this.router.navigateByUrl('/home');
       }
+    }
+    this.sessionSvc.getClientIp().subscribe((ipData:any) => {
+      this.login.ClientIp = ipData.ip;
+    });
   }
 
   onLogin(){

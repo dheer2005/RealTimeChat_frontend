@@ -1,4 +1,5 @@
 export interface LoginModel {
     UserName: string,
-    Password: string
+    Password: string,
+    ClientIp: string | null
 }
