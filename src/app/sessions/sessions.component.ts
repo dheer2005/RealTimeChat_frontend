@@ -22,20 +22,13 @@ export class SessionsComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    console.log('🎯 Sessions component initialized for user:', this.authSvc.getUserId());
     this.loadSessions();
 
-    // 🔥 IMPORTANT: Wait for SignalR to be connected first
     const checkConnection = setInterval(() => {
       if (this.chatSvc.isConnected()) {
-        console.log('✅ SignalR connected, subscribing to session changes...');
         
-        this.sessionChangeSub = this.chatSvc.sessionChanged$.subscribe((userID: string) => {
-          console.log('🔄 SessionChanged received for:', userID);
-          console.log('🔄 Current user:', this.authSvc.getUserId());
-          
+        this.sessionChangeSub = this.chatSvc.sessionChanged$.subscribe((userID: string) => {   
           if (userID === this.authSvc.getUserId()) {
-            console.log('✅ Match! Reloading sessions...');
             this.loadSessions();
           }
         });
@@ -55,7 +48,6 @@ export class SessionsComponent implements OnInit, OnDestroy {
     this.sessionSvc.getAllActiveSession().subscribe({
       next: (res) => {
         this.sessions = res;
-        console.log('Active sessions loaded:', this.sessions);
       },
       error: (err:any) => {
         this.toastrSvc.warning('Could not load active sessions', 'Error');
@@ -68,7 +60,6 @@ export class SessionsComponent implements OnInit, OnDestroy {
   {
     this.sessionSvc.logoutSessionById(sessionId).subscribe({
       next: (res) => {
-        console.log('Logged out from device:', sessionId);
         this.loadSessions();
       },
       error: (err) => {
