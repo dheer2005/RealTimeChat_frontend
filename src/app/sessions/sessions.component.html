@@ -1,10 +1,45 @@
-<div *ngFor="let s of sessions">
-  <p>
-    {{ s.deviceInfo }} <br>
-    IP: {{ s.ipAddress }} <br>
-    Logged in at: {{ s.createdAt | date:'short' }}
-  </p>
-  <button (click)="logoutDevice(s.id)">Logout</button>
-</div>
+<div class="sessions-container">
+  <div class="header">
+    <h2 class="title">Active Sessions</h2>
+    <button class="logout-all-btn" (click)="logoutAll()">Logout All Devices</button>
+  </div>
 
-<button (click)="logoutAll()">Logout All Devices</button>
+  <div *ngIf="sessions?.length === 0" class="empty-state">
+    <p>No active sessions found.</p>
+  </div>
+
+  <div class="sessions-grid">
+    <div *ngFor="let s of sessions" 
+         class="session-card" 
+         [class.current-session]="s.jwtId === authSvc.getJwtId()">
+      
+      <div class="session-header">
+        <div class="device-icon">
+          <i class="fas fa-laptop"></i>
+        </div>
+        <div class="device-info">
+          <h3>{{ s.deviceInfo }}</h3>
+          <p class="ip">IP: {{ s.ipAddress }}</p>
+        </div>
+      </div>
+
+      <div class="session-meta">
+        <p>
+          <i class="fas fa-clock"></i> 
+          Logged in at: 
+          <strong>{{ s.createdAt | date:'medium':'Asia/Kolkata' }}</strong>
+        </p>
+      </div>
+
+      <div class="session-actions">
+        <button 
+          class="logout-btn"
+          [disabled]="s.jwtId === authSvc.getJwtId()"
+          (click)="logoutDevice(s.jwtId)">
+          Logout
+        </button>
+        <span *ngIf="s.jwtId === authSvc.getJwtId()" class="badge">This Device</span>
+      </div>
+    </div>
+  </div>
+</div>

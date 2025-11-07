@@ -17,7 +17,7 @@ export class SessionsComponent implements OnInit, OnDestroy {
   sessions: any = [];
   private sessionChangeSub!: Subscription;
 
-  constructor(private authSvc: AuthenticationService, private sessionSvc: SessionService, private chatSvc: ChatService, private toastrSvc: ToastrService) {
+  constructor(public authSvc: AuthenticationService, private sessionSvc: SessionService, private chatSvc: ChatService, private toastrSvc: ToastrService) {
     this.loadSessions();
   }
 
@@ -72,7 +72,7 @@ export class SessionsComponent implements OnInit, OnDestroy {
     this.sessionSvc.logoutFromAllDevices().subscribe({
       next: (res) => {
         this.toastrSvc.success('Logged out from all devices', 'Success');
-        this.sessions = [];
+        this.sessions = this.sessions.filter((s: any) => s.jwtId === this.authSvc.getJwtId());
       },
       error: (err) => {
         this.toastrSvc.error('Could not log out from all devices', 'Error');

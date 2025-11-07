@@ -109,7 +109,7 @@ export class AuthenticationService {
     return null;
   }
 
-  getJti() {
+  getJwtId() {
     if(isPlatformBrowser(this.platformId)){
       const token = localStorage.getItem('jwt');
       if(token != null){

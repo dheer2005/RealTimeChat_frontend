@@ -154,7 +154,7 @@ export class ChatService {
       this.isConnectionStarted = true;
       this.connectionState$.next(signalR.HubConnectionState.Connected);
 
-      const jti = this.authSvc.getJti();
+      const jti = this.authSvc.getJwtId();
       if (jti) {
         this.hubConnection.invoke("JoinJwtGroup", jti);
       }
