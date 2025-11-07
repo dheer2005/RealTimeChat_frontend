@@ -38,12 +38,13 @@ export class LayoutComponent {
 
   logout(){
     this.chatService.stopConnection();
-    this.authSvc.logoutCurrentUser();
+    // this.authSvc.logoutCurrentUser();
     this.sessionSvc.logoutCurrentDevice().subscribe({
       next: (res)=>{
-        this.toastr.success('Logged out from current device successfully');
+        this.authSvc.clearToken();
+        this.toastr.success("User logged out from current device" , "Success");
+        this.router.navigateByUrl('/login');
       }
     });
-
   }
 }
