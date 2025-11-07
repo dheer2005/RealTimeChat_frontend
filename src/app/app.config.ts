@@ -21,6 +21,8 @@ export const appConfig: ApplicationConfig = {
       JwtModule.forRoot({
         config: {
           tokenGetter: () => localStorage.getItem('jwt'),
+          throwNoTokenError: false,
+          skipWhenExpired: true,
         }
       })
     ), 
