@@ -6,9 +6,9 @@ import { AuthenticationService } from './authentication.service';
   providedIn: 'root'
 })
 export class FriendrequestService {
-  private baseUrl = 'https://realtime001.bsite.net/api/Friend';
+  // private baseUrl = 'https://realtime001.bsite.net/api/Friend';
 
-  // private baseUrl = 'https://localhost:7180/api/Friend';
+  private baseUrl = 'https://localhost:7180/api/Friend';
 
   constructor(private http: HttpClient, private authSvc: AuthenticationService) { }
 

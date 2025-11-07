@@ -7,9 +7,9 @@ import { HttpClient } from '@angular/common/http';
 })
 export class SessionService {
 
-  private baseUrl = 'https://realtime001.bsite.net/api/Session';
+  // private baseUrl = 'https://realtime001.bsite.net/api/Session';
 
-  // private baseUrl = 'https://localhost:7180/api/Session';
+  private baseUrl = 'https://localhost:7180/api/Session';
 
   constructor(private authSvc: AuthenticationService, private http: HttpClient) { }
 
