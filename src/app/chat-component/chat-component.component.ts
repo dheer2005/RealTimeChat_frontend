@@ -195,8 +195,6 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.selectedMediaType = type;
     this.showContextMenu = true;
 
-    // Close menu when clicked outside
-    // document.addEventListener('click', this.closeContextMenu.bind(this), { once: true });
   }
   viewMedia(type: 'image' | 'video', item: any) {
     this.showContextMenu = false;

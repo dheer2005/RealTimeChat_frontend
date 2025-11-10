@@ -214,7 +214,7 @@
               <ul>
                 <li (click)="replyToMessage(msg)">Reply</li>
                 <li *ngIf="msg.message != ''" (click)="copyMessage(msg.message)">Copy message</li>
-                <li (click)="deleteMsg(selectedMsgId!)">Delete</li>
+                <li *ngIf="msg.fromUser == currentUser" (click)="deleteMsg(selectedMsgId!)">Delete</li>
               </ul>
             </div>
             
