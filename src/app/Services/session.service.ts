@@ -18,7 +18,7 @@ export class SessionService {
   }
 
   getClientIp(){
-    return this.http.get('https://api.ipify.org?format=json');
+    return this.http.get('https://ipapi.co/json');
   }
 
   logoutFromAllDevices(){
