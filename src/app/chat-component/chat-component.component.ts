@@ -72,12 +72,14 @@ export class ChatComponent implements OnInit, OnDestroy {
   mapStaticImageUrl: any = `https://res.cloudinary.com/ddvzeseip/image/upload/v1760094391/Chatlify/ap_a6v2ac.png`;
 
 
-  showLocationModal: boolean = false;
-  map!: any;
-  marker!: any;
-  selectedLat!: number | null;
-  selectedLon!: number | null;
+ showLocationModal: boolean = false;
+  map: any = null;
+  marker: any = null;
+  selectedLat: number | null = null;
+  selectedLon: number | null = null;
   isLoadingLocation: boolean = false;
+  isMapInitialized: boolean = false;
+
 
   showEmojiPicker: boolean = false;
   showAttachmentMenu = false;
@@ -98,6 +100,7 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   selectedMsgId: number | null = null;
   showMsgContextMenu: boolean = false;
+  contextMenuPosition = { x: 0, y: 0 };
   previewType: string = '';
   previewFileName: string = '';
 
@@ -172,11 +175,45 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.replyingToMessage = null;
   }
 
-  onMsgRightClick(event: MouseEvent, msg: any){
+  onMsgRightClick(event: MouseEvent, msg: any) {
     event.preventDefault();
+    event.stopPropagation();
+    
     this.selectedMsgId = msg.id;
     this.showMsgContextMenu = true;
-    this.selectedMsgId = msg.id
+
+    const menuWidth = 150; 
+    const menuHeight = 120; 
+    const padding = 10;
+
+    let x = event.clientX;
+    let y = event.clientY;
+
+    if (x + menuWidth > window.innerWidth) {
+      x = window.innerWidth - menuWidth - padding;
+    }
+
+    if (y + menuHeight > window.innerHeight) {
+      y = window.innerHeight - menuHeight - padding;
+    }
+    
+    if (x < padding) {
+      x = padding;
+    }
+
+    if (y < padding) {
+      y = padding;
+    }
+
+    this.contextMenuPosition = { x, y };
+
+    setTimeout(() => {
+      const menu = document.querySelector('.msg-context-menu') as HTMLElement;
+      if (menu) {
+        menu.style.left = `${x}px`;
+        menu.style.top = `${y}px`;
+      }
+    }, 0);
   }
 
   copyMessage(msg: any){
@@ -201,7 +238,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     if (type === 'image') {
       this.openImagePreviewViewModal(item);
     } else if (type === 'video') {
-      this.openVideoPreview(item);
+      // this.openVideoPreview(item);
     }
   }
 
@@ -460,71 +497,166 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   openLocationModal() {
     this.showLocationModal = true;
+    this.isMapInitialized = false;
 
     setTimeout(() => { 
-      if (!this.map) {
-        this.initMap();
-      } else {
-        this.map.invalidateSize();
-      }
-    }, 100);
+      this.initMap();
+    }, 300); 
   }
 
   destroyMap() {
     if (this.map) {
-      this.map.remove();
+      try {
+        this.map.remove();
+      } catch (error) {
+        console.error('Error removing map:', error);
+      }
       this.map = null;
       this.marker = null;
     }
+    this.isMapInitialized = false;
   }
 
   async initMap() {
-    if(!this.isBrowser)
-      return;
-     if (this.map) {
+    if (!this.isBrowser) return;
+    
+    try {
+      if (this.map) {
         this.map.remove();
         this.map = null;
+        this.marker = null;
       }
 
-    const L = await import('leaflet');
-
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        this.selectedLat = pos.coords.latitude;
-        this.selectedLon = pos.coords.longitude;
-
-        this.map = L.map('map').setView([this.selectedLat, this.selectedLon], 15);
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(this.map);
-
-        this.marker = L.marker([this.selectedLat, this.selectedLon], { draggable: true }).addTo(this.map);
-
-        this.marker.on('dragend', (e: any) => {
-          const latLng = e.target.getLatLng();
-          this.selectedLat = latLng.lat;
-          this.selectedLon = latLng.lng;
-        });
-      },
-      (err) => {
-        console.warn('Geolocation failed, using default location');
-        this.selectedLat = 28.6139; 
-        this.selectedLon = 77.2090;
-
-        this.map = L.map('map').setView([this.selectedLat, this.selectedLon], 15);
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        }).addTo(this.map);
-
-        this.marker = L.marker([this.selectedLat, this.selectedLon], { draggable: true }).addTo(this.map);
-        this.marker.on('dragend', (e: any) => {
-          const latLng = e.target.getLatLng();
-          this.selectedLat = latLng.lat;
-          this.selectedLon = latLng.lng;
-        });
+      const mapContainer = document.getElementById('map');
+      if (!mapContainer) {
+        console.error('Map container not found');
+        setTimeout(() => this.initMap(), 200);
+        return;
       }
-    );
+
+      const L = await import('leaflet');
+      
+      const iconRetinaUrl = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png';
+      const iconUrl = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png';
+      const shadowUrl = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png';
+
+      const DefaultIcon = L.icon({
+        iconRetinaUrl,
+        iconUrl,
+        shadowUrl,
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        tooltipAnchor: [16, -28],
+        shadowSize: [41, 41]
+      });
+
+      L.Marker.prototype.options.icon = DefaultIcon;
+
+      const getLocation = (): Promise<{lat: number, lng: number}> => {
+        return new Promise((resolve, reject) => {
+          if (!navigator.geolocation) {
+            reject(new Error('Geolocation not supported'));
+            return;
+          }
+
+          const timeoutId = setTimeout(() => {
+            reject(new Error('Geolocation timeout'));
+          }, 10000);
+
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              clearTimeout(timeoutId);
+              resolve({
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+              });
+            },
+            (error) => {
+              clearTimeout(timeoutId);
+              reject(error);
+            },
+            {
+              enableHighAccuracy: true,
+              timeout: 8000,
+              maximumAge: 0
+            }
+          );
+        });
+      };
+
+      let initialLat: number;
+      let initialLng: number;
+
+      try {
+        const location = await getLocation();
+        initialLat = location.lat;
+        initialLng = location.lng;
+      } catch (error) {
+        console.warn('Could not get current location, using default:', error);
+        
+        initialLat = 28.6139;
+        initialLng = 77.2090;
+        this.toastrSvc.info('Using default location. You can drag the marker to select a different location.');
+      }
+
+      this.selectedLat = initialLat;
+      this.selectedLon = initialLng;
+
+     
+      this.map = L.map('map', {
+        center: [initialLat, initialLng],
+        zoom: 15,
+        zoomControl: true,
+        scrollWheelZoom: true,
+        dragging: true,
+        touchZoom: true,
+        doubleClickZoom: true,
+        boxZoom: true
+        // tap: true,
+        // tapTolerance: 15
+      });
+
+      
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19
+      }).addTo(this.map);
+
+     
+      this.marker = L.marker([initialLat, initialLng], { 
+        draggable: true,
+        autoPan: true
+      }).addTo(this.map);
+
+     
+      this.marker.on('dragend', (e: any) => {
+        const latLng = e.target.getLatLng();
+        this.selectedLat = latLng.lat;
+        this.selectedLon = latLng.lng;
+      });
+
+      
+      this.map.on('click', (e: any) => {
+        const latLng = e.latlng;
+        this.selectedLat = latLng.lat;
+        this.selectedLon = latLng.lng;
+        this.marker.setLatLng(latLng);
+      });
+
+      
+      setTimeout(() => {
+        if (this.map) {
+          this.map.invalidateSize();
+          this.isMapInitialized = true;
+        }
+      }, 100);
+
+    } catch (error) {
+      console.error('Error initializing map:', error);
+      this.toastrSvc.error('Failed to load map. Please try again.');
+      this.closeLocationModal();
+    }
   }
 
   sendCurrentLocation() {
@@ -534,6 +666,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     }
 
     this.isLoadingLocation = true;
+    
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const lat = pos.coords.latitude;
@@ -542,14 +675,27 @@ export class ChatComponent implements OnInit, OnDestroy {
         this.sendLocation(lat, lng, 'Shared current Location');
         this.isLoadingLocation = false;
         this.closeLocationModal();
-        this.destroyMap();
       },
       (err) => {
         this.isLoadingLocation = false;
-        this.destroyMap();
-        this.toastrSvc.error('Failed to get current location');
+        console.error('Geolocation error:', err);
+        
+        let errorMessage = 'Failed to get current location';
+        if (err.code === 1) {
+          errorMessage = 'Location permission denied';
+        } else if (err.code === 2) {
+          errorMessage = 'Location unavailable';
+        } else if (err.code === 3) {
+          errorMessage = 'Location request timeout';
+        }
+        
+        this.toastrSvc.error(errorMessage);
       },
-      { enableHighAccuracy: true }
+      { 
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
     );
   }
 
@@ -575,16 +721,6 @@ export class ChatComponent implements OnInit, OnDestroy {
       true,
       osmStaticUrl
     );
-
-    this.messages.push({
-      fromUser: this.fromUser,
-      userTo: this.UserTo,
-      message: caption,
-      created: now,
-      isImage: true,
-      mediaUrl: osmStaticUrl,
-      status: 'sent'
-    });
 
     setTimeout(() => this.scrollToBottom(), 100);
     this.showAttachmentMenu = false;

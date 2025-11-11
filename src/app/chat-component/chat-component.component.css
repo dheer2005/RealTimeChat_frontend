@@ -1743,3 +1743,268 @@
     max-height: 200px;
   }
 }
+
+
+.location-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.location-modal.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.location-modal-content {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.location-modal-content h3 {
+  margin: 0 0 15px 0;
+  font-size: 1.3rem;
+  color: #333;
+}
+
+.location-map {
+  width: 100%;
+  height: 300px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  border: 2px solid #e0e0e0;
+  position: relative;
+  z-index: 1;
+}
+
+.map-loading {
+  width: 100%;
+  height: 300px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f5f5f5;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  color: #666;
+  font-size: 1rem;
+}
+
+.location-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.send-location-btn,
+.cancel-btn {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.send-location-btn {
+  background: #007bff;
+  color: white;
+}
+
+.send-location-btn:hover:not(:disabled) {
+  background: #0056b3;
+  transform: translateY(-2px);
+}
+
+.send-location-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.cancel-btn {
+  background: #6c757d;
+  color: white;
+}
+
+.cancel-btn:hover:not(:disabled) {
+  background: #5a6268;
+}
+
+.cancel-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .location-modal-content {
+    width: 95%;
+    padding: 15px;
+    max-height: 95vh;
+  }
+
+  .location-modal-content h3 {
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+  }
+
+  .location-map,
+  .map-loading {
+    height: 250px;
+  }
+
+  .send-location-btn,
+  .cancel-btn {
+    padding: 10px 15px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .location-map,
+  .map-loading {
+    height: 200px;
+  }
+
+  .location-actions {
+    gap: 8px;
+  }
+}
+
+/* Ensure Leaflet controls are visible and accessible */
+.location-map .leaflet-control-zoom {
+  margin: 10px;
+}
+
+.location-map .leaflet-touch .leaflet-control-zoom {
+  font-size: 18px;
+}
+
+/* Context Menu - Fixed for all screens */
+.msg-context-menu {
+  position: fixed; /* Changed from absolute to fixed */
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  padding: 5px 0;
+  min-width: 150px;
+  z-index: 2000;
+  white-space: nowrap;
+  overflow: visible;
+  animation: fadeInScale 0.15s ease-out;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Remove the positioning classes that rely on message bubble position */
+.msg-context-menu.sentReply,
+.msg-context-menu.receivedReply {
+  /* Position will be set dynamically via TypeScript */
+}
+
+.msg-context-menu ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.msg-context-menu li {
+  padding: 12px 20px;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 14px;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.msg-context-menu li:hover {
+  background: #f0f0f0;
+}
+
+.msg-context-menu li:active {
+  background: #e0e0e0;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .msg-context-menu {
+    min-width: 140px;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  }
+
+  .msg-context-menu li {
+    padding: 14px 18px;
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .msg-context-menu {
+    min-width: 130px;
+    max-width: 180px;
+  }
+
+  .msg-context-menu li {
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+}
+
+/* Ensure the menu doesn't go off-screen */
+.msg-context-menu {
+  max-width: calc(100vw - 20px);
+}
+
+/* Context menu backdrop for mobile */
+@media (max-width: 768px) {
+  .context-menu-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: transparent;
+    z-index: 1999;
+  }
+}
+
+/* Better positioning for message context */
+.message-wrapper {
+  position: relative;
+}
+
+.message-bubble {
+  position: relative;
+}
