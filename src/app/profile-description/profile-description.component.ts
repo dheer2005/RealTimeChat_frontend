@@ -1,4 +1,4 @@
-import { Component, input, Input } from '@angular/core';
+import { Component, input, Input, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthenticationService } from '../Services/authentication.service';
 import { ToastrService } from 'ngx-toastr';
@@ -14,12 +14,24 @@ import { ChatService } from '../Services/chat.service';
   templateUrl: './profile-description.component.html',
   styleUrl: './profile-description.component.css'
 })
-export class ProfileDescriptionComponent {
+export class ProfileDescriptionComponent implements OnInit,OnDestroy {
 
   profileName = '';
   userInfo: any;
   isLoading: boolean = false;
   errorMessage: string = '';
+  isCurrentUser: boolean = false;
+  isEditing: boolean = false;
+  previewImage: string | null = null;
+  selectedImageFile: File | null = null;
+
+  
+  editModel = {
+    fullName: '',
+    userName: '',
+    email: '',
+    phoneNumber: ''
+  };
 
   private onlineUsersSubscription?: Subscription;
   isUserOnline: boolean = false;
@@ -43,6 +55,20 @@ export class ProfileDescriptionComponent {
     );
   }
 
+  ngOnInit(): void {
+    this.isCurrentUser = this.profileName === this.authSvc.getUserName();
+  }
+
+  toggleEditMode(): void {
+    this.isEditing = true;
+    this.editModel = {
+      fullName: this.userInfo.fullName,
+      userName: this.userInfo.userName,
+      email: this.userInfo.email,
+      phoneNumber: this.userInfo.phoneNumber
+    };
+  }
+
   ngOnDestroy(): void {
     this.onlineUsersSubscription?.unsubscribe();
   }
@@ -61,6 +87,49 @@ export class ProfileDescriptionComponent {
         this.isLoading = false;
       }
     });
+  }
+
+  saveProfileChanges(): void {
+    this.authSvc.editUserProfile(this.userInfo.userId, this.editModel).subscribe({
+      next: () => {
+        this.toastrSvc.success('Profile updated successfully');
+        this.isEditing = false;
+        this.loadUserInfo();
+      },
+      error: () => this.toastrSvc.error('Failed to update profile')
+    });
+  }
+
+  cancelEdit(): void {
+    this.isEditing = false;
+    this.previewImage = null;
+  }
+
+   onProfileImageChange(event: any): void {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    this.selectedImageFile = file;
+    const reader = new FileReader();
+    reader.onload = (e: any) => (this.previewImage = e.target.result);
+    reader.readAsDataURL(file);
+
+    const formData = new FormData();
+    formData.append('NewProfileImage', file);
+
+    this.authSvc.editUserProfilePic(this.userInfo.userId, formData).subscribe({
+      next: () => {
+        this.toastrSvc.success('Profile picture updated');
+        this.loadUserInfo();
+      },
+      error: () => this.toastrSvc.error('Failed to upload image')
+    });
+  }
+
+  
+  triggerFileInput(): void {
+    const input: HTMLElement | null = document.querySelector('input[type=file]');
+    input?.click();
   }
 
   copyToClipboard(text: string): void {

@@ -122,6 +122,33 @@
   margin: 0 auto;
 }
 
+/* ============ EDIT BUTTON ============ */
+.edit-profile-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: white;
+  color: #667eea;
+  border: 2px solid #667eea;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  z-index: 10;
+}
+
+.edit-profile-btn:hover {
+  background: #667eea;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+}
+
 /* ============ HERO SECTION ============ */
 .profile-hero {
   background: white;
@@ -129,6 +156,7 @@
   overflow: hidden;
   margin-bottom: 2rem;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  position: relative;
 }
 
 .cover-image {
@@ -165,7 +193,6 @@
   right: 8px;
   width: 36px;
   height: 36px;
-  /* background: #10b981; */
   border: 4px solid white;
   border-radius: 50%;
   display: flex;
@@ -181,6 +208,30 @@
 
 .avatar-badge.offline{
   background: #d6d6d6;
+}
+
+/* ============ EDIT IMAGE BUTTON ============ */
+.edit-image-btn {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  width: 36px;
+  height: 36px;
+  background: #667eea;
+  border: 4px solid white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s;
+}
+
+.edit-image-btn:hover {
+  background: #5568d3;
+  transform: scale(1.1);
 }
 
 .profile-header-info {
@@ -248,12 +299,10 @@
 
 .profile-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
+  grid-template-columns: 1fr;
 }
 
-.left-column,
-.right-column {
+.left-column {
   display: flex;
   flex-direction: column;
   gap: 2rem;
@@ -283,7 +332,7 @@
 }
 
 .card-content {
-  padding: 6px 1.5rem 1.5rem;
+  padding: 6px 0.5rem 1.5rem;
 }
 
 .contact-item {
@@ -350,6 +399,73 @@ a.contact-value {
 a.contact-value:hover {
   color: #764ba2;
   text-decoration: underline;
+}
+
+/* ============ EDIT MODE INPUT ============ */
+.edit-input {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.9375rem;
+  color: #1f2937;
+  font-weight: 500;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.edit-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.edit-input:hover {
+  border-color: #cbd5e1;
+}
+
+/* ============ SAVE/CANCEL BUTTONS ============ */
+.edit-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding: 0 1rem;
+}
+
+.save-btn,
+.cancel-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1rem;
+  border: none;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.save-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.save-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+.cancel-btn {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.cancel-btn:hover {
+  background: #e5e7eb;
+  color: #374151;
 }
 
 .image-preview {
@@ -449,7 +565,20 @@ a.contact-value:hover {
   color: white;
 }
 
-@media (max-width: 992px) {
+/* Tablets and Medium Screens (992px - 1200px) */
+@media (max-width: 1200px) {
+  .profile-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+/* Medium Tablets (768px - 992px) */
+@media (min-width: 768px) and (max-width: 992px) {
+  .profile-content {
+    max-width: 700px;
+  }
+
   .profile-grid {
     grid-template-columns: 1fr;
     gap: 1.5rem;
@@ -472,7 +601,7 @@ a.contact-value:hover {
   }
 
   .contact-item {
-    padding: 0.75rem;
+    padding: 0.875rem;
   }
 
   .preview-img {
@@ -480,6 +609,7 @@ a.contact-value:hover {
   }
 }
 
+/* Small Tablets and Large Phones (≤ 768px) */
 @media (max-width: 768px) {
   .profile-page {
     padding: 1rem;
@@ -493,6 +623,13 @@ a.contact-value:hover {
     height: 160px;
   }
 
+  .edit-profile-btn {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.875rem;
+    top: 0.75rem;
+    right: 0.75rem;
+  }
+
   .avatar-image {
     width: 110px;
     height: 110px;
@@ -500,6 +637,11 @@ a.contact-value:hover {
   }
 
   .avatar-badge {
+    width: 28px;
+    height: 28px;
+  }
+
+  .edit-image-btn {
     width: 28px;
     height: 28px;
   }
@@ -542,7 +684,6 @@ a.contact-value:hover {
   }
 }
 
-/* Mobile Phones (≤ 576px) */
 @media (max-width: 576px) {
   .profile-avatar-section {
     padding: 0 1rem 1.5rem;
@@ -567,8 +708,7 @@ a.contact-value:hover {
     gap: 1rem;
   }
 
-  .left-column,
-  .right-column {
+  .left-column {
     gap: 1rem;
   }
 
@@ -601,9 +741,12 @@ a.contact-value:hover {
   .error-card {
     padding: 2rem 1.5rem;
   }
+
+  .edit-actions {
+    flex-direction: column;
+  }
 }
 
-/* Extra small (≤ 400px) */
 @media (max-width: 400px) {
   .profile-fullname {
     font-size: 1.1rem;

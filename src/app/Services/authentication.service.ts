@@ -65,6 +65,14 @@ export class AuthenticationService {
     return this.http.post(`${this.mediaUrl}uploadMedia`, formData);
   }
 
+  editUserProfile(userId: string, data: any) {
+    return this.http.put(`${this.baseUrl}edit-user-profile/${userId}`, data);
+  }
+
+  editUserProfilePic(userId: string, formData: FormData) {
+    return this.http.put(`${this.baseUrl}edit-user-profile-pic/${userId}`, formData);
+  }
+
   checkAuthentication(){
     const token = localStorage.getItem('jwt');
     if(token && !this.jwtHelper.isTokenExpired(token)){
