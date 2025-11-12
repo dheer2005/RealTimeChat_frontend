@@ -17,6 +17,7 @@ export class LayoutComponent {
   currentUserName: string = '';
   isNavbarOpen = false;
   isMobileMenuOpen = false;
+  isDropdownOpen = false;
 
   constructor(private eRef: ElementRef, private sessionSvc: SessionService, private chatService: ChatService, public authSvc: AuthenticationService, private router: Router, private toastr: ToastrService){
     this.currentUserName = this.authSvc.getUserName();
@@ -27,6 +28,14 @@ export class LayoutComponent {
     if (this.isNavbarOpen && !this.eRef.nativeElement.contains(event.target)) {
       this.isNavbarOpen = false;
     }
+    const target = event.target as HTMLElement;
+    if (!target.closest('.user-menu')) {
+      this.isDropdownOpen = false;
+    }
+  }
+
+  toggleDropdown() {
+    this.isDropdownOpen = !this.isDropdownOpen;
   }
 
   toggleMobileMenu(): void {
@@ -37,5 +46,16 @@ export class LayoutComponent {
     this.isMobileMenuOpen = false;
   }
 
+  logout(){
+    this.chatService.stopConnection();
+    // this.authSvc.logoutCurrentUser();
+    this.sessionSvc.logoutCurrentDevice().subscribe({
+      next: (res)=>{
+        this.authSvc.clearToken();
+        this.toastr.success("User logged out from current device" , "Success");
+        this.router.navigateByUrl('/login');
+      }
+    });
+  }
   
 }

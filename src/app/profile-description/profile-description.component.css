@@ -11,7 +11,6 @@
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
-/* ============ LOADING STATE ============ */
 .loading-state {
   display: flex;
   flex-direction: column;
@@ -59,7 +58,6 @@
   font-weight: 500;
 }
 
-/* ============ ERROR STATE ============ */
 .error-state {
   display: flex;
   align-items: center;
@@ -116,13 +114,11 @@
   box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
 }
 
-/* ============ PROFILE CONTENT ============ */
 .profile-content {
   max-width: 1200px;
   margin: 0 auto;
 }
 
-/* ============ EDIT BUTTON ============ */
 .edit-profile-btn {
   position: absolute;
   top: 1rem;
@@ -149,7 +145,6 @@
   box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
 }
 
-/* ============ HERO SECTION ============ */
 .profile-hero {
   background: white;
   border-radius: 24px;
@@ -210,7 +205,6 @@
   background: #d6d6d6;
 }
 
-/* ============ EDIT IMAGE BUTTON ============ */
 .edit-image-btn {
   position: absolute;
   bottom: 8px;
@@ -401,7 +395,6 @@ a.contact-value:hover {
   text-decoration: underline;
 }
 
-/* ============ EDIT MODE INPUT ============ */
 .edit-input {
   width: 100%;
   padding: 0.625rem 0.875rem;
@@ -424,7 +417,6 @@ a.contact-value:hover {
   border-color: #cbd5e1;
 }
 
-/* ============ SAVE/CANCEL BUTTONS ============ */
 .edit-actions {
   display: flex;
   gap: 0.75rem;
@@ -565,7 +557,12 @@ a.contact-value:hover {
   color: white;
 }
 
-/* Tablets and Medium Screens (992px - 1200px) */
+@media (min-width: 1200px) {
+  .logout-container{
+    display: none !important;
+  }
+}
+
 @media (max-width: 1200px) {
   .profile-grid {
     grid-template-columns: 1fr;
@@ -573,12 +570,16 @@ a.contact-value:hover {
   }
 }
 
-/* Medium Tablets (768px - 992px) */
+@media (min-width: 768px) and (max-width: 1200px) {
+  .logout-container{
+    display: none !important;
+  }
+}
+
 @media (min-width: 768px) and (max-width: 992px) {
   .profile-content {
     max-width: 700px;
   }
-
   .profile-grid {
     grid-template-columns: 1fr;
     gap: 1.5rem;
@@ -609,7 +610,6 @@ a.contact-value:hover {
   }
 }
 
-/* Small Tablets and Large Phones (≤ 768px) */
 @media (max-width: 768px) {
   .profile-page {
     padding: 1rem;
@@ -765,7 +765,6 @@ a.contact-value:hover {
   }
 }
 
-/* ============ LOGOUT BUTTON ============ */
 .logout-container {
   display: flex;
   justify-content: center;
