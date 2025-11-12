@@ -764,3 +764,41 @@ a.contact-value:hover {
     font-size: 0.8rem;
   }
 }
+
+/* ============ LOGOUT BUTTON ============ */
+.logout-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.logout-btn-modern {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #ff4d4d 0%, #e63946 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 10px rgba(230, 57, 70, 0.3);
+}
+
+.logout-btn-modern:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(230, 57, 70, 0.4);
+  background: linear-gradient(135deg, #e63946 0%, #d62839 100%);
+}
+
+.logout-btn-modern svg {
+  stroke: white;
+  transition: transform 0.2s;
+}
+
+.logout-btn-modern:hover svg {
+  transform: translateX(3px);
+}

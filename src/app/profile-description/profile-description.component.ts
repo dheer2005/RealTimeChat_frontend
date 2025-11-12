@@ -6,6 +6,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { ChatService } from '../Services/chat.service';
+import { SessionService } from '../Services/session.service';
 
 @Component({
   selector: 'app-profile-description',
@@ -36,7 +37,7 @@ export class ProfileDescriptionComponent implements OnInit,OnDestroy {
   private onlineUsersSubscription?: Subscription;
   isUserOnline: boolean = false;
 
-  constructor(private activatedRoute: ActivatedRoute, private Router: Router, private chatSvc: ChatService, private authSvc: AuthenticationService, private toastrSvc:ToastrService){
+  constructor(private activatedRoute: ActivatedRoute, private sessionSvc: SessionService, private chatService: ChatService, private router: Router, private chatSvc: ChatService, private authSvc: AuthenticationService, private toastrSvc:ToastrService){
     this.activatedRoute.paramMap.subscribe(param=>{
       this.profileName = param.get('name')?? '';
     });
@@ -145,6 +146,18 @@ export class ProfileDescriptionComponent implements OnInit,OnDestroy {
   formatPhoneNumber(phone: string): string {
     if (!phone) return '';
     return phone.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
+  }
+
+  logout(){
+    this.chatService.stopConnection();
+    // this.authSvc.logoutCurrentUser();
+    this.sessionSvc.logoutCurrentDevice().subscribe({
+      next: (res)=>{
+        this.authSvc.clearToken();
+        this.toastrSvc.success("User logged out from current device" , "Success");
+        this.router.navigateByUrl('/login');
+      }
+    });
   }
 
 }
