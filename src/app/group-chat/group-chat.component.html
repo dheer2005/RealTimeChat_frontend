@@ -29,6 +29,11 @@
         </div>
       </div>
     </div>
+
+    <div *ngIf="isLoader" class="loader-container">
+      <div class="loader"></div>
+      <p>Loading messages...</p>
+    </div>
   </div>
 
   <!-- Input Area -->
@@ -41,12 +46,5 @@
     <button (click)="send()">
       <i class="fa-solid fa-paper-plane"></i> Send
     </button>
-  </div>
-</div>
-
-<!-- Loading Spinner -->
-<div class="loading-overlay" *ngIf="isLoader">
-  <div class="spinner-border" role="status">
-    <span class="visually-hidden">Loading...</span>
   </div>
 </div>
