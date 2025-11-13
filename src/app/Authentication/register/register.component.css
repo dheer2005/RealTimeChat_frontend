@@ -98,28 +98,6 @@
     transition: 0.3s;
 }
 
-.profilePreview:hover img{
-    opacity: 0.8;
-    transform: scale(1.05);
-}
-
-.profilePreview .overlay-text {
-  position: absolute;
-  bottom: 20px;
-  color: #45f3ff;
-  font-size: 0.75em;
-  padding: 2px 8px;
-  font-size: 12px;
-  width: 100px;
-  border-radius: 4px;
-  opacity: 0;
-  transition: 0.3s;
-}
-
-.profilePreview:hover .overlay-text {
-  opacity: 1;
-}
-
 .box form .inputBox{
     position: relative;
     width: 100%;
@@ -259,13 +237,11 @@
     background: #1c1c1c;
 }
 
-/* Firefox scrollbar */
 .box form {
     scrollbar-width: thin;
     scrollbar-color: #45f3ff #1c1c1c;
 }
 
-/* Number input arrows styling */
 .box form .inputBox input[type="number"]::-webkit-inner-spin-button,
 .box form .inputBox input[type="number"]::-webkit-outer-spin-button {
     -webkit-appearance: none;
@@ -321,4 +297,31 @@
 
 .remove-icon:hover {
   background: rgba(255, 0, 0, 0.7);
+}
+
+.camera-button {
+    position: absolute;
+    bottom: 6px;
+    left: calc(50% - 45px); 
+    width: 32px;
+    height: 32px;
+    background: #45f3ff;
+    border: 3px solid #1c1c1c;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: 0.3s ease;
+    z-index: 5;
+    box-shadow: 0 0 8px rgba(69, 243, 255, 0.6);
+}
+
+.camera-button svg {
+    stroke: #000;
+}
+
+.camera-button:hover {
+    transform: scale(1.1);
+    background: #2dd4e0;
 }
