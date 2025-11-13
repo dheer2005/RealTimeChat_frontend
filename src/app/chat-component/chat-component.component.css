@@ -2014,3 +2014,7 @@
   width: 100% !important;
   display: block;
 }
+
+.location-modal.show .location-map {
+  min-height: 300px !important;
+}

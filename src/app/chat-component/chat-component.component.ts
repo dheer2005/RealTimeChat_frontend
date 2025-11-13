@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnDestroy, OnInit, ViewChild, Inject, PLATFORM_ID, HostListener } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild, Inject, PLATFORM_ID, HostListener, AfterViewChecked } from '@angular/core';
 import { isPlatformBrowser, CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -21,7 +21,7 @@ import { PickerComponent } from '@ctrl/ngx-emoji-mart';
   templateUrl: './chat-component.component.html',
   styleUrl: './chat-component.component.css'
 })
-export class ChatComponent implements OnInit, OnDestroy {
+export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
   @ViewChild('chatScroll', { static: false }) chatScrollContainer!: ElementRef;
   @ViewChild('messageInput') messageInputRef!: ElementRef<HTMLInputElement>;
@@ -343,6 +343,14 @@ export class ChatComponent implements OnInit, OnDestroy {
       });
 
       return sortedGroups as any;
+  }
+
+  ngAfterViewChecked() {
+    if (this.showLocationModal && this.map) {
+      setTimeout(() => {
+        this.map.invalidateSize();
+      }, 600);
+    }
   }
 
   ngOnInit(): void {
