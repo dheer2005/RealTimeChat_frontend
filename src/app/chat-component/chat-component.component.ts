@@ -1,7 +1,7 @@
-import { Component, ElementRef, OnDestroy, OnInit, ViewChild, Inject, PLATFORM_ID, HostListener, viewChild } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild, Inject, PLATFORM_ID, HostListener } from '@angular/core';
 import { isPlatformBrowser, CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ChatService } from '../Services/chat.service';
 import { AuthenticationService } from '../Services/authentication.service';
 import { VideoService } from '../Services/video.service';
@@ -10,7 +10,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
 import { VideoChatComponent } from '../video-chat/video-chat.component';
 import { Subscription } from 'rxjs';
-import { NgZone } from '@angular/core';
 import { ToastrService } from 'ngx-toastr';
 import { PickerComponent } from '@ctrl/ngx-emoji-mart';
 
@@ -518,9 +517,9 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   async initMap() {
-    if (!this.isBrowser) return;
-    
     try {
+      if (!this.isBrowser) return;
+
       if (this.map) {
         this.map.remove();
         this.map = null;
@@ -528,6 +527,7 @@ export class ChatComponent implements OnInit, OnDestroy {
       }
 
       const mapContainer = document.getElementById('map');
+
       if (!mapContainer) {
         console.error('Map container not found');
         setTimeout(() => this.initMap(), 200);
@@ -535,127 +535,74 @@ export class ChatComponent implements OnInit, OnDestroy {
       }
 
       const L = await import('leaflet');
-      
-      const iconRetinaUrl = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png';
-      const iconUrl = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png';
-      const shadowUrl = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png';
+
+      const newContainer = mapContainer.cloneNode(true) as HTMLElement;
+      mapContainer.replaceWith(newContainer);
 
       const DefaultIcon = L.icon({
-        iconRetinaUrl,
-        iconUrl,
-        shadowUrl,
+        iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+        iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
         iconSize: [25, 41],
         iconAnchor: [12, 41],
-        popupAnchor: [1, -34],
-        tooltipAnchor: [16, -28],
         shadowSize: [41, 41]
       });
-
       L.Marker.prototype.options.icon = DefaultIcon;
 
-      const getLocation = (): Promise<{lat: number, lng: number}> => {
+      const getLocation = (): Promise<{ lat: number; lng: number }> => {
         return new Promise((resolve, reject) => {
           if (!navigator.geolocation) {
-            reject(new Error('Geolocation not supported'));
+            resolve({ lat: 28.6139, lng: 77.2090 });
             return;
           }
 
-          const timeoutId = setTimeout(() => {
-            reject(new Error('Geolocation timeout'));
-          }, 10000);
-
           navigator.geolocation.getCurrentPosition(
-            (position) => {
-              clearTimeout(timeoutId);
-              resolve({
-                lat: position.coords.latitude,
-                lng: position.coords.longitude
-              });
-            },
-            (error) => {
-              clearTimeout(timeoutId);
-              reject(error);
-            },
-            {
-              enableHighAccuracy: true,
-              timeout: 8000,
-              maximumAge: 0
-            }
+            (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+            () => resolve({ lat: 28.6139, lng: 77.2090 }), // fallback
+            { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
           );
         });
       };
 
-      let initialLat: number;
-      let initialLng: number;
-
-      try {
-        const location = await getLocation();
-        initialLat = location.lat;
-        initialLng = location.lng;
-      } catch (error) {
-        console.warn('Could not get current location, using default:', error);
-        
-        initialLat = 28.6139;
-        initialLng = 77.2090;
-        this.toastrSvc.info('Using default location. You can drag the marker to select a different location.');
-      }
+      const { lat: initialLat, lng: initialLng } = await getLocation();
 
       this.selectedLat = initialLat;
       this.selectedLon = initialLng;
 
-     
-      this.map = L.map('map', {
+      this.map = L.map(newContainer, {
         center: [initialLat, initialLng],
         zoom: 15,
         zoomControl: true,
-        scrollWheelZoom: true,
-        dragging: true,
-        touchZoom: true,
-        doubleClickZoom: true,
-        boxZoom: true
-        // tap: true,
-        // tapTolerance: 15
+        scrollWheelZoom: true
       });
 
-      
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        attribution: '&copy; OpenStreetMap contributors',
         maxZoom: 19
       }).addTo(this.map);
 
-     
-      this.marker = L.marker([initialLat, initialLng], { 
+      this.marker = L.marker([initialLat, initialLng], {
         draggable: true,
         autoPan: true
       }).addTo(this.map);
 
-     
       this.marker.on('dragend', (e: any) => {
-        const latLng = e.target.getLatLng();
-        this.selectedLat = latLng.lat;
-        this.selectedLon = latLng.lng;
+        const latlng = e.target.getLatLng();
+        this.selectedLat = latlng.lat;
+        this.selectedLon = latlng.lng;
       });
-
       
       this.map.on('click', (e: any) => {
-        const latLng = e.latlng;
-        this.selectedLat = latLng.lat;
-        this.selectedLon = latLng.lng;
-        this.marker.setLatLng(latLng);
+        this.selectedLat = e.latlng.lat;
+        this.selectedLon = e.latlng.lng;
+        this.marker.setLatLng(e.latlng);
       });
 
-      
-      setTimeout(() => {
-        if (this.map) {
-          this.map.invalidateSize();
-          this.isMapInitialized = true;
-        }
-      }, 100);
+      setTimeout(() => this.map?.invalidateSize(), 500);
 
     } catch (error) {
       console.error('Error initializing map:', error);
       this.toastrSvc.error('Failed to load map. Please try again.');
-      this.closeLocationModal();
     }
   }
 

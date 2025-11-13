@@ -267,10 +267,6 @@ body {
   .mobile-bottom-nav {
     display: none !important;
   }
-
-  nav{
-    margin-bottom: 40px;
-  }
 }
 
 @media (max-width: 767px) {

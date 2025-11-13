@@ -824,3 +824,9 @@
     flex: 1 1 100%; 
   }
 }
+
+@media (max-width: 768px) {
+  .search-results{
+    margin-bottom: 40px;
+  }
+}

@@ -2008,3 +2008,9 @@
 .message-bubble {
   position: relative;
 }
+
+#map {
+  height: 350px !important;
+  width: 100% !important;
+  display: block;
+}

@@ -62,7 +62,7 @@
       
       <div *ngIf="isLoading" class="loading">
         <div class="spinner"></div>
-        <p>Loading requests...</p>
+        <p class="text-light">Loading requests...</p>
       </div>
 
       <div *ngIf="!isLoading && friendRequests.length === 0" class="empty-state">
@@ -244,7 +244,7 @@
 
       <div *ngIf="isSearching" class="loading">
         <div class="spinner"></div>
-        <p>Searching...</p>
+        <p class="text-light">Searching...</p>
       </div>
 
       <div *ngIf="!isSearching && searchQuery && searchResults.length === 0" class="empty-state">
