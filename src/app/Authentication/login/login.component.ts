@@ -45,12 +45,10 @@ export class LoginComponent implements OnInit {
     this.isLoading = true;
     this.authSvc.loginUser(this.login).subscribe({
       next: (res:any)=>{
-        if(res && res.token){
-          this.authSvc.saveToken(res.token);
-          this.toastr.success("User logged in" , "Success");
-          this.authSvc.getUserName();
-          this.router.navigateByUrl('/home');
-        }
+        this.authSvc.saveToken(res.token);
+        this.toastr.success("User logged in" , "Success");
+        this.authSvc.getUserName();
+        this.router.navigateByUrl('/home');
         this.isLoading = false;
       },
       error: (err:any)=>{
