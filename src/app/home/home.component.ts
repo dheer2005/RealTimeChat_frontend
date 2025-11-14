@@ -7,6 +7,7 @@ import { ChatService } from '../Services/chat.service';
 import { firstValueFrom, forkJoin, map, Observable, Subscription } from 'rxjs';
 import { FriendrequestService } from '../Services/friendrequest.service';
 import { ToastrService } from 'ngx-toastr';
+import { VideoService } from '../Services/video.service';
 
 @Component({
   selector: 'app-home',
@@ -39,6 +40,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     private router: Router, 
     private activatedRoute: ActivatedRoute, 
     private chatService: ChatService,
+    private videoService: VideoService,
     private friendRequestSvc: FriendrequestService,
     private toastrSvc: ToastrService,
     @Inject(PLATFORM_ID) private platformId: Object
@@ -106,6 +108,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   private initializeSignalR(): void {
     try {
+      this.videoService.startConnection().catch((err:any) => console.log(err));
       this.chatService.startConnection(
         this.userName,
         () => {},

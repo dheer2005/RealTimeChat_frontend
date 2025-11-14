@@ -46,11 +46,11 @@ export class AuthenticationService {
   }
 
   loginUser(data:any){
-    return this.http.post(this.baseUrl+"Login", data, this.httpOptions);
+    return this.http.post(this.baseUrl+"Login", data, this.getHttpOptions());
   }
 
   registerUser(data:any){
-    return this.http.post(this.baseUrl+"Register",data , this.httpOptions);
+    return this.http.post(this.baseUrl+"Register",data , this.getHttpOptions());
   }
 
   getAllUsers(userId: string){
