@@ -104,19 +104,26 @@ export class VideoChatComponent implements OnInit, OnDestroy {
     this.candidateSubscription = this.signalRService.candidateReceived.subscribe(async (data) => {
       if (!this.peerConnection || this.peerConnection.signalingState === 'closed') return;
 
-      if (!data || !data.candidate) {
-        console.warn("Invalid ICE candidate data received:", data);
+      if (!data || !data.candidate) return;
+
+      const c = data.candidate;
+
+      // Validation (prevents invalid ice candidate error)
+      if (!c.candidate || c.sdpMLineIndex == null) {
+        console.warn("Invalid ICE candidate received:", c);
         return;
       }
 
-      try {
-        if (this.remoteDescriptionSet) {
-          await this.peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
-        } else {
-          this.pendingCandidates.push(data.candidate);
-        }
-      } catch (err) {
-        console.error("Error adding ICE candidate:", err);
+      const iceCandidate = new RTCIceCandidate({
+        candidate: c.candidate,
+        sdpMid: c.sdpMid ?? null,
+        sdpMLineIndex: c.sdpMLineIndex
+      });
+
+      if (this.remoteDescriptionSet) {
+        await this.peerConnection.addIceCandidate(iceCandidate);
+      } else {
+        this.pendingCandidates.push(iceCandidate);
       }
     });
   }

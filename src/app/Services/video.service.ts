@@ -64,8 +64,8 @@ export class VideoService {
       this.answerReceived.next({from, answer: JSON.parse(answer)});
     });
 
-    this.hubConnection.on('ReceiveCandidate', (from: string, candidate: string) => {
-      this.candidateReceived.next({from, candidate: JSON.parse(candidate)});
+    this.hubConnection.on('ReceiveCandidate', (from: string, candidate: any) => {
+      this.candidateReceived.next({from, candidate});
     });
 
     this.hubConnection.on('CallEnded', (from: string) => {
