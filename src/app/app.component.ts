@@ -33,7 +33,7 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    if(!this.authService.getToken) return;
+    if(!this.authService.getToken()) return;
     this.signalRService.startConnection();
     this.startOfferReceive();
   }

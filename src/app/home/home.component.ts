@@ -108,7 +108,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   private initializeSignalR(): void {
     try {
-      this.videoService.startConnection().catch((err:any) => console.log(err));
+      // this.videoService.startConnection().catch((err:any) => console.log(err));
       this.chatService.startConnection(
         this.userName,
         () => {},

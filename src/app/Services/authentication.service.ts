@@ -26,9 +26,9 @@ export class AuthenticationService {
   // chatUrl: any = "https://localhost:7180/api/ChatHub/"
   // baseUrl: any = "https://localhost:7180/api/Authentication/"
   // mediaUrl: any = "https://localhost:7180/api/Media/"
-  httpOptions:any={
-    header: new Headers({
-      'content-type': 'application/json'
+  httpOptions = {
+    headers: new HttpHeaders({
+      'Content-Type': 'application/json'
     })
   };
 
@@ -46,11 +46,11 @@ export class AuthenticationService {
   }
 
   loginUser(data:any){
-    return this.http.post(this.baseUrl+"Login", data, this.getHttpOptions());
+    return this.http.post(this.baseUrl+"Login", data, this.httpOptions);
   }
 
   registerUser(data:any){
-    return this.http.post(this.baseUrl+"Register",data , this.getHttpOptions());
+    return this.http.post(this.baseUrl+"Register",data , this.httpOptions);
   }
 
   getAllUsers(userId: string){

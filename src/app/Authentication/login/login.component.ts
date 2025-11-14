@@ -19,7 +19,7 @@ import { log } from 'node:console';
   styleUrl: './login.component.css'
 })
 export class LoginComponent implements OnInit {
-  constructor(private http:HttpClient, private sessionSvc: SessionService,private chatSvc: ChatService,private authSvc: AuthenticationService,private toastr: ToastrService,private router: Router, @Inject(PLATFORM_ID) private platformId: any){}
+  constructor(private sessionSvc: SessionService,private chatSvc: ChatService, private authSvc: AuthenticationService,private toastr: ToastrService,private router: Router, @Inject(PLATFORM_ID) private platformId: any){}
 
   login:LoginModel={
     UserName: '',
@@ -45,10 +45,12 @@ export class LoginComponent implements OnInit {
     this.isLoading = true;
     this.authSvc.loginUser(this.login).subscribe({
       next: (res:any)=>{
-        this.authSvc.saveToken(res.token);
-        this.toastr.success("User logged in" , "Success");
-        this.authSvc.getUserName();
-        this.router.navigateByUrl('/home');
+        if(res && res.token){
+          this.authSvc.saveToken(res.token);
+          this.toastr.success("User logged in" , "Success");
+          this.authSvc.getUserName();
+          this.router.navigateByUrl('/home');
+        }
         this.isLoading = false;
       },
       error: (err:any)=>{
