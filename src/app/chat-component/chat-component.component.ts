@@ -983,6 +983,22 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
       return;
     }
     
+    // ADD THIS: Ensure connection is started
+    if (!this.signalRService.hubConnection || 
+        this.signalRService.hubConnection.state !== 'Connected') {
+      this.signalRService.startConnection().then(() => {
+        this.initiateCall(Userto);
+      }).catch(err => {
+        console.error('Failed to start video connection:', err);
+        this.toastrSvc.error('Failed to initialize video call');
+      });
+    } else {
+      this.initiateCall(Userto);
+    }
+  }
+
+  // ADD THIS NEW METHOD:
+  private initiateCall(Userto: string): void {
     this.signalRService.remoteUserId = Userto;
     this.signalRService.isOpen = true;
     

@@ -3,7 +3,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { HubConnection } from '@microsoft/signalr';
 import * as signalR from '@microsoft/signalr';
 import { AuthenticationService } from './authentication.service';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Subject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -24,9 +24,11 @@ export class VideoService {
 
   public peerConnection!: RTCPeerConnection;
 
-  public offerReceived = new BehaviorSubject<{from: string, offer: RTCSessionDescriptionInit} | null>(null);
-  public answerReceived = new BehaviorSubject<{from: string, answer: RTCSessionDescriptionInit} | null>(null);
-  public candidateReceived = new BehaviorSubject<{from: string, candidate: RTCIceCandidate} | null>(null);
+  public offerReceived = new Subject<{from: string, offer: RTCSessionDescriptionInit}>();
+  public answerReceived = new Subject<{from: string, answer: RTCSessionDescriptionInit}>();
+  public candidateReceived = new Subject<{from: string, candidate: RTCIceCandidate}>();
+  public incomingCallEvent = new Subject<{from: string, offer: RTCSessionDescriptionInit}>();
+  public lastOffer: {from: string, offer: RTCSessionDescriptionInit} | null = null;
 
   constructor(
     private authSvc: AuthenticationService,
@@ -57,7 +59,16 @@ export class VideoService {
 
     // Setup listeners BEFORE starting connection
     this.hubConnection.on('ReceiveOffer', (from: string, offer: string) => {
-      this.offerReceived.next({from, offer: JSON.parse(offer)});
+      const parsedOffer = JSON.parse(offer);
+      
+      // Store offer for later use
+      this.lastOffer = {from, offer: parsedOffer};
+      
+      this.offerReceived.next({from, offer: parsedOffer});
+      this.incomingCall = true;
+      this.remoteUserId = from;
+      
+      console.log('📞 Incoming call from:', from);
     });
 
     this.hubConnection.on('ReceiveAnswer', (from: string, answer: string) => {

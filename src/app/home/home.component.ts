@@ -4,7 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthenticationService } from '../Services/authentication.service';
 import { ChatService } from '../Services/chat.service';
-import { firstValueFrom, forkJoin, map, Observable, Subscription } from 'rxjs';
+import { forkJoin, map, Observable, Subscription } from 'rxjs';
 import { FriendrequestService } from '../Services/friendrequest.service';
 import { ToastrService } from 'ngx-toastr';
 import { VideoService } from '../Services/video.service';

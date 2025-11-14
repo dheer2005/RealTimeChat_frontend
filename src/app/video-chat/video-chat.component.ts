@@ -52,6 +52,16 @@ export class VideoChatComponent implements OnInit, OnDestroy {
   private setupSignalListeners(): void {
     if (!this.isBrowser) return;
 
+    this.signalRService.offerReceived.subscribe(async (data) => {
+      if (!this.peerConnection || this.peerConnection.signalingState === 'closed') return;
+      
+      if (data && data.offer && !this.signalRService.isCallActive) {
+        // Store offer for when user accepts
+        console.log('Offer received from:', data.from);
+        // Offer will be handled in acceptCall()
+      }
+    });
+
     // Wait for connection to be established
     const setupCallEndedListener = () => {
       this.signalRService.hubConnection?.on('CallEnded', () => {
@@ -134,6 +144,7 @@ export class VideoChatComponent implements OnInit, OnDestroy {
     await this.signalRService.endCall(this.signalRService.remoteUserId);
     this.stopLocalVideo();
     this.signalRService.isOpen = false;
+    this.signalRService.lastOffer = null;
     this.dialogRef.close();
   }
 
@@ -146,14 +157,31 @@ export class VideoChatComponent implements OnInit, OnDestroy {
     if (this.stream) {
       this.stream.getAudioTracks().forEach((track) => track.enabled = true);
     }
+    
+    // Get stored offer from service
+    const offerData = this.signalRService.lastOffer;
 
-    const offerData = this.signalRService.offerReceived.getValue();
-    const offer = offerData?.offer;
-
-    if (offer) {
+    if (offerData && offerData.offer) {
       try {
+
+        if (this.peerConnection.remoteDescription) {
+          console.warn("Remote description already set, skipping...");
+          return;
+        }
+
         if (this.peerConnection.signalingState === 'stable') {
-          await this.peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+          await this.peerConnection.setRemoteDescription(new RTCSessionDescription(offerData.offer));
+          
+          // Set remote description flag for ICE candidates
+          this.remoteDescriptionSet = true;
+
+          // Process pending candidates
+          for (const candidate of this.pendingCandidates) {
+            await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+          }
+          this.pendingCandidates = [];
+
+
           const answer = await this.peerConnection.createAnswer();
           await this.peerConnection.setLocalDescription(answer);
           await this.signalRService.sendAnswer(this.signalRService.remoteUserId, answer);
@@ -164,6 +192,8 @@ export class VideoChatComponent implements OnInit, OnDestroy {
       } catch (error) {
         console.error("Error accepting call:", error);
       }
+    } else {
+      console.error("No offer available to accept");
     }
   }
 
@@ -309,6 +339,8 @@ export class VideoChatComponent implements OnInit, OnDestroy {
       await this.signalRService.endCall(this.signalRService.remoteUserId);
       this.stopLocalVideo();
       this.signalRService.remoteUserId = '';
+
+      this.signalRService.lastOffer = null;
       
       setTimeout(() => {
         this.signalRService.isOpen = false;
