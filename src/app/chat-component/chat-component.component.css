@@ -138,22 +138,42 @@
 }
 
 .video-call-btn,
+.audio-call-btn,
 .profile-btn {
   background: none;
   border: none;
   cursor: pointer;
   padding: 8px;
   border-radius: 50%;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   color: #333;
   transition: background-color 0.2s;
 }
 
-.video-call-btn:hover,
+.audio-call-btn:hover {
+  background-color: #e3f2fd;
+  color: #2196f3;
+}
+
 .profile-btn:hover {
   background-color: #f0f0f0;
+}
+
+.video-call-btn:hover {
+  background-color: #f3e5f5;
+  color: #9c27b0;
+}
+
+.audio-call-btn + .video-call-btn {
+  margin-left: 8px;
+}
+
+
+.audio-call-btn:active,
+.video-call-btn:active {
+  transform: scale(0.95);
 }
 
 /* Loader */
@@ -1668,6 +1688,10 @@
 @media (max-width: 768px) {
   .message-bubble {
     max-width: 85%;
+  }
+
+  .image-modal .modal-content{
+    margin-bottom: 45px;
   }
 
   .profile-content,

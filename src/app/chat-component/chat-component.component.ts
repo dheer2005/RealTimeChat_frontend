@@ -12,6 +12,8 @@ import { VideoChatComponent } from '../video-chat/video-chat.component';
 import { Subscription } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
 import { PickerComponent } from '@ctrl/ngx-emoji-mart';
+import { AudioService } from '../Services/audio.service';
+import { AudioChatComponent } from '../audio-chat/audio-chat.component';
 
 
 @Component({
@@ -107,6 +109,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   constructor(
     private activatedRoute: ActivatedRoute,
     private chatService: ChatService,
+    private audioService: AudioService,
     private authSvc: AuthenticationService,
     private signalRService: VideoService,
     public router: Router,
@@ -978,12 +981,44 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
     }
   }
 
-  displayDialog(Userto: string): void {
+  displayAudioDialog(UserTo: string): void {
     if (!this.isBrowser) {
       return;
     }
     
-    // ADD THIS: Ensure connection is started
+    if (!this.audioService.hubConnection || 
+        this.audioService.hubConnection.state !== 'Connected') {
+      this.audioService.startConnection().then(() => {
+        this.initiateAudioCall(UserTo);
+      }).catch(err => {
+        console.error('Failed to start audio connection:', err);
+        this.toastrSvc.error('Failed to initialize audio call');
+      });
+    } else {
+      this.initiateAudioCall(UserTo);
+    }
+  }
+
+  private initiateAudioCall(UserTo: string): void {
+    this.audioService.remoteUserId = UserTo;
+    this.audioService.isOpen = true;
+    
+    this.dialog.open(AudioChatComponent, {
+      width: '400px',
+      maxWidth: '95vw',
+      height: '500px',
+      maxHeight: '95vh',
+      disableClose: true,
+      autoFocus: false,
+      panelClass: 'audio-call-dialog'
+    });
+  }
+
+  displayVideoDialog(Userto: string): void {
+    if (!this.isBrowser) {
+      return;
+    }
+    
     if (!this.signalRService.hubConnection || 
         this.signalRService.hubConnection.state !== 'Connected') {
       this.signalRService.startConnection().then(() => {
@@ -997,7 +1032,6 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
     }
   }
 
-  // ADD THIS NEW METHOD:
   private initiateCall(Userto: string): void {
     this.signalRService.remoteUserId = Userto;
     this.signalRService.isOpen = true;

@@ -1,0 +1,64 @@
+<div class="audio-container">
+  <div class="audio-call-ui">
+    <!-- User Avatar/Info -->
+    <div class="user-info">
+      <div class="avatar">
+        <mat-icon>person</mat-icon>
+      </div>
+      <div class="user-name">
+        {{ audioService.remoteUserId || 'Unknown User' }}
+      </div>
+      <div class="call-status">
+        @if(audioService.incomingCall) {
+          <span>Incoming Call...</span>
+        } @else if(audioService.isCallActive) {
+          <span>{{ callDuration }}</span>
+        } @else {
+          <span>Connecting...</span>
+        }
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      @if(audioService.incomingCall) {
+        <button class="btn accept" (click)="acceptCall()" title="Accept Call">
+          <mat-icon>call</mat-icon>
+        </button>
+        <button class="btn decline" (click)="declineCall()" title="Decline Call">
+          <mat-icon>call_end</mat-icon>
+        </button>
+      }
+
+      @if(!audioService.incomingCall && !audioService.isCallActive) {
+        <button class="btn accept" (click)="startCall()" title="Start Call">
+          <mat-icon>call</mat-icon>
+        </button>
+      }
+
+      @if(audioService.isCallActive) {
+        <button 
+          class="btn mute" 
+          [class.active]="isMuted"
+          (click)="toggleMute()" 
+          [title]="isMuted ? 'Unmute' : 'Mute'">
+          <mat-icon>{{ isMuted ? 'mic_off' : 'mic' }}</mat-icon>
+        </button>
+
+        <button 
+          class="btn speaker" 
+          [class.active]="!isSpeakerOn"
+          (click)="toggleSpeaker()" 
+          [title]="isSpeakerOn ? 'Speaker Off' : 'Speaker On'">
+          <mat-icon>{{ isSpeakerOn ? 'volume_up' : 'volume_off' }}</mat-icon>
+        </button>
+      }
+
+      @if(!audioService.incomingCall) {
+        <button class="btn end" (click)="endCall()" title="End Call">
+          <mat-icon>call_end</mat-icon>
+        </button>
+      }
+    </div>
+  </div>
+</div>

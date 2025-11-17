@@ -829,4 +829,16 @@
   .search-results{
     margin-bottom: 40px;
   }
+
+  .friends-grid{
+    margin-bottom: 40px;
+  }
+
+  .empty-state {
+    margin-bottom: 40px;
+  }
+
+  .request-list{
+    margin-bottom: 40px;
+  }
 }
