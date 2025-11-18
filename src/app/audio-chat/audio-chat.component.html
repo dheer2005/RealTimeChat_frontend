@@ -1,46 +1,86 @@
 <div class="audio-container">
   <div class="audio-call-ui">
+    <!-- User Avatar & Info -->
     <div class="user-info">
-      <div class="avatar">
-        <mat-icon>person</mat-icon>
+      <div class="avatar-wrapper">
+        <div class="avatar" [class.pulsing]="audioService.isCallActive && !isMuted">
+          <mat-icon>person</mat-icon>
+        </div>
+        <!-- Remote User Mute Indicator -->
+        <div class="remote-mute-indicator" *ngIf="isRemoteUserMuted">
+          <mat-icon>mic_off</mat-icon>
+        </div>
       </div>
+      
       <div class="user-name">
         {{ audioService.remoteUserId || 'Unknown User' }}
       </div>
+      
       <div class="call-status">
-        @if(audioService.incomingCall) {
-          <span class="incoming-text">Incoming Call...</span>
-        } @else if(isRinging && !audioService.isCallActive) {
-          <span class="ringing-text">Ringing...</span>
-        } @else if(audioService.isCallActive) {
-          <span class="connected-text">{{ callDuration }}</span>
-        } @else {
-          <span>Connecting...</span>
-        }
+        <ng-container *ngIf="audioService.incomingCall">
+          <span class="status-text incoming">
+            <mat-icon class="status-icon">phone_callback</mat-icon>
+            Incoming Call...
+          </span>
+        </ng-container>
+        
+        <ng-container *ngIf="isRinging && !audioService.isCallActive">
+          <span class="status-text ringing">
+            <mat-icon class="status-icon ringing-icon">phone_forwarded</mat-icon>
+            Ringing...
+          </span>
+        </ng-container>
+        
+        <ng-container *ngIf="audioService.isCallActive">
+          <span class="status-text connected">
+            <mat-icon class="status-icon">check_circle</mat-icon>
+            {{ callDuration }}
+          </span>
+        </ng-container>
+        
+        <ng-container *ngIf="!audioService.incomingCall && !isRinging && !audioService.isCallActive">
+          <span class="status-text connecting">
+            <mat-icon class="status-icon">sync</mat-icon>
+            Connecting...
+          </span>
+        </ng-container>
+      </div>
+
+      <!-- Your Mute Status (visible to you) -->
+      <div class="self-mute-status" *ngIf="isMuted && audioService.isCallActive">
+        <mat-icon>mic_off</mat-icon>
+        <span>You are muted</span>
       </div>
     </div>
 
+    <!-- Call Controls -->
     <div class="controls">
-      @if(audioService.incomingCall) {
-        <!-- INCOMING CALL BUTTONS -->
+      <!-- INCOMING CALL BUTTONS -->
+      <ng-container *ngIf="audioService.incomingCall">
         <button class="btn accept" (click)="acceptCall()" title="Accept Call">
           <mat-icon>call</mat-icon>
+          <span class="btn-label">Accept</span>
         </button>
         <button class="btn decline" (click)="declineCall()" title="Decline Call">
           <mat-icon>call_end</mat-icon>
+          <span class="btn-label">Decline</span>
         </button>
-      } @else if(audioService.isCallActive) {
-        <!-- ACTIVE CALL BUTTONS -->
+      </ng-container>
+
+      <!-- ACTIVE CALL BUTTONS -->
+      <ng-container *ngIf="audioService.isCallActive">
         <button 
           class="btn mute" 
           [class.active]="isMuted"
           (click)="toggleMute()" 
           [title]="isMuted ? 'Unmute' : 'Mute'">
           <mat-icon>{{ isMuted ? 'mic_off' : 'mic' }}</mat-icon>
+          <span class="btn-label">{{ isMuted ? 'Unmute' : 'Mute' }}</span>
         </button>
 
         <button class="btn end" (click)="endCall()" title="End Call">
           <mat-icon>call_end</mat-icon>
+          <span class="btn-label">End</span>
         </button>
 
         <button 
@@ -49,13 +89,17 @@
           (click)="toggleSpeaker()" 
           [title]="isSpeakerOn ? 'Speaker Off' : 'Speaker On'">
           <mat-icon>{{ isSpeakerOn ? 'volume_up' : 'volume_off' }}</mat-icon>
+          <span class="btn-label">Speaker</span>
         </button>
-      } @else {
-        <!-- RINGING STATE -->
+      </ng-container>
+
+      <!-- RINGING STATE (Outgoing Call) -->
+      <ng-container *ngIf="!audioService.incomingCall && !audioService.isCallActive">
         <button class="btn end" (click)="endCall()" title="Cancel Call">
           <mat-icon>call_end</mat-icon>
+          <span class="btn-label">Cancel</span>
         </button>
-      }
+      </ng-container>
     </div>
   </div>
 </div>

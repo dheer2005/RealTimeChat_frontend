@@ -1,28 +1,78 @@
 <div class="video-container">
-    <video class="local-video" #localVideo autoplay playsinline></video>
-    <video class="remote-video" #remoteVideo autoplay playsinline></video>
-    
-    <div class="controls">
-        @if(signalRService.incomingCall){
-            <button class="btn accept" (click)="acceptCall()">
-                <mat-icon>call</mat-icon>
-            </button>
-            <button class="btn decline" (click)="declineCall()">
-                <mat-icon>call_end</mat-icon>
-            </button>
-        }
+  <video class="remote-video" #remoteVideo autoplay playsinline></video>
+  
+  <video class="local-video" #localVideo autoplay playsinline muted></video>
+  
+  <div class="remote-mute-badge" *ngIf="isRemoteUserMuted && signalRService.isCallActive">
+    <mat-icon>mic_off</mat-icon>
+    <span>{{ signalRService.remoteUserId }} is muted</span>
+  </div>
+  
+  <div class="status-indicator" *ngIf="signalRService.incomingCall">
+    Incoming Call from {{ signalRService.remoteUserId }}
+  </div>
+  
+  <div class="status-indicator" *ngIf="!signalRService.incomingCall && !signalRService.isCallActive">
+    Calling {{ signalRService.remoteUserId }}...
+  </div>
+  
+  <div class="status-indicator" *ngIf="signalRService.isCallActive">
+    Connected
+  </div>
 
-        @if(!signalRService.incomingCall && !this.signalRService.isCallActive){
-            <button class="btn accept" (click)="startCall()">
-                <mat-icon>call</mat-icon>
-            </button>
-        }
 
-        @if(!this.signalRService.incomingCall){
-            <button class="btn end" (click)="endCall()">
-                <mat-icon>call_end</mat-icon>
-            </button>
-        }
-    </div>
+  <div class="self-mute-badge" *ngIf="isMuted && signalRService.isCallActive">
+    <mat-icon>mic_off</mat-icon>
+    <span>You are muted</span>
+  </div>
+
+
+  <div class="controls">
+    <ng-container *ngIf="signalRService.incomingCall">
+      <button class="btn accept" (click)="acceptCall()" title="Accept Call">
+        <mat-icon>call</mat-icon>
+        <span class="btn-label">Accept</span>
+      </button>
+      <button class="btn decline" (click)="declineCall()" title="Decline Call">
+        <mat-icon>call_end</mat-icon>
+        <span class="btn-label">Decline</span>
+      </button>
+    </ng-container>
+
+    <ng-container *ngIf="!signalRService.incomingCall && !signalRService.isCallActive">
+      <button class="btn start" (click)="startCall()" title="Start Call">
+        <mat-icon>videocam</mat-icon>
+        <span class="btn-label">Start</span>
+      </button>
+      <button class="btn end" (click)="endCall()" title="Cancel Call">
+        <mat-icon>call_end</mat-icon>
+        <span class="btn-label">Cancel</span>
+      </button>
+    </ng-container>
+
+    <ng-container *ngIf="signalRService.isCallActive">
+      <button 
+        class="btn mute" 
+        [class.active]="isMuted"
+        (click)="toggleMute()" 
+        [title]="isMuted ? 'Unmute' : 'Mute'">
+        <mat-icon>{{ isMuted ? 'mic_off' : 'mic' }}</mat-icon>
+        <span class="btn-label">{{ isMuted ? 'Unmute' : 'Mute' }}</span>
+      </button>
+
+      <button class="btn end" (click)="endCall()" title="End Call">
+        <mat-icon>call_end</mat-icon>
+        <span class="btn-label">End Call</span>
+      </button>
+
+      <button 
+        class="btn camera" 
+        [class.active]="!isCameraOn"
+        (click)="toggleCamera()" 
+        [title]="isCameraOn ? 'Camera Off' : 'Camera On'">
+        <mat-icon>{{ isCameraOn ? 'videocam' : 'videocam_off' }}</mat-icon>
+        <span class="btn-label">Camera</span>
+      </button>
+    </ng-container>
+  </div>
 </div>
-

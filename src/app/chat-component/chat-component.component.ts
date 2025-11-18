@@ -1062,15 +1062,13 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
     this.signalRService.remoteUserId = Userto;
     this.signalRService.isOpen = true;
     
-    this.dialog.open(VideoChatComponent, {
-      width: '400px',
-      maxWidth: '95vw',
-      height: '550px',
-      maxHeight: '95vh',
-      disableClose: true,
-      autoFocus: false,
-      panelClass: 'video-call-dialog'
-    });
+    this.dialog.open(VideoChatComponent,{
+            width: '400px',
+            height: '600px',
+            disableClose:false,
+            autoFocus:false,
+            panelClass: 'video-call-dialog'
+          });
   }
   
   userDesc(): void {

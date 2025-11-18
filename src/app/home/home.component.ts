@@ -89,6 +89,8 @@ export class HomeComponent implements OnInit, OnDestroy {
             width: '400px',
             height: '600px',
             disableClose:false,
+            autoFocus:false,
+            panelClass: 'video-call-dialog'
           });
         }
         this.videoService.remoteUserId = data.from;

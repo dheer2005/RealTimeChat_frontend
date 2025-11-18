@@ -1,5 +1,5 @@
 import { Component, ElementRef, inject, OnInit, OnDestroy, ViewChild, Inject, PLATFORM_ID } from '@angular/core';
-import { CommonModule, isPlatformBrowser, NgIf } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { VideoService } from '../Services/video.service';
 import { MatDialogRef } from '@angular/material/dialog';
@@ -22,10 +22,16 @@ export class VideoChatComponent implements OnInit, OnDestroy {
   private pendingCandidates: RTCIceCandidateInit[] = [];
   private stream: MediaStream | null = null;
   private isBrowser: boolean;
+  private isEndingCall = false;
+
+  isMuted = false;
+  isCameraOn = true;
+  isRemoteUserMuted = false;
   
   // Subscriptions for cleanup
   private answerSubscription?: Subscription;
   private candidateSubscription?: Subscription;
+  private offerSubscription?: Subscription;
 
   constructor(
     public signalRService: VideoService,
@@ -37,7 +43,6 @@ export class VideoChatComponent implements OnInit, OnDestroy {
   private dialogRef: MatDialogRef<VideoChatComponent> = inject(MatDialogRef);
 
   ngOnInit(): void {
-    // Only initialize in browser
     if (!this.isBrowser) {
       console.warn('Video chat not available during SSR');
       return;
@@ -45,41 +50,39 @@ export class VideoChatComponent implements OnInit, OnDestroy {
 
     this.setupPeerConnection();
     this.startLocalVideo();
-    this.signalRService.startConnection();
-    this.setupSignalListeners();
+    
+    // Ensure SignalR connection
+    if (!this.signalRService.hubConnection || 
+        this.signalRService.hubConnection.state !== 'Connected') {
+      this.signalRService.startConnection().then(() => {
+        this.setupSignalListeners();
+      });
+    } else {
+      this.setupSignalListeners();
+    }
   }
 
   private setupSignalListeners(): void {
-    if (!this.isBrowser) return;
+    if (!this.isBrowser || !this.signalRService.hubConnection) return;
 
-    this.signalRService.offerReceived.subscribe(async (data) => {
+    // Handle incoming offers
+    this.offerSubscription = this.signalRService.offerReceived.subscribe(async (data) => {
       if (!this.peerConnection || this.peerConnection.signalingState === 'closed') return;
       
       if (data && data.offer && !this.signalRService.isCallActive) {
-        // Store offer for when user accepts
-        console.log('Offer received from:', data.from);
-        // Offer will be handled in acceptCall()
+        console.log('📹 Offer received from:', data.from);
       }
     });
 
-    // Wait for connection to be established
-    const setupCallEndedListener = () => {
-      this.signalRService.hubConnection?.on('CallEnded', () => {
-        this.stopLocalVideo();
-        this.signalRService.isCallActive = false;
-        this.signalRService.incomingCall = false;
-        this.signalRService.remoteUserId = '';
+    // Handle call ended
+    this.signalRService.hubConnection.on('CallEnded', (fromUser: string) => {
+      console.log('📹 Call ended by:', fromUser);
+      
+      if (!this.isEndingCall) {
+        this.cleanupCall();
         this.dialogRef.close();
-      });
-    };
-
-    // If connection is already started, setup immediately
-    if (this.signalRService.hubConnection?.state === 'Connected') {
-      setupCallEndedListener();
-    } else {
-      // Wait for connection to start
-      this.signalRService.hubConnection?.onreconnected(() => setupCallEndedListener());
-    }
+      }
+    });
 
     // Handle answer received
     this.answerSubscription = this.signalRService.answerReceived.subscribe(async (data) => {
@@ -96,16 +99,16 @@ export class VideoChatComponent implements OnInit, OnDestroy {
             await this.peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
             this.remoteDescriptionSet = true;
 
+            // Process pending ICE candidates
             for (const candidate of this.pendingCandidates) {
               await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
             }
             this.pendingCandidates = [];
           } else {
-            console.warn('Unexpected signaling state. Expected have-local-offer but got:', 
-              this.peerConnection.signalingState);
+            console.warn('Unexpected signaling state:', this.peerConnection.signalingState);
           }
         } catch (error) {
-          console.error("Error setting remote description or adding candidates:", error);
+          console.error("Error setting remote description:", error);
         }
       }
     });
@@ -118,7 +121,7 @@ export class VideoChatComponent implements OnInit, OnDestroy {
 
       const c = data.candidate;
 
-      // Validation (prevents invalid ice candidate error)
+      // Validate ICE candidate
       if (!c.candidate || c.sdpMLineIndex == null) {
         console.warn("Invalid ICE candidate received:", c);
         return;
@@ -139,11 +142,18 @@ export class VideoChatComponent implements OnInit, OnDestroy {
   }
 
   async declineCall(): Promise<void> {
-    if (!this.isBrowser) return;
+    if (!this.isBrowser || this.isEndingCall) return;
+    
+    this.isEndingCall = true;
+    console.log('📹 Declining call...');
 
-    await this.signalRService.endCall(this.signalRService.remoteUserId);
-    this.stopLocalVideo();
-    this.signalRService.isOpen = false;
+    try {
+      await this.signalRService.endCall(this.signalRService.remoteUserId);
+    } catch (error) {
+      console.error('Error declining call:', error);
+    }
+
+    this.cleanupCall();
     this.signalRService.lastOffer = null;
     this.dialogRef.close();
   }
@@ -151,19 +161,19 @@ export class VideoChatComponent implements OnInit, OnDestroy {
   async acceptCall(): Promise<void> {
     if (!this.isBrowser) return;
 
+    console.log('📹 Accepting call...');
     this.signalRService.incomingCall = false;
     this.signalRService.isCallActive = true;
 
+    // Unmute audio
     if (this.stream) {
       this.stream.getAudioTracks().forEach((track) => track.enabled = true);
     }
     
-    // Get stored offer from service
     const offerData = this.signalRService.lastOffer;
 
     if (offerData && offerData.offer) {
       try {
-
         if (this.peerConnection.remoteDescription) {
           console.warn("Remote description already set, skipping...");
           return;
@@ -171,8 +181,6 @@ export class VideoChatComponent implements OnInit, OnDestroy {
 
         if (this.peerConnection.signalingState === 'stable') {
           await this.peerConnection.setRemoteDescription(new RTCSessionDescription(offerData.offer));
-          
-          // Set remote description flag for ICE candidates
           this.remoteDescriptionSet = true;
 
           // Process pending candidates
@@ -181,13 +189,14 @@ export class VideoChatComponent implements OnInit, OnDestroy {
           }
           this.pendingCandidates = [];
 
-
+          // Create and send answer
           const answer = await this.peerConnection.createAnswer();
           await this.peerConnection.setLocalDescription(answer);
           await this.signalRService.sendAnswer(this.signalRService.remoteUserId, answer);
+          
+          console.log('📹 Answer sent successfully');
         } else {
-          console.warn("Cannot accept offer: invalid signaling state:", 
-            this.peerConnection.signalingState);
+          console.warn("Cannot accept: invalid signaling state:", this.peerConnection.signalingState);
         }
       } catch (error) {
         console.error("Error accepting call:", error);
@@ -199,11 +208,16 @@ export class VideoChatComponent implements OnInit, OnDestroy {
 
   async startCall(): Promise<void> {
     if (!this.isBrowser) return;
+    
     try {
+      console.log('📹 Starting call...');
       this.signalRService.isCallActive = true;
+      
       const offer = await this.peerConnection.createOffer();
       await this.peerConnection.setLocalDescription(offer);
       await this.signalRService.sendOffer(this.signalRService.remoteUserId, offer);
+      
+      console.log('📹 Offer sent successfully');
     } catch (error) {
       console.error("Error starting call:", error);
       this.signalRService.isCallActive = false;
@@ -237,21 +251,50 @@ export class VideoChatComponent implements OnInit, OnDestroy {
       }
     };
 
-    // Handle remote track
     this.peerConnection.ontrack = (event) => {
       if (this.remoteVideo?.nativeElement) {
         this.remoteVideo.nativeElement.srcObject = event.streams[0];
+        
+        this.monitorRemoteAudio(event.streams[0]);
       }
     };
 
-    // Monitor connection state
     this.peerConnection.oniceconnectionstatechange = () => {
+      console.log('📹 ICE Connection State:', this.peerConnection.iceConnectionState);
       
       if (this.peerConnection.iceConnectionState === 'failed' || 
           this.peerConnection.iceConnectionState === 'disconnected') {
-        console.warn('Connection failed/disconnected. May need TURN server.');
+        console.warn('Connection failed/disconnected');
       }
     };
+  }
+
+  private monitorRemoteAudio(stream: MediaStream): void {
+    try {
+      const audioContext = new AudioContext();
+      const source = audioContext.createMediaStreamSource(stream);
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 256;
+      source.connect(analyser);
+
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+      
+      const checkAudioLevel = () => {
+        if (!this.signalRService.isCallActive) return;
+        
+        analyser.getByteFrequencyData(dataArray);
+        const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
+        
+        // If average is very low, user might be muted
+        this.isRemoteUserMuted = average < 2;
+        
+        requestAnimationFrame(checkAudioLevel);
+      };
+      
+      checkAudioLevel();
+    } catch (error) {
+      console.error('Error monitoring remote audio:', error);
+    }
   }
 
   private async startLocalVideo(): Promise<void> {
@@ -285,32 +328,33 @@ export class VideoChatComponent implements OnInit, OnDestroy {
           this.peerConnection.addTrack(track, this.stream);
         }
       });
+      
+      console.log('📹 Local video started');
     } catch (error) {
       console.error('Error accessing media devices:', error);
       alert('Unable to access camera/microphone. Please check permissions.');
     }
   }
 
-  private stopLocalVideo(): void {
+  private cleanupCall(): void {
     if (!this.isBrowser) return;
 
-    // Stop all tracks in the stream
     if (this.stream) {
-      this.stream.getTracks().forEach((track) => track.stop());
+      this.stream.getTracks().forEach((track) => {
+        track.stop();
+        console.log('Stopped track:', track.kind);
+      });
       this.stream = null;
     }
 
-    // Clear local video
     if (this.localVideo?.nativeElement) {
       this.localVideo.nativeElement.srcObject = null;
     }
 
-    // Clear remote video
     if (this.remoteVideo?.nativeElement) {
       this.remoteVideo.nativeElement.srcObject = null;
     }
 
-    // Clean up peer connection
     if (this.peerConnection) {
       this.peerConnection.onicecandidate = null;
       this.peerConnection.ontrack = null;
@@ -325,40 +369,71 @@ export class VideoChatComponent implements OnInit, OnDestroy {
       this.peerConnection.close();
     }
 
-    // Reset state
     this.signalRService.isCallActive = false;
     this.signalRService.incomingCall = false;
+    this.signalRService.isOpen = false;
     this.remoteDescriptionSet = false;
     this.pendingCandidates = [];
+    this.isMuted = false;
+    this.isCameraOn = true;
+    this.isRemoteUserMuted = false;
   }
 
   async endCall(): Promise<void> {
-    if (!this.isBrowser || !this.peerConnection) return;
+    if (!this.isBrowser || !this.peerConnection || this.isEndingCall) return;
+
+    this.isEndingCall = true;
+    console.log('📹 Ending call...');
 
     try {
+      // Send end call signal
       await this.signalRService.endCall(this.signalRService.remoteUserId);
-      this.stopLocalVideo();
-      this.signalRService.remoteUserId = '';
-
-      this.signalRService.lastOffer = null;
-      
-      setTimeout(() => {
-        this.signalRService.isOpen = false;
-        this.dialogRef.close();
-      }, 100);
+      console.log('📹 End call signal sent');
     } catch (error) {
-      console.error('Error ending call:', error);
-      this.dialogRef.close();
+      console.error('Error sending end call signal:', error);
     }
+
+    // Cleanup and close
+    this.cleanupCall();
+    this.signalRService.remoteUserId = '';
+    this.signalRService.lastOffer = null;
+    
+    setTimeout(() => {
+      this.dialogRef.close();
+    }, 200);
+  }
+
+  toggleMute(): void {
+  if (!this.stream) return;
+
+  this.isMuted = !this.isMuted;
+  
+  this.stream.getAudioTracks().forEach((track) => {
+    track.enabled = !this.isMuted;
+    console.log(`🎤 Audio ${this.isMuted ? 'muted' : 'unmuted'}`);
+  });
+}
+
+  toggleCamera(): void {
+    if (!this.stream) return;
+
+    this.isCameraOn = !this.isCameraOn;
+    
+    this.stream.getVideoTracks().forEach((track) => {
+      track.enabled = this.isCameraOn;
+    });
   }
 
   ngOnDestroy(): void {
-    // Clean up subscriptions
+    
     if (this.answerSubscription) {
       this.answerSubscription.unsubscribe();
     }
     if (this.candidateSubscription) {
       this.candidateSubscription.unsubscribe();
+    }
+    if (this.offerSubscription) {
+      this.offerSubscription.unsubscribe();
     }
 
     // Remove SignalR event listeners
@@ -366,7 +441,9 @@ export class VideoChatComponent implements OnInit, OnDestroy {
       this.signalRService.hubConnection.off('CallEnded');
     }
 
-    // Stop media and close connection
-    this.stopLocalVideo();
+    // Final cleanup
+    if (!this.isEndingCall) {
+      this.cleanupCall();
+    }
   }
 }

@@ -1,150 +1,625 @@
+/* Audio Call Container */
 .audio-container {
   width: 100%;
   height: 100%;
+  min-height: 500px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 20px;
+  padding: 24px;
+  box-sizing: border-box;
 }
 
 .audio-call-ui {
-  background: white;
-  border-radius: 20px;
-  padding: 40px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(10px);
+  border-radius: 24px;
+  padding: 48px 40px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   text-align: center;
-  min-width: 300px;
+  min-width: 320px;
+  max-width: 400px;
+  width: 100%;
+  position: relative;
 }
 
+/* User Info Section */
 .user-info {
-  margin-bottom: 40px;
+  margin-bottom: 48px;
+}
+
+.avatar-wrapper {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 24px;
 }
 
 .avatar {
-  width: 100px;
-  height: 100px;
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 20px;
+  margin: 0 auto;
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+  transition: all 0.3s ease;
 }
 
 .avatar mat-icon {
-  font-size: 50px;
-  width: 50px;
-  height: 50px;
+  font-size: 64px;
+  width: 64px;
+  height: 64px;
   color: white;
 }
 
-.user-name {
-  font-size: 24px;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 10px;
+/* Pulsing animation when speaking */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.15);
+    opacity: 0;
+  }
 }
 
+.avatar.pulsing {
+  animation: pulse-ring 1.5s ease-out infinite;
+}
+
+/* Remote User Mute Indicator */
+.remote-mute-indicator {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  width: 36px;
+  height: 36px;
+  background: #ff5252;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid white;
+  box-shadow: 0 4px 12px rgba(255, 82, 82, 0.5);
+  z-index: 10;
+}
+
+.remote-mute-indicator mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  color: white;
+}
+
+/* User Name */
+.user-name {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 12px;
+  letter-spacing: -0.5px;
+}
+
+/* Call Status */
 .call-status {
   font-size: 16px;
-  color: #666;
+  font-weight: 500;
+  margin-top: 8px;
 }
 
+.status-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+}
+
+.status-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+.status-text.incoming {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.status-text.ringing {
+  background: #fff3e0;
+  color: #ef6c00;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.ringing-icon {
+  animation: rotate 2s linear infinite;
+}
+
+.status-text.connected {
+  background: #e3f2fd;
+  color: #1565c0;
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+}
+
+.status-text.connecting {
+  background: #f3e5f5;
+  color: #7b1fa2;
+}
+
+/* Self Mute Status */
+.self-mute-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 10px 20px;
+  background: #fff3e0;
+  border: 2px solid #ff9800;
+  border-radius: 24px;
+  color: #e65100;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.self-mute-status mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+/* Controls */
 .controls {
   display: flex;
-  gap: 15px;
+  gap: 20px;
   justify-content: center;
+  align-items: center;
   flex-wrap: wrap;
 }
 
 .btn {
-  width: 60px;
-  height: 60px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
   border: none;
   cursor: pointer;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+  transform: scale(0);
+  opacity: 0;
+  transition: all 0.5s ease;
+}
+
+.btn:active::before {
+  transform: scale(2);
+  opacity: 1;
+  transition: all 0s;
 }
 
 .btn mat-icon {
-  font-size: 28px;
-  width: 28px;
-  height: 28px;
+  font-size: 30px;
+  width: 30px;
+  height: 30px;
   color: white;
+  margin-bottom: 2px;
+}
+
+.btn-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 2px;
 }
 
 .btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
 }
 
+.btn:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Button Colors */
 .btn.accept {
-  background: #4caf50;
+  background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
 }
 
 .btn.accept:hover {
-  background: #45a049;
+  background: linear-gradient(135deg, #66bb6a 0%, #4caf50 100%);
 }
 
 .btn.decline,
 .btn.end {
-  background: #f44336;
+  background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
 }
 
 .btn.decline:hover,
 .btn.end:hover {
-  background: #da190b;
+  background: linear-gradient(135deg, #e57373 0%, #f44336 100%);
 }
 
 .btn.mute,
 .btn.speaker {
-  background: #2196f3;
+  background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
 }
 
 .btn.mute:hover,
 .btn.speaker:hover {
-  background: #0b7dda;
+  background: linear-gradient(135deg, #64b5f6 0%, #2196f3 100%);
 }
 
 .btn.mute.active,
 .btn.speaker.active {
-  background: #ff9800;
+  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
 }
 
-@media (max-width: 480px) {
+.btn.mute.active:hover,
+.btn.speaker.active:hover {
+  background: linear-gradient(135deg, #ffb74d 0%, #ff9800 100%);
+}
+
+/* Tablet Landscape (768px - 1024px) */
+@media (max-width: 1024px) and (min-width: 768px) {
+  .audio-container {
+    padding: 20px;
+    min-height: 450px;
+  }
+
   .audio-call-ui {
-    padding: 30px 20px;
-    min-width: 250px;
+    padding: 40px 36px;
+    min-width: 300px;
   }
 
   .avatar {
-    width: 80px;
-    height: 80px;
+    width: 110px;
+    height: 110px;
   }
 
   .avatar mat-icon {
-    font-size: 40px;
-    width: 40px;
-    height: 40px;
+    font-size: 56px;
+    width: 56px;
+    height: 56px;
   }
 
   .user-name {
-    font-size: 20px;
+    font-size: 26px;
   }
 
   .btn {
-    width: 50px;
-    height: 50px;
+    width: 60px;
+    height: 60px;
+  }
+
+  .btn mat-icon {
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+  }
+}
+
+/* Tablet Portrait (481px - 767px) */
+@media (max-width: 767px) and (min-width: 481px) {
+  .audio-container {
+    padding: 18px;
+    min-height: 420px;
+  }
+
+  .audio-call-ui {
+    padding: 36px 30px;
+    min-width: 280px;
+  }
+
+  .user-info {
+    margin-bottom: 40px;
+  }
+
+  .avatar {
+    width: 100px;
+    height: 100px;
+  }
+
+  .avatar mat-icon {
+    font-size: 52px;
+    width: 52px;
+    height: 52px;
+  }
+
+  .remote-mute-indicator {
+    width: 32px;
+    height: 32px;
+  }
+
+  .remote-mute-indicator mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  .user-name {
+    font-size: 24px;
+  }
+
+  .call-status {
+    font-size: 15px;
+  }
+
+  .controls {
+    gap: 16px;
+  }
+
+  .btn {
+    width: 56px;
+    height: 56px;
+  }
+
+  .btn mat-icon {
+    font-size: 26px;
+    width: 26px;
+    height: 26px;
+  }
+
+  .btn-label {
+    font-size: 9px;
+  }
+}
+
+/* Mobile (up to 480px) */
+@media (max-width: 480px) {
+  .audio-container {
+    padding: 16px;
+    min-height: 400px;
+  }
+
+  .audio-call-ui {
+    padding: 32px 24px;
+    min-width: 260px;
+    border-radius: 20px;
+  }
+
+  .user-info {
+    margin-bottom: 36px;
+  }
+
+  .avatar {
+    width: 90px;
+    height: 90px;
+  }
+
+  .avatar mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+  }
+
+  .remote-mute-indicator {
+    width: 30px;
+    height: 30px;
+    bottom: 3px;
+    right: 3px;
+  }
+
+  .remote-mute-indicator mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+
+  .user-name {
+    font-size: 22px;
+    margin-bottom: 10px;
+  }
+
+  .call-status {
+    font-size: 14px;
+  }
+
+  .status-text {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+
+  .status-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  .self-mute-status {
+    padding: 8px 16px;
+    font-size: 13px;
+    margin-top: 12px;
+  }
+
+  .self-mute-status mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+
+  .controls {
+    gap: 14px;
+  }
+
+  .btn {
+    width: 52px;
+    height: 52px;
   }
 
   .btn mat-icon {
     font-size: 24px;
     width: 24px;
     height: 24px;
+  }
+
+  .btn-label {
+    font-size: 8px;
+  }
+}
+
+/* Extra Small Mobile (up to 360px) */
+@media (max-width: 360px) {
+  .audio-container {
+    padding: 12px;
+    min-height: 380px;
+  }
+
+  .audio-call-ui {
+    padding: 28px 20px;
+    min-width: 240px;
+  }
+
+  .user-info {
+    margin-bottom: 32px;
+  }
+
+  .avatar {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 20px;
+  }
+
+  .avatar mat-icon {
+    font-size: 42px;
+    width: 42px;
+    height: 42px;
+  }
+
+  .remote-mute-indicator {
+    width: 28px;
+    height: 28px;
+  }
+
+  .remote-mute-indicator mat-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+  }
+
+  .user-name {
+    font-size: 20px;
+  }
+
+  .call-status {
+    font-size: 13px;
+  }
+
+  .status-text {
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+
+  .self-mute-status {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  .controls {
+    gap: 12px;
+  }
+
+  .btn {
+    width: 48px;
+    height: 48px;
+  }
+
+  .btn mat-icon {
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
+  }
+
+  .btn-label {
+    font-size: 7px;
+  }
+}
+
+/* Landscape Mode */
+@media (max-height: 500px) and (orientation: landscape) {
+  .audio-container {
+    min-height: 100%;
+    padding: 12px;
+  }
+
+  .audio-call-ui {
+    padding: 24px 20px;
+    min-width: 280px;
+  }
+
+  .user-info {
+    margin-bottom: 24px;
+  }
+
+  .avatar {
+    width: 70px;
+    height: 70px;
+    margin-bottom: 12px;
+  }
+
+  .avatar mat-icon {
+    font-size: 36px;
+    width: 36px;
+    height: 36px;
+  }
+
+  .user-name {
+    font-size: 18px;
+    margin-bottom: 6px;
+  }
+
+  .call-status {
+    font-size: 12px;
+  }
+
+  .self-mute-status {
+    margin-top: 8px;
+    padding: 5px 12px;
+    font-size: 11px;
+  }
+
+  .btn {
+    width: 46px;
+    height: 46px;
+  }
+
+  .btn mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+
+  .btn-label {
+    display: none;
   }
 }
