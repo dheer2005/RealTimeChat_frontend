@@ -466,8 +466,8 @@ export class ChatService {
     return this.http.get<any[]>(`${this.baseUrl}Chat/getGroupMessages/${groupName}`, this.authSvc.getHttpOptions());
   }
 
-  public unreadCount(userTo: string) {
-    return this.http.get<any[]>(`${this.baseUrl}Chat/unread-counts/${userTo}`, this.authSvc.getHttpOptions());
+  public getUnreadSummary(currentUser: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}Chat/unread-summary/${currentUser}`, this.authSvc.getHttpOptions());
   }
 
   public lastMessage(userName: string): Observable<any[]> {

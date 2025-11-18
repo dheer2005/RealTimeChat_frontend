@@ -65,7 +65,7 @@
             *ngIf="!isUserTyping(user.userName) && user.lastMessage" 
             class="last-message"
           >
-            {{ user.lastMessageSender === userName ? 'You: ' : '' }}
+            {{ user.lastMessageSender === currentUserName ? 'You: ' : '' }}
             {{ user.lastMessage }}
           </span>
         </div>

@@ -22,7 +22,7 @@ import { VideoChatComponent } from '../video-chat/video-chat.component';
 })
 export class HomeComponent implements OnInit, OnDestroy {
   public usersList: any[] = [];
-  public userName: any;
+  public currentUserName: any;
   public currentUserId: any;
   public userList2: any[] = [];
   public friends: any[] = [];
@@ -58,7 +58,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     if (!this.isBrowser) {
       return;
     }
-    this.userName = this.authSvc.getUserName();
+    this.currentUserName = this.authSvc.getUserName();
     this.currentUserId = this.authSvc.getUserId();
 
     this.loadFriends();
@@ -152,7 +152,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       this.videoService.startConnection().catch((err:any) => console.log(err));
       this.audioService.startConnection().catch((err:any) => console.log(err));
       this.chatService.startConnection(
-        this.userName,
+        this.currentUserName,
         () => {},
         () => {}
       );
@@ -180,24 +180,22 @@ export class HomeComponent implements OnInit, OnDestroy {
             lastMessageTime: null as Date | null
           }));
 
-        const observables = this.userList2.map(user =>
-          this.getUnreadCountAndLastMessage(user.userName).pipe(
-            map((res: any) => {
-              user.unreadCount = res?.count || 0;
-              user.lastMessage = user.lastMessage || res?.lastMsg || '';
-              user.lastMessageSender = user.lastMessageSender || res?.lastMsgSender || '';
-              user.lastMessageTime = res?.lastMsgTime ? new Date(res.lastMsgTime) : null;
-              return user;
-            })
-          )
-        );
+        this.chatService.getUnreadSummary(this.currentUserName).subscribe(summary => {
 
-        forkJoin(observables).subscribe(updatedUsers => {
-          this.userList2 = updatedUsers.sort((a, b) => {
-            const timeA = a.lastMessageTime ? a.lastMessageTime.getTime() : 0;
-            const timeB = b.lastMessageTime ? b.lastMessageTime.getTime() : 0;
-            return timeB - timeA;
+          summary.forEach((item:any) => {
+            const user = this.userList2.find(u => u.userName === item.userName);
+
+            if (user) {
+              user.unreadCount = item.unreadCount;
+              user.lastMessage = item.lastMessage;
+              user.lastMessageTime = new Date(item.lastMessageTime);
+              user.lastMessageSender = item.lastMessageSender;
+            }
           });
+
+          this.userList2 = this.userList2.sort(
+            (a, b) => (b.lastMessageTime?.getTime() || 0) - (a.lastMessageTime?.getTime() || 0)
+          );
 
           this.IsLoader = false;
         });
@@ -215,14 +213,6 @@ export class HomeComponent implements OnInit, OnDestroy {
     }
   }
 
-  getUnreadCountAndLastMessage(userTo: string): Observable<any[] | null> {
-    return this.chatService.unreadCount(userTo).pipe(
-      map((res: any) => {
-        return res;
-      })
-    );
-  }
-
   onKeyPress(event: any): void {
     this.filter = event.target.value;
   }
@@ -238,7 +228,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   userCard(userName: string): void {
     this.chatService.setCurrentChatUser(userName);
-    this.chatService.markAsSeen(userName, this.userName);
+    this.chatService.markAsSeen(userName, this.currentUserName);
     this.router.navigate(['chats', userName]);
   }
 
