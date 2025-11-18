@@ -11,9 +11,9 @@ import { AuthenticationService } from './authentication.service';
 export class AudioService {
 
   public hubConnection!: HubConnection;
-  private hubUrl = 'https://realtime001.bsite.net/video';
+  private hubUrl = 'https://realtime001.bsite.net/audio';
   
-  // private hubUrl = 'https://localhost:7180/video';
+  // private hubUrl = 'https://localhost:7180/audio';
 
   private token: string | null = null;
   private isBrowser: boolean;
@@ -30,6 +30,7 @@ export class AudioService {
   public candidateReceived = new Subject<{from: string, candidate: RTCIceCandidate}>();
   public incomingCallEvent = new Subject<{from: string, offer: RTCSessionDescriptionInit}>();
   public lastOffer: {from: string, offer: RTCSessionDescriptionInit} | null = null;
+  public incomingAudioCall = new Subject<string>();
 
   constructor(
     private authSvc: AuthenticationService,
@@ -52,24 +53,30 @@ export class AudioService {
 
     this.hubConnection = new signalR.HubConnectionBuilder()
       .withUrl(this.hubUrl, {
-        accessTokenFactory: () => this.token!,
-        withCredentials: false
+        accessTokenFactory: () => this.token!
       })
       .withAutomaticReconnect()
       .build();
 
-    // Setup listeners BEFORE starting connection
     this.hubConnection.on('ReceiveOffer', (from: string, offer: string) => {
       const parsedOffer = JSON.parse(offer);
       
-      // Store offer for later use
       this.lastOffer = {from, offer: parsedOffer};
       
       this.offerReceived.next({from, offer: parsedOffer});
       this.incomingCall = true;
       this.remoteUserId = from;
       
+      this.incomingCallEvent.next({ from, offer: parsedOffer });
       console.log('📞 Incoming call from:', from);
+    });
+
+    this.hubConnection.on("IncomingAudioCall", (from: string) => {
+      console.log("📞 Incoming audio call from:", from);
+      this.incomingCall = true;
+      this.remoteUserId = from;
+
+      this.incomingAudioCall.next(from);
     });
 
     this.hubConnection.on('ReceiveAnswer', (from: string, answer: string) => {

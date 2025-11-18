@@ -768,7 +768,6 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   downloadFile(url: string) {
     if (!url) return;
 
-    // Force download via Cloudinary transformation
     const downloadUrl = url.replace('/upload/', '/upload/fl_attachment/');
 
     const link = document.createElement('a');
@@ -988,6 +987,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
     
     if (!this.audioService.hubConnection || 
         this.audioService.hubConnection.state !== 'Connected') {
+      
       this.audioService.startConnection().then(() => {
         this.initiateAudioCall(UserTo);
       }).catch(err => {
@@ -1002,7 +1002,33 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   private initiateAudioCall(UserTo: string): void {
     this.audioService.remoteUserId = UserTo;
     this.audioService.isOpen = true;
-    
+    this.audioService.incomingCall = false; 
+    this.audioService.isCallActive = false;
+
+    this.audioService.hubConnection.invoke("SendIncomingAudioCall", UserTo)
+      .then(() => {
+        console.log('📤 Audio call notification sent to:', UserTo);
+        
+        this.dialog.open(AudioChatComponent, {
+          width: '400px',
+          maxWidth: '95vw',
+          height: '500px',
+          maxHeight: '95vh',
+          disableClose: true,
+          autoFocus: false,
+          panelClass: 'audio-call-dialog'
+        });
+      })
+      .catch(err => {
+        console.error('Failed to send audio call notification:', err);
+        this.toastrSvc.error('Failed to initiate call');
+      });
+  }
+
+  openAudioModal(UserTo: string): void {
+    this.audioService.remoteUserId = UserTo;
+    this.audioService.isOpen = true;
+
     this.dialog.open(AudioChatComponent, {
       width: '400px',
       maxWidth: '95vw',

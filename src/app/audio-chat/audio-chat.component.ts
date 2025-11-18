@@ -1,24 +1,26 @@
+// audio-chat.component.ts
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { Component, Inject, inject, PLATFORM_ID } from '@angular/core';
+import { Component, Inject, inject, OnDestroy, OnInit, PLATFORM_ID } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { Subscription } from 'rxjs';
 import { AudioService } from '../Services/audio.service';
 import { MatIconModule } from '@angular/material/icon';
-import { FormsModule } from '@angular/forms';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-audio-chat',
   standalone: true,
-  imports: [MatIconModule, CommonModule, FormsModule],
+  imports: [MatIconModule, CommonModule],
   templateUrl: './audio-chat.component.html',
   styleUrl: './audio-chat.component.css'
 })
-export class AudioChatComponent {
+export class AudioChatComponent implements OnInit, OnDestroy {
   private peerConnection!: RTCPeerConnection;
   private remoteDescriptionSet = false;
   private pendingCandidates: RTCIceCandidateInit[] = [];
   private stream: MediaStream | null = null;
   private isBrowser: boolean;
+  private remoteAudioElement: HTMLAudioElement | null = null;
   
   // Audio state
   isMuted = false;
@@ -27,12 +29,17 @@ export class AudioChatComponent {
   private callTimer?: any;
   private callStartTime?: number;
 
-  // Subscriptions for cleanup
+  // Call states
+  isRinging = false; // For caller - showing "Ringing..."
+  
+  // Subscriptions
   private answerSubscription?: Subscription;
   private candidateSubscription?: Subscription;
+  private offerSubscription?: Subscription;
 
   constructor(
     public audioService: AudioService,
+    private toastrSvc: ToastrService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
@@ -48,29 +55,39 @@ export class AudioChatComponent {
 
     this.setupPeerConnection();
     this.startLocalAudio();
-    this.audioService.startConnection();
     this.setupSignalListeners();
+
+    // If this user initiated the call (not incoming), start immediately
+    if (!this.audioService.incomingCall) {
+      this.initiateCall();
+    }
   }
 
   private setupSignalListeners(): void {
     if (!this.isBrowser) return;
 
-    this.audioService.offerReceived.subscribe(async (data) => {
+    // Listen for incoming offers (when someone calls you)
+    this.offerSubscription = this.audioService.offerReceived.subscribe(async (data) => {
       if (!this.peerConnection || this.peerConnection.signalingState === 'closed') return;
 
-      if (data && data.offer && !this.audioService.isCallActive) {
-        console.log('Offer received from:', data.from);
-      }
+      console.log('📞 Offer received from:', data.from);
+      
+      // Store the offer for when user clicks accept
+      this.audioService.lastOffer = data;
+      this.audioService.incomingCall = true;
+      this.audioService.remoteUserId = data.from;
     });
 
-    // Call ended listener
+    // Setup call ended listener
     const setupCallEndedListener = () => {
       this.audioService.hubConnection?.on('CallEnded', () => {
+        console.log('Call ended by remote user');
         this.stopLocalAudio();
         this.stopCallTimer();
         this.audioService.isCallActive = false;
         this.audioService.incomingCall = false;
         this.audioService.remoteUserId = '';
+        this.isRinging = false;
         this.dialogRef.close();
       });
     };
@@ -81,9 +98,11 @@ export class AudioChatComponent {
       this.audioService.hubConnection?.onreconnected(() => setupCallEndedListener());
     }
 
-    // Handle answer received
+    // Handle answer received (when receiver accepts)
     this.answerSubscription = this.audioService.answerReceived.subscribe(async (data) => {
       if (!this.peerConnection || this.peerConnection.signalingState === 'closed') return;
+
+      console.log('✅ Answer received from:', data.from);
 
       if (data && data.answer) {
         if (this.peerConnection.remoteDescription) {
@@ -96,10 +115,18 @@ export class AudioChatComponent {
             await this.peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
             this.remoteDescriptionSet = true;
 
+            // Process pending ICE candidates
             for (const candidate of this.pendingCandidates) {
               await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
             }
             this.pendingCandidates = [];
+
+            // Call is now active!
+            this.isRinging = false;
+            this.audioService.isCallActive = true;
+            this.startCallTimer();
+
+            console.log('🎉 Call connected!');
           } else {
             console.warn('Unexpected signaling state:', this.peerConnection.signalingState);
           }
@@ -109,7 +136,7 @@ export class AudioChatComponent {
       }
     });
 
-    // Handle ICE candidate received
+    // Handle ICE candidates
     this.candidateSubscription = this.audioService.candidateReceived.subscribe(async (data) => {
       if (!this.peerConnection || this.peerConnection.signalingState === 'closed') return;
       if (!data || !data.candidate) return;
@@ -127,14 +154,45 @@ export class AudioChatComponent {
         sdpMLineIndex: c.sdpMLineIndex
       });
 
-      if (this.remoteDescriptionSet) {
-        await this.peerConnection.addIceCandidate(iceCandidate);
-      } else {
-        this.pendingCandidates.push(iceCandidate);
+      try {
+        if (this.remoteDescriptionSet) {
+          await this.peerConnection.addIceCandidate(iceCandidate);
+        } else {
+          this.pendingCandidates.push(iceCandidate);
+        }
+      } catch (error) {
+        console.error('Error adding ICE candidate:', error);
       }
     });
   }
 
+  // CALLER initiates the call
+  async initiateCall(): Promise<void> {
+    if (!this.isBrowser) return;
+
+    try {
+      console.log('📞 Initiating call to:', this.audioService.remoteUserId);
+      
+      this.isRinging = true; // Show "Ringing..." status
+      
+      // Create and send offer
+      const offer = await this.peerConnection.createOffer({
+        offerToReceiveAudio: true
+      });
+      
+      await this.peerConnection.setLocalDescription(offer);
+      
+      // Send offer to remote user
+      await this.audioService.sendOffer(this.audioService.remoteUserId, offer);
+      
+      console.log('📤 Offer sent successfully');
+    } catch (error) {
+      console.error("Error initiating call:", error);
+      this.isRinging = false;
+    }
+  }
+
+  // RECEIVER declines the call
   async declineCall(): Promise<void> {
     if (!this.isBrowser) return;
 
@@ -142,42 +200,52 @@ export class AudioChatComponent {
     this.stopLocalAudio();
     this.audioService.isOpen = false;
     this.audioService.lastOffer = null;
+    this.audioService.incomingCall = false;
     this.dialogRef.close();
   }
 
+  // RECEIVER accepts the call
   async acceptCall(): Promise<void> {
     if (!this.isBrowser) return;
+
+    console.log('✅ Accepting call from:', this.audioService.remoteUserId);
 
     this.audioService.incomingCall = false;
     this.audioService.isCallActive = true;
     this.startCallTimer();
 
+    // Enable microphone
     if (this.stream) {
-      this.stream.getAudioTracks().forEach((track) => track.enabled = true);
+      this.stream.getAudioTracks().forEach(t => t.enabled = true);
     }
 
     const offerData = this.audioService.lastOffer;
     if (offerData && offerData.offer) {
       try {
         if (this.peerConnection.remoteDescription) {
-          console.warn("Remote description already set, skipping...");
+          console.warn("Remote description already set");
           return;
         }
 
         if (this.peerConnection.signalingState === 'stable') {
+          // Set remote offer
           await this.peerConnection.setRemoteDescription(new RTCSessionDescription(offerData.offer));
           this.remoteDescriptionSet = true;
 
+          // Process pending candidates
           for (const candidate of this.pendingCandidates) {
             await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
           }
           this.pendingCandidates = [];
 
+          // Create and send answer
           const answer = await this.peerConnection.createAnswer();
           await this.peerConnection.setLocalDescription(answer);
           await this.audioService.sendAnswer(this.audioService.remoteUserId, answer);
+
+          console.log('📤 Answer sent successfully');
         } else {
-          console.warn("Cannot accept offer: invalid signaling state:", this.peerConnection.signalingState);
+          console.warn("Invalid signaling state:", this.peerConnection.signalingState);
         }
       } catch (error) {
         console.error("Error accepting call:", error);
@@ -187,30 +255,13 @@ export class AudioChatComponent {
     }
   }
 
-  async startCall(): Promise<void> {
-    if (!this.isBrowser) return;
-
-    try {
-      this.audioService.isCallActive = true;
-      this.startCallTimer();
-
-      const offer = await this.peerConnection.createOffer();
-      await this.peerConnection.setLocalDescription(offer);
-      await this.audioService.sendOffer(this.audioService.remoteUserId, offer);
-    } catch (error) {
-      console.error("Error starting call:", error);
-      this.audioService.isCallActive = false;
-      this.stopCallTimer();
-    }
-  }
-
   private setupPeerConnection(): void {
     if (!this.isBrowser) return;
 
     const configuration: RTCConfiguration = {
       iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun.services.mozilla.com' },
+        { urls: 'stun:stun1.l.google.com:19302' },
         {
           urls: 'turn:relay1.expressturn.com:3480',
           username: 'efPU52K4SLOQ34W2QY',
@@ -222,28 +273,49 @@ export class AudioChatComponent {
 
     this.peerConnection = new RTCPeerConnection(configuration);
 
+    // Send ICE candidates
     this.peerConnection.onicecandidate = (event) => {
       if (event.candidate) {
         this.audioService.sendCandidate(
           this.audioService.remoteUserId,
           event.candidate
-        ).catch((err:any) => console.error("Error sending ICE candidate:", err));
+        ).catch(err => console.error("Error sending ICE candidate:", err));
       }
     };
 
-    // Handle remote track (audio only)
+    // Handle remote audio track
     this.peerConnection.ontrack = (event) => {
-      const audioElement = new Audio();
-      audioElement.srcObject = event.streams[0];
-      audioElement.play().catch(err => console.error("Error playing remote audio:", err));
+      console.log('🎵 Remote track received');
+      
+      if (!this.remoteAudioElement) {
+        this.remoteAudioElement = new Audio();
+        this.remoteAudioElement.autoplay = true;
+      }
+      
+      this.remoteAudioElement.srcObject = event.streams[0];
+      this.remoteAudioElement.play()
+        .then(() => console.log('🔊 Remote audio playing'))
+        .catch(err => console.error("Error playing remote audio:", err));
     };
 
     // Monitor connection state
     this.peerConnection.oniceconnectionstatechange = () => {
       console.log('ICE Connection State:', this.peerConnection.iceConnectionState);
-      if (this.peerConnection.iceConnectionState === 'failed' || 
-          this.peerConnection.iceConnectionState === 'disconnected') {
-        console.warn('Connection failed/disconnected.');
+      
+      if (this.peerConnection.iceConnectionState === 'connected') {
+        console.log('✅ ICE Connected!');
+      } else if (this.peerConnection.iceConnectionState === 'failed') {
+        console.warn('❌ ICE Connection failed');
+      } else if (this.peerConnection.iceConnectionState === 'disconnected') {
+        console.warn('⚠️ ICE Disconnected');
+      }
+    };
+
+    this.peerConnection.onconnectionstatechange = () => {
+      console.log('Connection State:', this.peerConnection.connectionState);
+      
+      if (this.peerConnection.connectionState === 'connected') {
+        console.log('✅ Peer connection established!');
       }
     };
   }
@@ -260,47 +332,89 @@ export class AudioChatComponent {
         }
       });
 
-      // Mute audio initially if not in active call
-      this.stream.getAudioTracks().forEach((track) => {
-        track.enabled = this.audioService.isCallActive;
+      console.log('🎤 Microphone access granted');
+
+      // Mute initially if incoming call (unmute on accept)
+      this.stream.getAudioTracks().forEach(track => {
+        track.enabled = !this.audioService.incomingCall;
       });
 
       // Add tracks to peer connection
-      this.stream.getTracks().forEach((track) => {
-        if (this.stream) {
-          this.peerConnection.addTrack(track, this.stream);
-        }
+      this.stream.getTracks().forEach(track => {
+        this.peerConnection.addTrack(track, this.stream!);
       });
+
     } catch (error) {
-      console.error('Error accessing microphone:', error);
-      alert('Unable to access microphone. Please check permissions.');
+      console.error("⚠️ Microphone access denied or unavailable:", error);
+      
+      // Create silent audio track so call can still proceed
+      try {
+        const ctx = new AudioContext();
+        const oscillator = ctx.createOscillator();
+        const dst = oscillator.connect(ctx.createMediaStreamDestination()) as MediaStreamAudioDestinationNode;
+        oscillator.start();
+        
+        this.stream = dst.stream;
+        
+        // Mute the silent track
+        this.stream.getAudioTracks().forEach(track => {
+          track.enabled = false;
+        });
+
+        // Add silent track to peer connection
+        this.stream.getTracks().forEach(track => {
+          this.peerConnection.addTrack(track, this.stream!);
+        });
+
+        console.log('🔇 Using silent track (microphone unavailable)');
+        
+        // Only show alert, don't block the call
+        this.toastrSvc?.warning('Microphone access denied. You will not be able to speak.', 'Warning', {
+          timeOut: 5000
+        });
+      } catch (silentError) {
+        console.error("Failed to create silent track:", silentError);
+      }
     }
   }
 
   private stopLocalAudio(): void {
     if (!this.isBrowser) return;
 
+    // Stop local stream
     if (this.stream) {
-      this.stream.getTracks().forEach((track) => track.stop());
+      this.stream.getTracks().forEach(track => track.stop());
       this.stream = null;
     }
 
+    // Stop remote audio
+    if (this.remoteAudioElement) {
+      this.remoteAudioElement.srcObject = null;
+      this.remoteAudioElement = null;
+    }
+
+    // Close peer connection
     if (this.peerConnection) {
       this.peerConnection.onicecandidate = null;
       this.peerConnection.ontrack = null;
       this.peerConnection.oniceconnectionstatechange = null;
-      this.peerConnection.getSenders().forEach((sender) => {
+      this.peerConnection.onconnectionstatechange = null;
+      
+      this.peerConnection.getSenders().forEach(sender => {
         if (sender.track) {
           sender.track.stop();
         }
       });
+      
       this.peerConnection.close();
     }
 
+    // Reset states
     this.audioService.isCallActive = false;
     this.audioService.incomingCall = false;
     this.remoteDescriptionSet = false;
     this.pendingCandidates = [];
+    this.isRinging = false;
   }
 
   async endCall(): Promise<void> {
@@ -327,15 +441,14 @@ export class AudioChatComponent {
     if (!this.stream) return;
 
     this.isMuted = !this.isMuted;
-    this.stream.getAudioTracks().forEach((track) => {
+    this.stream.getAudioTracks().forEach(track => {
       track.enabled = !this.isMuted;
     });
   }
 
   toggleSpeaker(): void {
     this.isSpeakerOn = !this.isSpeakerOn;
-    // Note: Web browsers don't have direct speaker control
-    // This is mainly for UI state
+    // Browser doesn't support speaker toggle directly
   }
 
   private startCallTimer(): void {
@@ -360,20 +473,14 @@ export class AudioChatComponent {
   }
 
   ngOnDestroy(): void {
-    // Clean up subscriptions
-    if (this.answerSubscription) {
-      this.answerSubscription.unsubscribe();
-    }
-    if (this.candidateSubscription) {
-      this.candidateSubscription.unsubscribe();
-    }
+    if (this.answerSubscription) this.answerSubscription.unsubscribe();
+    if (this.candidateSubscription) this.candidateSubscription.unsubscribe();
+    if (this.offerSubscription) this.offerSubscription.unsubscribe();
 
-    // Remove SignalR event listeners
     if (this.isBrowser && this.audioService.hubConnection) {
       this.audioService.hubConnection.off('CallEnded');
     }
 
-    // Stop media and close connection
     this.stopLocalAudio();
     this.stopCallTimer();
   }

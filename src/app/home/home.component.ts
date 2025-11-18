@@ -8,6 +8,10 @@ import { forkJoin, map, Observable, Subscription } from 'rxjs';
 import { FriendrequestService } from '../Services/friendrequest.service';
 import { ToastrService } from 'ngx-toastr';
 import { VideoService } from '../Services/video.service';
+import { AudioService } from '../Services/audio.service';
+import { AudioChatComponent } from '../audio-chat/audio-chat.component';
+import { MatDialog } from '@angular/material/dialog';
+import { VideoChatComponent } from '../video-chat/video-chat.component';
 
 @Component({
   selector: 'app-home',
@@ -41,6 +45,8 @@ export class HomeComponent implements OnInit, OnDestroy {
     private activatedRoute: ActivatedRoute, 
     private chatService: ChatService,
     private videoService: VideoService,
+    private audioService: AudioService,
+    private dialog: MatDialog,
     private friendRequestSvc: FriendrequestService,
     private toastrSvc: ToastrService,
     @Inject(PLATFORM_ID) private platformId: Object
@@ -56,6 +62,39 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.currentUserId = this.authSvc.getUserId();
 
     this.loadFriends();
+
+    this.audioService.incomingAudioCall.subscribe((fromUser: string) => {
+      
+      this.audioService.remoteUserId = fromUser;
+      this.audioService.incomingCall = true;
+      this.audioService.isOpen = true;
+
+      this.dialog.open(AudioChatComponent, {
+        width: '400px',
+        maxWidth: '95vw',
+        height: '500px',
+        maxHeight: '95vh',
+        disableClose: true,
+        autoFocus: false,
+        panelClass: 'audio-call-dialog'
+      });
+    });
+
+    this.videoService.offerReceived.subscribe(async(data)=>{
+      console.log("Video offer received in home component:", data);
+      if(data){
+        if(!this.videoService.isOpen){
+          this.videoService.isOpen = true;
+          this.dialog.open(VideoChatComponent,{
+            width: '400px',
+            height: '600px',
+            disableClose:false,
+          });
+        }
+        this.videoService.remoteUserId = data.from;
+        this.videoService.incomingCall = true;
+      }
+    })
 
     this.friendRequestSubscription = this.chatService.friendRequest$.subscribe(req=>{
       if(req && req.toUserId == this.currentUserId){
@@ -108,7 +147,8 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   private initializeSignalR(): void {
     try {
-      // this.videoService.startConnection().catch((err:any) => console.log(err));
+      this.videoService.startConnection().catch((err:any) => console.log(err));
+      this.audioService.startConnection().catch((err:any) => console.log(err));
       this.chatService.startConnection(
         this.userName,
         () => {},
