@@ -14,6 +14,8 @@ export class VideoService {
   
   // private hubUrl = 'https://localhost:7180/video';
 
+  // private hubUrl = 'https://10.0.0.43:5000/video';
+
   private token: string | null = null;
   private isBrowser: boolean;
 
@@ -28,6 +30,9 @@ export class VideoService {
   public answerReceived = new Subject<{from: string, answer: RTCSessionDescriptionInit}>();
   public candidateReceived = new Subject<{from: string, candidate: RTCIceCandidate}>();
   public incomingCallEvent = new Subject<{from: string, offer: RTCSessionDescriptionInit}>();
+  public callFailed = new Subject<string>();
+  public callDeclined = new Subject<string>();
+  
   public lastOffer: {from: string, offer: RTCSessionDescriptionInit} | null = null;
 
   constructor(
@@ -57,18 +62,20 @@ export class VideoService {
       .withAutomaticReconnect()
       .build();
 
-    // Setup listeners BEFORE starting connection
     this.hubConnection.on('ReceiveOffer', (from: string, offer: string) => {
+      if (this.isCallActive || this.incomingCall) {
+        this.hubConnection.invoke('DeclineCall', from);
+        return;
+      }
+
       const parsedOffer = JSON.parse(offer);
       
-      // Store offer for later use
       this.lastOffer = {from, offer: parsedOffer};
       
       this.offerReceived.next({from, offer: parsedOffer});
       this.incomingCall = true;
       this.remoteUserId = from;
       
-      console.log('📞 Incoming call from:', from);
     });
 
     this.hubConnection.on('ReceiveAnswer', (from: string, answer: string) => {
@@ -80,9 +87,17 @@ export class VideoService {
     });
 
     this.hubConnection.on('CallEnded', (from: string) => {
-      this.incomingCall = false;
-      this.isCallActive = false;
-      this.remoteUserId = '';
+      this.resetCallState();
+    });
+
+    this.hubConnection.on('CallFailed', (reason: string) => {
+      this.callFailed.next(reason);
+      this.resetCallState();
+    });
+
+    this.hubConnection.on('CallDeclined', (by: string) => {
+      this.callDeclined.next(by);
+      this.resetCallState();
     });
 
     return this.hubConnection.start()
@@ -90,6 +105,13 @@ export class VideoService {
         console.error("signalRConnectionError", err);
         throw err;
       });
+  }
+
+  private resetCallState(): void {
+    this.incomingCall = false;
+    this.isCallActive = false;
+    this.remoteUserId = '';
+    this.lastOffer = null;
   }
 
   public sendOffer(toUser: string, offer: RTCSessionDescriptionInit): Promise<any> {
@@ -118,6 +140,25 @@ export class VideoService {
       return Promise.reject('SignalR not available');
     }
     return this.hubConnection.invoke('EndCall', toUser);
+  }
+
+  public declineCall(fromUser: string): Promise<any> {
+    if (!this.isBrowser || !this.hubConnection) {
+      return Promise.reject('SignalR not available');
+    }
+    return this.hubConnection.invoke('DeclineCall', fromUser);
+  }
+
+  public async checkUserAvailability(userName: string): Promise<boolean> {
+    if (!this.isBrowser || !this.hubConnection) {
+      return false;
+    }
+    try {
+      return await this.hubConnection.invoke('CheckUserAvailability', userName);
+    } catch (error) {
+      console.error('Error checking user availability:', error);
+      return false;
+    }
   }
 
   public stopConnection(): void {

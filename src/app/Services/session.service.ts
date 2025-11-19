@@ -10,6 +10,8 @@ export class SessionService {
   private baseUrl = 'https://realtime001.bsite.net/api/Session';
 
   // private baseUrl = 'https://localhost:7180/api/Session';
+  
+  // private baseUrl = 'https://10.0.0.43:5000/api/Session';
 
   constructor(private authSvc: AuthenticationService, private http: HttpClient) { }
 

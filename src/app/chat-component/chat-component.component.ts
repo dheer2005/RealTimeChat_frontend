@@ -14,6 +14,7 @@ import { ToastrService } from 'ngx-toastr';
 import { PickerComponent } from '@ctrl/ngx-emoji-mart';
 import { AudioService } from '../Services/audio.service';
 import { AudioChatComponent } from '../audio-chat/audio-chat.component';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 
 @Component({
@@ -115,6 +116,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
     public router: Router,
     private toastrSvc: ToastrService,
     public dialog: MatDialog,
+    private snackBar: MatSnackBar,
     private location: Location,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
@@ -984,6 +986,11 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
     if (!this.isBrowser) {
       return;
     }
+
+    if (this.audioService.isOpen) {
+      console.log("⚠️ Audio dialog already open — ignoring extra open call");
+      return;
+    }
     
     if (!this.audioService.hubConnection || 
         this.audioService.hubConnection.state !== 'Connected') {
@@ -1005,30 +1012,6 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
     this.audioService.incomingCall = false; 
     this.audioService.isCallActive = false;
 
-    this.audioService.hubConnection.invoke("SendIncomingAudioCall", UserTo)
-      .then(() => {
-        console.log('📤 Audio call notification sent to:', UserTo);
-        
-        this.dialog.open(AudioChatComponent, {
-          width: '400px',
-          maxWidth: '95vw',
-          height: '500px',
-          maxHeight: '95vh',
-          disableClose: true,
-          autoFocus: false,
-          panelClass: 'audio-call-dialog'
-        });
-      })
-      .catch(err => {
-        console.error('Failed to send audio call notification:', err);
-        this.toastrSvc.error('Failed to initiate call');
-      });
-  }
-
-  openAudioModal(UserTo: string): void {
-    this.audioService.remoteUserId = UserTo;
-    this.audioService.isOpen = true;
-
     this.dialog.open(AudioChatComponent, {
       width: '400px',
       maxWidth: '95vw',
@@ -1048,17 +1031,17 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
     if (!this.signalRService.hubConnection || 
         this.signalRService.hubConnection.state !== 'Connected') {
       this.signalRService.startConnection().then(() => {
-        this.initiateCall(Userto);
+        this.initiateVideoCall(Userto);
       }).catch(err => {
         console.error('Failed to start video connection:', err);
         this.toastrSvc.error('Failed to initialize video call');
       });
     } else {
-      this.initiateCall(Userto);
+      this.initiateVideoCall(Userto);
     }
   }
 
-  private initiateCall(Userto: string): void {
+  private initiateVideoCall(Userto: string): void {
     this.signalRService.remoteUserId = Userto;
     this.signalRService.isOpen = true;
     

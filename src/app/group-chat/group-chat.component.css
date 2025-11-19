@@ -118,3 +118,18 @@
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+.main-separator {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.date-separator {
+  margin: 10px 0;
+  font-size: 12px;
+  background: rgba(0,0,0,0.1);
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 10px;
+}

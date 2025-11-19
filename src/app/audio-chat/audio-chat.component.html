@@ -67,7 +67,6 @@
         </button>
       </ng-container>
 
-      <!-- ACTIVE CALL BUTTONS -->
       <ng-container *ngIf="audioService.isCallActive">
         <button 
           class="btn mute" 
@@ -95,6 +94,10 @@
 
       <!-- RINGING STATE (Outgoing Call) -->
       <ng-container *ngIf="!audioService.incomingCall && !audioService.isCallActive">
+        <button class="btn accept" *ngIf="!isRinging" (click)="initiateCall()" title="Start Call">
+          <mat-icon>call</mat-icon>
+          <span class="btn-label">Call</span>
+        </button>
         <button class="btn end" (click)="endCall()" title="Cancel Call">
           <mat-icon>call_end</mat-icon>
           <span class="btn-label">Cancel</span>

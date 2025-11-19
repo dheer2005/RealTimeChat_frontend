@@ -14,8 +14,15 @@
 
   <!-- Messages Area -->
   <div class="messages" id="group-chat-scroll">
+    <div *ngFor="let msg of messages; let i = index">
+      <div class="main-separator" *ngIf="isNewDate(i)">
+        <div class="date-separator">
+          {{ getDateLabel(msg.created) }}
+        </div>
+      </div>
+    
     <div
-      *ngFor="let msg of messages"
+      
       [ngClass]="{
         'my-message': msg.fromUser === fromUser,
         'other-message': msg.fromUser !== fromUser
@@ -29,7 +36,7 @@
         </div>
       </div>
     </div>
-
+    </div>
     <div *ngIf="isLoader" class="loader-container">
       <div class="loader"></div>
       <p>Loading messages...</p>

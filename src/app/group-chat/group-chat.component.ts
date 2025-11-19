@@ -64,6 +64,45 @@ export class GroupChatComponent implements OnInit {
     }
   }
 
+  isNewDate(i: number): boolean {
+  if (i === 0) return true;
+
+  const current = new Date(this.messages[i].created);
+  const previous = new Date(this.messages[i - 1].created);
+
+  return (
+    current.getFullYear() !== previous.getFullYear() ||
+    current.getMonth() !== previous.getMonth() ||
+    current.getDate() !== previous.getDate()
+  );
+}
+
+getDateLabel(date: any): string {
+  const d = new Date(date);
+  const today = new Date();
+
+  if (
+    d.getDate() === today.getDate() &&
+    d.getMonth() === today.getMonth() &&
+    d.getFullYear() === today.getFullYear()
+  ) {
+    return 'Today';
+  }
+
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+
+  if (
+    d.getDate() === yesterday.getDate() &&
+    d.getMonth() === yesterday.getMonth() &&
+    d.getFullYear() === yesterday.getFullYear()
+  ) {
+    return 'Yesterday';
+  }
+
+  return d.toDateString();
+}
+
   scrollToBottom() {
     $('#group-chat-scroll').stop().animate({
       scrollTop: $('#group-chat-scroll')[0].scrollHeight

@@ -9,6 +9,8 @@ export class FriendrequestService {
   private baseUrl = 'https://realtime001.bsite.net/api/Friend';
 
   // private baseUrl = 'https://localhost:7180/api/Friend';
+  
+  // private baseUrl = 'https://10.0.0.43:5000/api/Friend';
 
   constructor(private http: HttpClient, private authSvc: AuthenticationService) { }
 

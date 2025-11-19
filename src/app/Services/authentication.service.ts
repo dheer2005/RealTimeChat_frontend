@@ -26,6 +26,11 @@ export class AuthenticationService {
   // chatUrl: any = "https://localhost:7180/api/ChatHub/"
   // baseUrl: any = "https://localhost:7180/api/Authentication/"
   // mediaUrl: any = "https://localhost:7180/api/Media/"
+
+  // seenUrl: any = "https://10.0.0.43:5000/api/Seen/messages/" 
+  // chatUrl: any = "https://10.0.0.43:500/api/ChatHub/"
+  // baseUrl: any = "https://10.0.0.43:5000/api/Authentication/"
+  // mediaUrl: any = "https://10.0.0.43:5000/api/Media/"
   httpOptions = {
     headers: new HttpHeaders({
       'Content-Type': 'application/json'

@@ -67,17 +67,19 @@ export class HomeComponent implements OnInit, OnDestroy {
       
       this.audioService.remoteUserId = fromUser;
       this.audioService.incomingCall = true;
-      this.audioService.isOpen = true;
-
-      this.dialog.open(AudioChatComponent, {
-        width: '400px',
-        maxWidth: '95vw',
-        height: '500px',
-        maxHeight: '95vh',
-        disableClose: true,
-        autoFocus: false,
-        panelClass: 'audio-call-dialog'
-      });
+      
+      if(!this.audioService.isOpen){
+        this.audioService.isOpen = true;
+        this.dialog.open(AudioChatComponent, {
+          width: '400px',
+          maxWidth: '95vw',
+          height: '500px',
+          maxHeight: '95vh',
+          disableClose: true,
+          autoFocus: false,
+          panelClass: 'audio-call-dialog'
+        });
+      }
     });
 
     this.videoService.offerReceived.subscribe(async(data)=>{

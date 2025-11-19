@@ -5,6 +5,7 @@ import { Subscription } from 'rxjs';
 import { AudioService } from '../Services/audio.service';
 import { MatIconModule } from '@angular/material/icon';
 import { ToastrService } from 'ngx-toastr';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-audio-chat',
@@ -22,7 +23,6 @@ export class AudioChatComponent implements OnInit, OnDestroy {
   private remoteAudioElement: HTMLAudioElement | null = null;
   private isEndingCall = false;
   
-  // Audio state
   isMuted = false;
   isSpeakerOn = true;
   isRemoteUserMuted = false;
@@ -30,23 +30,35 @@ export class AudioChatComponent implements OnInit, OnDestroy {
   private callTimer?: any;
   private callStartTime?: number;
 
-  // Call states
   isRinging = false;
   
-  // Subscriptions
   private answerSubscription?: Subscription;
   private candidateSubscription?: Subscription;
   private offerSubscription?: Subscription;
 
+  private callFailedSubscription?: Subscription;
+  private callDeclinedSubscription?: Subscription;
+
+
   constructor(
     public audioService: AudioService,
     private toastrSvc: ToastrService,
+    private snackBar: MatSnackBar,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
   }
 
   private dialogRef: MatDialogRef<AudioChatComponent> = inject(MatDialogRef);
+
+  private showNotification(message: string, type: 'info' | 'error' = 'info'): void {
+    this.snackBar.open(message, 'Close', {
+      duration: 3000,
+      horizontalPosition: 'center',
+      verticalPosition: 'top',
+      panelClass: type === 'error' ? ['error-snackbar'] : ['info-snackbar']
+    });
+  }
 
   ngOnInit(): void {
     if (!this.isBrowser) {
@@ -57,7 +69,6 @@ export class AudioChatComponent implements OnInit, OnDestroy {
     this.setupPeerConnection();
     this.startLocalAudio();
     
-    // Ensure SignalR connection
     if (!this.audioService.hubConnection || 
         this.audioService.hubConnection.state !== 'Connected') {
       this.audioService.startConnection().then(() => {
@@ -67,42 +78,35 @@ export class AudioChatComponent implements OnInit, OnDestroy {
       this.setupSignalListeners();
     }
 
-    // If caller (not receiving), initiate the call
-    if (!this.audioService.incomingCall) {
-      // Small delay to ensure everything is set up
-      setTimeout(() => this.initiateCall(), 500);
-    }
+    // if (!this.audioService.incomingCall) {
+    //   setTimeout(() => this.initiateCall(), 500);
+    // }
   }
 
   private setupSignalListeners(): void {
     if (!this.isBrowser || !this.audioService.hubConnection) return;
 
-    // Listen for incoming offers
     this.offerSubscription = this.audioService.offerReceived.subscribe(async (data) => {
       if (!this.peerConnection || this.peerConnection.signalingState === 'closed') return;
 
-      console.log('📞 Offer received from:', data.from);
       
       this.audioService.lastOffer = data;
       this.audioService.incomingCall = true;
       this.audioService.remoteUserId = data.from;
     });
 
-    // Setup call ended listener
     this.audioService.hubConnection.on('CallEnded', (fromUser: string) => {
-      console.log('📞 Call ended by:', fromUser);
       
       if (!this.isEndingCall) {
+        this.showNotification('Call ended');
         this.cleanupCall();
         this.dialogRef.close();
       }
     });
 
-    // Handle answer received
     this.answerSubscription = this.audioService.answerReceived.subscribe(async (data) => {
       if (!this.peerConnection || this.peerConnection.signalingState === 'closed') return;
 
-      console.log('✅ Answer received from:', data.from);
 
       if (data && data.answer) {
         if (this.peerConnection.remoteDescription) {
@@ -115,13 +119,11 @@ export class AudioChatComponent implements OnInit, OnDestroy {
             await this.peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
             this.remoteDescriptionSet = true;
 
-            // Process pending ICE candidates
             for (const candidate of this.pendingCandidates) {
               await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
             }
             this.pendingCandidates = [];
 
-            // Call is now connected!
             this.isRinging = false;
             this.audioService.isCallActive = true;
             this.startCallTimer();
@@ -134,7 +136,6 @@ export class AudioChatComponent implements OnInit, OnDestroy {
       }
     });
 
-    // Handle ICE candidates
     this.candidateSubscription = this.audioService.candidateReceived.subscribe(async (data) => {
       if (!this.peerConnection || this.peerConnection.signalingState === 'closed') return;
       if (!data || !data.candidate) return;
@@ -162,27 +163,35 @@ export class AudioChatComponent implements OnInit, OnDestroy {
         console.error('Error adding ICE candidate:', error);
       }
     });
+
+    this.callFailedSubscription = this.audioService.callFailed.subscribe((reason: string) => {
+      this.showNotification(reason, 'error');
+      this.cleanupCall();
+      this.dialogRef.close();
+    });
+
+    this.callDeclinedSubscription = this.audioService.callDeclined.subscribe((userName: string) => {
+      this.showNotification(`${userName} declined your call`);
+      this.cleanupCall();
+      this.dialogRef.close();
+    });
   }
 
   async initiateCall(): Promise<void> {
     if (!this.isBrowser) return;
 
     try {
-      console.log('📞 Initiating call to:', this.audioService.remoteUserId);
       
       this.isRinging = true;
       
-      // Create offer
       const offer = await this.peerConnection.createOffer({
         offerToReceiveAudio: true
       });
       
       await this.peerConnection.setLocalDescription(offer);
       
-      // Send offer via SignalR
       await this.audioService.sendOffer(this.audioService.remoteUserId, offer);
       
-      console.log('📤 Offer sent successfully');
     } catch (error) {
       console.error("Error initiating call:", error);
       this.isRinging = false;
@@ -194,10 +203,9 @@ export class AudioChatComponent implements OnInit, OnDestroy {
     if (!this.isBrowser || this.isEndingCall) return;
     
     this.isEndingCall = true;
-    console.log('📞 Declining call...');
 
     try {
-      await this.audioService.endCall(this.audioService.remoteUserId);
+      await this.audioService.declineCall(this.audioService.remoteUserId);
     } catch (error) {
       console.error('Error declining call:', error);
     }
@@ -216,11 +224,9 @@ export class AudioChatComponent implements OnInit, OnDestroy {
     this.audioService.isCallActive = true;
     this.startCallTimer();
 
-    // CRITICAL: Enable microphone immediately on accept
     if (this.stream) {
       this.stream.getAudioTracks().forEach(track => {
         track.enabled = true;
-        console.log('🎤 Microphone enabled:', track.label);
       });
       this.isMuted = false;
     }
@@ -237,23 +243,20 @@ export class AudioChatComponent implements OnInit, OnDestroy {
           await this.peerConnection.setRemoteDescription(new RTCSessionDescription(offerData.offer));
           this.remoteDescriptionSet = true;
 
-          // Process pending candidates
           for (const candidate of this.pendingCandidates) {
             await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
           }
           this.pendingCandidates = [];
 
-          // Create answer
           const answer = await this.peerConnection.createAnswer();
           await this.peerConnection.setLocalDescription(answer);
           
-          // Send answer
           await this.audioService.sendAnswer(this.audioService.remoteUserId, answer);
 
-          console.log('📤 Answer sent successfully');
         }
       } catch (error) {
         console.error("Error accepting call:", error);
+        this.showNotification('Failed to accept call', 'error');
       }
     }
   }
@@ -276,7 +279,6 @@ export class AudioChatComponent implements OnInit, OnDestroy {
 
     this.peerConnection = new RTCPeerConnection(configuration);
 
-    // Send ICE candidates
     this.peerConnection.onicecandidate = (event) => {
       if (event.candidate) {
         this.audioService.sendCandidate(
@@ -286,7 +288,6 @@ export class AudioChatComponent implements OnInit, OnDestroy {
       }
     };
 
-    // Handle remote audio track
     this.peerConnection.ontrack = (event) => {
       console.log('🎵 Remote audio track received');
       
@@ -297,7 +298,6 @@ export class AudioChatComponent implements OnInit, OnDestroy {
       
       this.remoteAudioElement.srcObject = event.streams[0];
       
-      // Monitor remote audio levels to detect mute
       this.monitorRemoteAudio(event.streams[0]);
       
       this.remoteAudioElement.play()
@@ -305,9 +305,7 @@ export class AudioChatComponent implements OnInit, OnDestroy {
         .catch(err => console.error("Error playing remote audio:", err));
     };
 
-    // Monitor connection state
     this.peerConnection.oniceconnectionstatechange = () => {
-      console.log('📡 ICE Connection State:', this.peerConnection.iceConnectionState);
       
       if (this.peerConnection.iceConnectionState === 'connected') {
         console.log('✅ ICE Connected!');
@@ -335,7 +333,6 @@ export class AudioChatComponent implements OnInit, OnDestroy {
         analyser.getByteFrequencyData(dataArray);
         const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
         
-        // If average is very low for extended period, user might be muted
         this.isRemoteUserMuted = average < 2;
         
         requestAnimationFrame(checkAudioLevel);
@@ -359,33 +356,23 @@ export class AudioChatComponent implements OnInit, OnDestroy {
         }
       });
 
-      console.log('🎤 Microphone access granted');
-
-      // For CALLER: Enable mic immediately
-      // For RECEIVER: Keep muted until they accept
       const shouldEnableMic = !this.audioService.incomingCall;
       
       this.stream.getAudioTracks().forEach(track => {
         track.enabled = shouldEnableMic;
-        console.log(`🎤 Mic ${shouldEnableMic ? 'enabled' : 'muted'} initially:`, track.label);
       });
 
       this.isMuted = !shouldEnableMic;
 
-      // Add tracks to peer connection IMMEDIATELY
       this.stream.getTracks().forEach(track => {
         const sender = this.peerConnection.addTrack(track, this.stream!);
-        console.log('✅ Added audio track to peer connection:', track.label);
       });
 
     } catch (error) {
       console.error("⚠️ Microphone access error:", error);
+
+      this.showNotification('Microphone access denied. You will not be able to speak', 'error');
       
-      this.toastrSvc.warning('Microphone access denied. You will not be able to speak.', 'Warning', {
-        timeOut: 5000
-      });
-      
-      // Create silent track as fallback
       try {
         const ctx = new AudioContext();
         const oscillator = ctx.createOscillator();
@@ -408,9 +395,6 @@ export class AudioChatComponent implements OnInit, OnDestroy {
   private cleanupCall(): void {
     if (!this.isBrowser) return;
 
-    console.log('📞 Cleaning up call...');
-
-    // Stop local stream
     if (this.stream) {
       this.stream.getTracks().forEach(track => {
         track.stop();
@@ -419,14 +403,12 @@ export class AudioChatComponent implements OnInit, OnDestroy {
       this.stream = null;
     }
 
-    // Stop remote audio
     if (this.remoteAudioElement) {
       this.remoteAudioElement.pause();
       this.remoteAudioElement.srcObject = null;
       this.remoteAudioElement = null;
     }
 
-    // Close peer connection
     if (this.peerConnection) {
       this.peerConnection.onicecandidate = null;
       this.peerConnection.ontrack = null;
@@ -442,7 +424,6 @@ export class AudioChatComponent implements OnInit, OnDestroy {
       this.peerConnection.close();
     }
 
-    // Reset states
     this.audioService.isCallActive = false;
     this.audioService.incomingCall = false;
     this.audioService.isOpen = false;
@@ -457,11 +438,9 @@ export class AudioChatComponent implements OnInit, OnDestroy {
     if (!this.isBrowser || !this.peerConnection || this.isEndingCall) return;
 
     this.isEndingCall = true;
-    console.log('📞 Ending call...');
 
     try {
       await this.audioService.endCall(this.audioService.remoteUserId);
-      console.log('📞 End call signal sent');
     } catch (error) {
       console.error('Error sending end call signal:', error);
     }
@@ -483,7 +462,6 @@ export class AudioChatComponent implements OnInit, OnDestroy {
     
     this.stream.getAudioTracks().forEach(track => {
       track.enabled = !this.isMuted;
-      console.log(`🎤 Microphone ${this.isMuted ? 'muted' : 'unmuted'}:`, track.label);
     });
 
     this.toastrSvc.info(this.isMuted ? 'Microphone muted' : 'Microphone unmuted', '', {
@@ -501,11 +479,9 @@ export class AudioChatComponent implements OnInit, OnDestroy {
         
         if (this.isSpeakerOn) {
           source.connect(audioContext.destination);
-          console.log('🔊 Speaker mode: ON (loudspeaker)');
         } else {
           this.remoteAudioElement.volume = 0.3; 
           source.connect(audioContext.destination);
-          console.log('📱 Speaker mode: OFF (earpiece simulation)');
         }
         
         if (this.isSpeakerOn) {
@@ -546,11 +522,12 @@ export class AudioChatComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    console.log('📞 Component destroying...');
     
     if (this.answerSubscription) this.answerSubscription.unsubscribe();
     if (this.candidateSubscription) this.candidateSubscription.unsubscribe();
     if (this.offerSubscription) this.offerSubscription.unsubscribe();
+    if (this.callFailedSubscription) this.callFailedSubscription.unsubscribe();
+    if (this.callDeclinedSubscription) this.callDeclinedSubscription.unsubscribe();
 
     if (this.isBrowser && this.audioService.hubConnection) {
       this.audioService.hubConnection.off('CallEnded');

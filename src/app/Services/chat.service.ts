@@ -16,6 +16,9 @@ export class ChatService {
   // private baseUrl = 'https://localhost:7180/api/';
   // private chatHubUrl = 'https://localhost:7180/';
 
+  // private baseUrl = 'https://10.0.0.43:5000/api/';
+  // private chatHubUrl = 'https://10.0.0.43:5000/';
+
   private hubConnection!: signalR.HubConnection;
   private connectionPromise: Promise<void> | null = null;
   private isConnectionStarted: boolean = false;
