@@ -43,15 +43,30 @@
     </div>
   </div>
 
-  <!-- Input Area -->
+  <!-- Scroll to Bottom Button -->
+  <button 
+    *ngIf="showScrollButton" 
+    class="scroll-to-bottom-btn"
+    (click)="scrollToBottom(true)"
+    title="Scroll to bottom">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path d="M12 5v14M19 12l-7 7-7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+
   <div class="input-area">
-    <input
-      [(ngModel)]="message"
-      (keyup.enter)="send()"
-      placeholder="Type a message..."
-    />
-    <button (click)="send()">
-      <i class="fa-solid fa-paper-plane"></i> Send
-    </button>
+    <div class="input-wrapper">
+      <input
+        [(ngModel)]="message"
+        (keyup.enter)="send()"
+        placeholder="Type a message..."
+      />
+
+      <button (click)="send()" class="send-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+        </svg>
+      </button>
+    </div>
   </div>
 </div>

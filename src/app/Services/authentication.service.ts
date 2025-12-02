@@ -40,7 +40,7 @@ export class AuthenticationService {
   saveToken(token: string) {
     if(isPlatformBrowser(this.platformId)){
       localStorage.setItem(this.tokenKey, token);
-    }
+    }  
   }
 
   clearToken() {

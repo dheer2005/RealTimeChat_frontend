@@ -18,6 +18,8 @@ export class GroupChatComponent implements OnInit {
   fromUser: string = '';
   groupName: string = 'AngularDevs'; 
   isLoader: boolean = true;
+  showScrollButton: boolean = false;
+  private userScrolled: boolean = false;
 
   constructor(private chatSvc: ChatService, private authSvc: AuthenticationService, private location: Location) {
     this.fromUser = this.authSvc.getUserName();
@@ -27,13 +29,29 @@ export class GroupChatComponent implements OnInit {
     this.location.back();
   }
 
+  private setupScrollListener(): void {
+    const scrollContainer = document.getElementById('group-chat-scroll');
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', (event: Event) => {
+        const element = event.target as HTMLElement;
+        const threshold = 150; // pixels from bottom
+        const atBottom = element.scrollHeight - element.scrollTop - element.clientHeight < threshold;
+        
+        this.showScrollButton = !atBottom;
+        this.userScrolled = !atBottom;
+      });
+    }
+  }
+
   ngOnInit(): void {
     this.chatSvc.startConnection(this.fromUser,
       () => {},
       (groupName, fromUser, message, created) => {
         if (groupName === this.groupName) {
           this.messages.push({ groupName, fromUser, message, created });
-          setTimeout(() => this.scrollToBottom(), 100);
+          if (!this.userScrolled) {
+            setTimeout(() => this.scrollToBottom(), 100);
+          }
         }
       },
       ).then(() => {
@@ -41,7 +59,10 @@ export class GroupChatComponent implements OnInit {
       this.chatSvc.getGroupMessages(this.groupName).subscribe((res: any[]) => {
         this.messages = res;
         this.isLoader = false;
-        setTimeout(() => this.scrollToBottom(), 100);
+        setTimeout(() => {
+          this.scrollToBottom();
+          this.setupScrollListener();
+        }, 100);
       });
     });
   }
@@ -60,7 +81,7 @@ export class GroupChatComponent implements OnInit {
   
       this.chatSvc.SaveGroupChats(groupMsg).subscribe();
       this.message = '';
-      setTimeout(() => this.scrollToBottom(), 100);
+      setTimeout(() => this.scrollToBottom(true), 100);
     }
   }
 
@@ -103,9 +124,20 @@ getDateLabel(date: any): string {
   return d.toDateString();
 }
 
-  scrollToBottom() {
-    $('#group-chat-scroll').stop().animate({
-      scrollTop: $('#group-chat-scroll')[0].scrollHeight
-    }, 300);
+  scrollToBottom(smooth: boolean = false) {
+    const element = document.getElementById('group-chat-scroll');
+    if (element) {
+      if (smooth) {
+        element.scrollTo({
+          top: element.scrollHeight,
+          behavior: 'smooth'
+        });
+      } else {
+        element.scrollTop = element.scrollHeight;
+      }
+      
+      this.showScrollButton = false;
+      this.userScrolled = false;
+    }
   }
 }

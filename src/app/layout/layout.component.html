@@ -1,4 +1,4 @@
-<nav class="navbar navbar-expand-lg custom-navbar fixed-top d-none d-xl-flex">
+<nav *ngIf="showNavbar" class="navbar navbar-expand-lg custom-navbar fixed-top d-none d-xl-flex">
   <div class="container-fluid">
     <img src="../../assets/logo2.png" alt="logo" class="navbar-logo" routerLink="/home" />
     <ul class="navbar-nav ms-auto align-items-lg-center">
@@ -28,7 +28,7 @@
   </div>
 </nav>
 
-<nav class="navbar custom-navbar fixed-top d-none d-md-flex d-xl-none">
+<nav *ngIf="showNavbar" class="navbar custom-navbar fixed-top d-none d-md-flex d-xl-none">
   <div class="container-fluid tablet-nav-container">
     <img src="../../assets/logo2.png" alt="logo" class="navbar-logo" routerLink="/home" />
     
@@ -65,7 +65,7 @@
   </div>
 </nav>
 
-<nav class="mobile-bottom-nav d-md-none">
+<nav *ngIf="showNavbar" class="mobile-bottom-nav d-md-none">
   <a routerLink="/home" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M2 8l9-6 9 6v11a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8z" />

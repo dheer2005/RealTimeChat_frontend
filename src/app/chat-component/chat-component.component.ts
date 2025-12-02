@@ -74,7 +74,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   mapStaticImageUrl: any = `https://res.cloudinary.com/ddvzeseip/image/upload/v1760094391/Chatlify/ap_a6v2ac.png`;
 
 
- showLocationModal: boolean = false;
+  showLocationModal: boolean = false;
   map: any = null;
   marker: any = null;
   selectedLat: number | null = null;
@@ -105,6 +105,9 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   contextMenuPosition = { x: 0, y: 0 };
   previewType: string = '';
   previewFileName: string = '';
+
+  showScrollButton: boolean = false;
+  private userScrolled: boolean = false;
 
 
   constructor(
@@ -232,6 +235,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
 
   onRightClick(event: MouseEvent, mediaUrl: string, id: number, type: 'image' | 'video' | 'file') {
     event.preventDefault();
+    event.stopPropagation();
     this.selectedMediaUrl = mediaUrl;
     this.selectedMediaType = type;
     this.showContextMenu = true;
@@ -250,12 +254,12 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
     
   }
 
-  @HostListener('document: click')
-  closeContextMenu(){
-    this.showContextMenu = false;
-    this.selectedMsgId = null;
-    this.showMsgContextMenu = false;
-  }
+  // @HostListener('document: click')
+  // closeContextMenu(){
+  //   this.showContextMenu = false;
+  //   this.selectedMsgId = null;
+  //   this.showMsgContextMenu = false;
+  // }
 
   goToMessage(messageId: number, image?: any) {
     this.showContextMenu = false;
@@ -355,6 +359,18 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
       setTimeout(() => {
         this.map.invalidateSize();
       }, 600);
+    }
+
+    if (this.chatScrollContainer?.nativeElement && !this.chatScrollContainer.nativeElement.dataset.scrollListenerAdded) {
+      this.chatScrollContainer.nativeElement.addEventListener('scroll', (event: Event) => {
+        const element = event.target as HTMLElement;
+        const threshold = 150; // pixels from bottom
+        const atBottom = element.scrollHeight - element.scrollTop - element.clientHeight < threshold;
+        
+        this.showScrollButton = !atBottom;
+        this.userScrolled = !atBottom;
+      });
+      this.chatScrollContainer.nativeElement.dataset.scrollListenerAdded = 'true';
     }
   }
 
@@ -490,6 +506,18 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   @HostListener('document:click', ['$event'])
   closeOnOutsideClick(event: MouseEvent) {
     const target = event.target as HTMLElement;
+
+    if (!target.closest('.msg-context-menu') && !target.closest('.message-bubble')) {
+      this.showMsgContextMenu = false;
+      this.selectedMsgId = null;
+    }
+
+    if (!target.closest('.context-menu')) {
+      this.showContextMenu = false;
+      this.selectedMediaUrl = null;
+      this.selectedMediaType = null;
+    }
+
     if (!target.closest('.attachment-container')) {
       this.showAttachmentMenu = false;
     }
@@ -974,7 +1002,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
         textarea.style.height = 'auto';
       }
 
-      setTimeout(() => this.scrollToBottom(), 300);
+      setTimeout(() => this.scrollToBottom(), 100);
       this.isSending = false;
     }
     else{
@@ -1062,21 +1090,28 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
     this.profileClicked = false;
   }
 
-  scrollToBottom(): void {
+  scrollToBottom(smooth: boolean = false): void {
     if (!this.isBrowser) {
       return;
     }
 
     try {
       if (this.chatScrollContainer?.nativeElement) {
-        this.chatScrollContainer.nativeElement.scrollTop = 
-          this.chatScrollContainer.nativeElement.scrollHeight;
+        this.chatScrollContainer.nativeElement.scrollTo({
+          top: this.chatScrollContainer.nativeElement.scrollHeight,
+          behavior: smooth ? 'smooth' : 'auto'
+        });
       } else {
         const element = document.getElementById('chat-scroll');
         if (element) {
-          element.scrollTop = element.scrollHeight;
+          element.scrollTo({
+            top: element.scrollHeight,
+            behavior: smooth ? 'smooth' : 'auto'
+          });
         }
       }
+      this.showScrollButton = false;
+      this.userScrolled = false;
     } catch (err) {
       console.error('Error scrolling to bottom:', err);
     }
