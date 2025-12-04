@@ -613,6 +613,7 @@ a.contact-value:hover {
 @media (max-width: 768px) {
   .profile-page {
     padding: 1rem;
+    padding-bottom: 50px !important;
   }
 
   .profile-hero {

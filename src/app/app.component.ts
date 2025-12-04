@@ -19,17 +19,25 @@ import { AudioService } from './Services/audio.service';
 export class AppComponent implements OnInit {
   title = 'RealTimeChatWeb';
   showNavbar = true;
+  isLoading = true;
 
-  constructor(private router: Router, private audioService: AudioService, private signalRService: VideoService, private authService: AuthenticationService, private dialog: MatDialog){
+  constructor(private router: Router, private audioService: AudioService, private signalRService: VideoService, private authService: AuthenticationService, private dialog: MatDialog)
+  {
+    this.checkRoute(this.router.url);
+    // Subscribe to route changes
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
-    ).subscribe((event:any)=>{
-      if(event.urlAfterRedirects === '/login' || event.urlAfterRedirects === '/register'){
-        this.showNavbar = false;
-      }else{
-        this.showNavbar = true;
-      }
-    })
+    ).subscribe((event: any) => {
+      this.checkRoute(event.urlAfterRedirects);
+      this.isLoading = false;
+    });
+    
+  }
+
+  private checkRoute(url: string): void {
+    // Hide navbar for login and register
+    const chatRoutes = ['/login', '/register'];
+    this.showNavbar = !chatRoutes.some(route => url.startsWith(route));
   }
 
   ngOnInit(): void {

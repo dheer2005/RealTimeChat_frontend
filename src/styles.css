@@ -4,12 +4,17 @@
     box-sizing: border-box;
 }
 
+html, body {
+    height: 100%;
+    width: 100%;
+    overflow-x: hidden; 
+}
+
 body {
     font-family: 'Inter', sans-serif;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    height: 100%;
-    padding-bottom: 10px;
-    /* padding: 0px; */
+    background-attachment: fixed; 
+    /* min-height: 100vh; */
 }
 
 .spinner-border {
@@ -27,7 +32,6 @@ body {
   }
 }
 
-/* Loading overlay for better UX */
 .loading-overlay {
   position: fixed;
   top: 0;

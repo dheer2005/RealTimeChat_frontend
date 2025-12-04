@@ -10,6 +10,7 @@ import { chatUserGuardGuard } from './Guards/chat-user-guard.guard';
 import { SessionsComponent } from './sessions/sessions.component';
 
 export const routes: Routes = [
+    { path: '', redirectTo: 'home', pathMatch: 'full' },
     { path: 'login', component: LoginComponent },
     { path: 'register', component: RegisterComponent },
     { path:'home', component: HomeComponent, canActivate: [authGuard] },
@@ -19,6 +20,5 @@ export const routes: Routes = [
     { path: 'profile', component: ProfileDescriptionComponent, canActivate: [authGuard] },
     { path: 'sessions', component: SessionsComponent, canActivate: [authGuard] },
     { path: 'friend-request', loadComponent: () => import('./friend-request/friend-request.component').then(m => m.FriendRequestComponent), canActivate: [authGuard] },
-    { path: '', redirectTo: 'login', pathMatch: 'full' },
-    { path: '**', redirectTo: 'login', pathMatch: 'full' }
+    { path: '**', redirectTo: 'home', pathMatch: 'full' }
 ];

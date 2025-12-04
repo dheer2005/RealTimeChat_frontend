@@ -308,63 +308,65 @@
         <button (click)="cancelReply()" class="cancel-reply-btn">✖</button>
       </div>
 
-      <div class="input-wrapper">
-        <button 
-          class="icon-btn" 
-          [class.active]="showEmojiPicker"
-          title="Emoji" 
-          (click)="toggleEmojiPicker()">
-          <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="10" stroke-width="2"></circle>
-            <path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01" stroke-width="2"/>
-          </svg>
-        </button>
-
-        <div class="attachment-container">
+      <div class="input-area">
+        <div class="input-wrapper">
           <button 
             class="icon-btn" 
-            title="Attach"
-            (click)="toggleAttachmentMenu()">
+            [class.active]="showEmojiPicker"
+            title="Emoji" 
+            (click)="toggleEmojiPicker()">
             <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.19 9.19a2 2 0 1 1-2.83-2.83l8.12-8.12" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="12" cy="12" r="10" stroke-width="2"></circle>
+              <path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01" stroke-width="2"/>
             </svg>
           </button>
 
-          <div class="attachment-menu" *ngIf="showAttachmentMenu">
-            <button class="icon-btn" (click)="toggleImageModal()" title="Attach image">
+          <div class="attachment-container">
+            <button 
+              class="icon-btn" 
+              title="Attach"
+              (click)="toggleAttachmentMenu()">
               <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke-width="2"/>
-                <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/>
-                <path d="M21 15l-5-5L5 21" stroke-width="2" stroke-linecap="round"/>
-              </svg> <span class="ms-2">Document</span>
+                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.19 9.19a2 2 0 1 1-2.83-2.83l8.12-8.12" stroke-width="2" stroke-linecap="round"/>
+              </svg>
             </button>
-            <button class="icon-btn" title="Share Location" (click)="openLocationModal()">
-              <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zM12 11.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z" stroke-width="2"/>
-              </svg> <span class="ms-2">Location</span>
-            </button>
-          </div>
-        </div>
 
-        <textarea
-          #messageInput
-          [(ngModel)]="message"
-          (input)="handleInputChange()"
-          (keydown.enter)="$event.preventDefault(); send()"
-          placeholder="Type a message..."
-          class="message-input"
-          rows="1"
-        ></textarea>
-        
-        <button 
-          (click)="send()"
-          class="send-btn"
-          [class.active]="message.trim()"
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-          </svg>
-        </button>
+            <div class="attachment-menu" *ngIf="showAttachmentMenu">
+              <button class="icon-btn" (click)="toggleImageModal()" title="Attach image">
+                <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke-width="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/>
+                  <path d="M21 15l-5-5L5 21" stroke-width="2" stroke-linecap="round"/>
+                </svg> <span class="ms-2">Document</span>
+              </button>
+              <button class="icon-btn" title="Share Location" (click)="openLocationModal()">
+                <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zM12 11.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z" stroke-width="2"/>
+                </svg> <span class="ms-2">Location</span>
+              </button>
+            </div>
+          </div>
+
+          <textarea
+            #messageInput
+            [(ngModel)]="message"
+            (input)="handleInputChange()"
+            (keydown.enter)="$event.preventDefault(); send()"
+            placeholder="Type a message..."
+            class="message-input"
+            rows="1"
+          ></textarea>
+          
+          <button 
+            (click)="send()"
+            class="send-btn"
+            [class.active]="message.trim()"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
 

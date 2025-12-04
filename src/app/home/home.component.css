@@ -2,7 +2,7 @@
 @media (min-width: 768px) {
   .home-container {
     margin-top: 20px;
-    height: 720px !important;
+    height: 92vh !important;
     max-width: 800px;
     margin: 0 auto;
     padding: 4px;
@@ -13,7 +13,7 @@
   .users-list {
     background: white;
     border-radius: 10px;
-    height: 570px !important;
+    height: 73vh !important;
     overflow-y: auto;
 
     scrollbar-width: thin;
@@ -291,7 +291,7 @@
 
 @media (max-width: 768px) {
   .home-container {
-    min-height: 725px !important;
+    height: 92vh !important;
     width: 100%;
     padding: 5px;
     background: #f5f5f5;
@@ -303,7 +303,7 @@
     background: white;
     border-radius: 10px;
     overflow: hidden;
-    height: 573px;
+    height: 75% !important;
     overflow-y: auto;
 
     scrollbar-width: thin;
