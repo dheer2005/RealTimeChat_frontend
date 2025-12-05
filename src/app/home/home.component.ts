@@ -106,11 +106,93 @@ export class HomeComponent implements OnInit, OnDestroy {
       }
     });
 
-    this.friendResponseSubscription = this.chatService.friendResponse$.subscribe(res=>{
-      if(res && res.status){
-        this.toastrSvc.success(`Friend request ${res.status}`);
+    this.friendResponseSubscription = this.chatService.friendResponse$.subscribe(res => {
+      if (res && res.status) {
+        const status = res.status.toLowerCase();
+        if (status === 'accepted') {
+          this.toastrSvc.success('Friend request accepted');
+          this.addFriendOptimistically(res);
+        } else if (status === 'rejected') {
+          this.toastrSvc.info('Friend request rejected');
+        }
       }
     });
+
+    this.unfriendSubscription = this.chatService.unfriend$.subscribe(ev => {
+      if (ev && (ev.fromUser === this.currentUserId || ev.toUser === this.currentUserId)) {
+        this.toastrSvc.info('Friend removed');
+        
+        const removedUserId = ev.fromUser === this.currentUserId ? ev.toUser : ev.fromUser;
+        this.removeFriendOptimistically(removedUserId);
+      }
+    });
+  }
+
+  private addFriendOptimistically(response: any): void {
+    const isCurrentUserSender = response.fromUserId === this.currentUserId;
+    const newFriend = isCurrentUserSender ? response.toUser : response.fromUser;
+    
+    if (!newFriend) return;
+    
+    // Add to friends array if not already present
+    const exists = this.friends.some(f => f.id === newFriend.id);
+    if (!exists) {
+      this.friends.push(newFriend);
+    }
+    
+    // Add to visible user list if they're online
+    this.addToUserList2IfOnline(newFriend);
+  }
+
+  private removeFriendOptimistically(userId: string): void {
+    
+    const friend = this.friends.find(f => f.id === userId);
+    
+    // Remove from friends array
+    this.friends = this.friends.filter(f => f.id !== userId);
+    
+    // Remove from visible chat list
+    if (friend) {
+      this.userList2 = this.userList2.filter(u => 
+        u.userName.toLowerCase() !== friend.userName.toLowerCase()
+      );
+    }
+  }
+
+  private addToUserList2IfOnline(friend: any): void {
+    const onlineUsers = this.chatService.onlineUsers$.value;
+    const onlineUser = onlineUsers.find(u => 
+      u.userName.toLowerCase() === friend.userName.toLowerCase()
+    );
+    
+    if (onlineUser && onlineUser.isOnline) {
+      // Check if not already in list
+      const exists = this.userList2.some(u => 
+        u.userName.toLowerCase() === friend.userName.toLowerCase()
+      );
+      
+      if (!exists) {
+        const newUserEntry = {
+          userName: friend.userName,
+          fullName: friend.fullName || '',
+          phoneNumber: friend.phoneNumber || '',
+          email: friend.email || '',
+          isOnline: true,
+          profileImage: friend.profileImage || '',
+          unreadCount: 0,
+          lastMessage: '',
+          lastMessageSender: '',
+          lastMessageTime: null as Date | null
+        };
+        
+        this.userList2.push(newUserEntry);
+        
+        // Sort the list by last message time
+        this.userList2 = this.userList2.sort(
+          (a, b) => (b.lastMessageTime?.getTime() || 0) - (a.lastMessageTime?.getTime() || 0)
+        );
+      }
+    }
   }
 
   ngOnDestroy(): void {
@@ -120,6 +202,10 @@ export class HomeComponent implements OnInit, OnDestroy {
 
     if(this.friendResponseSubscription){
       this.friendResponseSubscription.unsubscribe();
+    }
+
+    if(this.unfriendSubscription){
+      this.unfriendSubscription.unsubscribe();
     }
 
     if(this.onlineUsersSubscription){
