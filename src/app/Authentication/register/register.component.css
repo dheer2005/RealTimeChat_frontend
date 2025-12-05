@@ -1,82 +1,128 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
-*{
+* {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
     font-family: "Poppins", sans-serif;
 }
 
-.body{
+.body {
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    background: #23252a;
-    padding: 20px 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+.body::before {
+    content: '';
+    position: absolute;
+    width: 500px;
+    height: 500px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    top: -200px;
+    right: -200px;
+    animation: float 6s ease-in-out infinite;
+}
+
+.body::after {
+    content: '';
+    position: absolute;
+    width: 400px;
+    height: 400px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 50%;
+    bottom: -150px;
+    left: -150px;
+    animation: float 8s ease-in-out infinite reverse;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(20px); }
 }
 
 .box {
     position: relative;
-    width: 380px;
-    height: 95vh;
-    background: #1c1c1c;
-    border-radius: 8px;
+    width: 100%;
+    max-width: 480px;
+    max-height: 95vh;
+    background: rgba(255, 255, 255, 0.98);
+    border-radius: 24px;
     overflow: hidden;
-    padding: 5px;
-}
-
-.box::before,
-.box::after,
-.borderLine::before,
-.borderLine::after {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 380px;
-    height: 750px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
     z-index: 1;
-    transform-origin: bottom right;
-    animation: animate 6s linear infinite;
 }
 
-.box::before,
-.box::after {
-    background: linear-gradient(0deg, transparent, transparent, #45f3ff, #45f3ff, #45f3ff);
-}
-.box::after { animation-delay: -3s; }
-
-.borderLine::before,
-.borderLine::after {
-    background: linear-gradient(0deg, transparent, transparent, #ff2770, #ff2770, #ff2770);
-}
-.borderLine::before { animation-delay: -1.5s; }
-.borderLine::after { animation-delay: -4.5s; }
-
-@keyframes animate {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-.box form{
-    position: relative;
-    background: #222;
-    padding: 30px 30px 20px;
-    border-radius: 8px;
-    z-index: 2;
+.box form {
+    padding: 40px 40px 30px;
     display: flex;
     flex-direction: column;
-    height: calc(96vh - 20px);
+    max-height: 95vh;
     overflow-y: auto;
 }
 
-.box form h2{
-    color: #fff;
-    font-weight: 500;
+.box form::-webkit-scrollbar {
+    width: 6px;
+}
+
+.box form::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #667eea, #764ba2);
+    border-radius: 10px;
+}
+
+.box form::-webkit-scrollbar-track {
+    background: #f3f4f6;
+}
+
+.brand-header {
     text-align: center;
-    letter-spacing: 0.1em;
-    margin-bottom: 10px;
+    margin-bottom: 25px;
+}
+
+.brand-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.brand-logo svg {
+    width: 42px;
+    height: 42px;
+}
+
+.brand-name {
+    font-size: 2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.5px;
+    padding: 5px 0;
+    display: inline-block;
+}
+
+.brand-tagline {
+    color: #6b7280;
+    font-size: 0.9rem;
+    font-weight: 400;
+}
+
+.box form h2 {
+    color: #1f2937;
+    font-weight: 600;
+    font-size: 1.4rem;
+    text-align: center;
+    margin-bottom: 25px;
 }
 
 .profilePreview {
@@ -84,162 +130,140 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 120px;
+    margin-bottom: 30px;
     cursor: pointer;
 }
 
 .profilePreview img {
-    width: 110px;
-    height: 110px;
+    width: 120px;
+    height: 120px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid #45f3ff;
-    box-shadow: 0 0 10px rgba(69, 243, 255, 0.5);
-    transition: 0.3s;
+    border: 4px solid #667eea;
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+    transition: all 0.3s ease;
 }
 
-.box form .inputBox{
-    position: relative;
-    width: 100%;
-    margin-top: 15px;
+.profilePreview:hover img {
+    transform: scale(1.05);
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
 }
 
-.box form .inputBox input{
-    width: 100%;
-    padding: 25px 10px 10px;
-    background: transparent;
-    outline: none;
-    border: none;
-    color: #000;
-    font-size: 1.2em;
-    letter-spacing: 0.05em;
-    transition: 0.5s;
-    z-index: 10;
-    position: relative;
-}
-
-.box form .inputBox input[type="file"] {
-    padding: 5px 3px;
-    cursor: pointer;
-    color: #8f8f8f;
-}
-
-.box form .inputBox input[type="file"]::-webkit-file-upload-button {
-    background: #45f3ff;
-    color: #000;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.85em;
-    font-weight: 600;
-    margin-right: 10px;
-    transition: 0.3s;
-}
-
-.box form .inputBox input[type="file"]::-webkit-file-upload-button:hover {
-    background: #2dd4e0;
-}
-
-.box form .inputBox span{
+.camera-button {
     position: absolute;
-    left: 0;
-    padding: 20px 0 10px;
-    pointer-events: none;
-    color: #8f8f8f;
-    font-size: 1.2em;
-    letter-spacing: 0.05em;
-    transition: 0.5s;
-}
-
-.box form .inputBox input[type="file"] ~ span {
-    padding: 0;
-    top: -20px;
-    font-size: 0.85em;
-    color: #fff;
-}
-
-.box form .inputBox input:valid ~ span,
-.box form .inputBox input:focus ~ span {
-    color: #fff;
-    font-size: 0.75em;
-    transform: translateY(-34px);
-}
-
-.box form .inputBox i{
-    position: absolute;
-    left: 0;
-    bottom: 0;
-    width: 100%;
-    height: 2px;
-    background: #fff;
-    border-radius: 4px;
-    overflow: hidden;
-    transition: 0.5s;
-    pointer-events: none;
-}
-
-.box form .inputBox input:valid ~ i,
-.box form .inputBox input:focus ~ i {
-    height: 49px;
-}
-
-.box form .links{
+    bottom: 5px;
+    right: calc(50% - 65px);
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: 4px solid white;
+    border-radius: 50%;
     display: flex;
-    justify-content: flex-end;
-}
-
-.box form .links a{
-    margin: 10px 0;
-    font-size: 0.75em;
-    color: #8f8f8f;
-    text-decoration: none;
-    transition: 0.3s;
-}
-
-.box form .links a:hover {
-    color: #45f3ff;
-}
-
-#submit{
-    border: none;
-    outline: none;
-    background: linear-gradient(45deg, #45f3ff, #ff2770);
-    color: #fff;
-    padding: 11px 25px;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-    font-size: 0.9em;
-    border-radius: 4px;
-    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.camera-button:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.5);
+}
+
+.camera-button svg {
+    stroke: white;
+}
+
+.remove-icon {
+    position: absolute;
+    top: 0;
+    right: calc(50% - 75px);
+    width: 32px;
+    height: 32px;
+    background: #ef4444;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 700;
+    transition: all 0.3s ease;
+    border: 3px solid white;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+.remove-icon:hover {
+    background: #dc2626;
+    transform: scale(1.1);
+}
+
+.box form .inputBox {
+    position: relative;
     width: 100%;
-    margin-top: 15px;
-    transition: 0.3s;
+    margin-bottom: 25px;
 }
 
-#submit:hover{
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(69, 243, 255, 0.4);
+.box form .inputBox input {
+    width: 100%;
+    padding: 16px 16px 16px 50px;
+    background: #f9fafb;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    outline: none;
+    color: #1f2937;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
 }
 
-#submit:active{
-    opacity: 0.8;
-    transform: translateY(0);
+.box form .inputBox input:focus {
+    background: white;
+    border-color: #667eea;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
 }
 
-.box form::-webkit-scrollbar {
-    width: 6px;
-}
-.box form::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, #45f3ff, #ff2770);
-    border-radius: 10px;
-}
-.box form::-webkit-scrollbar-track {
-    background: #1c1c1c;
+.box form .inputBox input:valid,
+.box form .inputBox input:focus {
+    border-color: #667eea;
 }
 
-.box form {
-    scrollbar-width: thin;
-    scrollbar-color: #45f3ff #1c1c1c;
+.box form .inputBox .input-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    transition: color 0.3s ease;
+}
+
+.box form .inputBox input:focus ~ .input-icon,
+.box form .inputBox input:valid ~ .input-icon {
+    color: #667eea;
+}
+
+.box form .inputBox label {
+    position: absolute;
+    left: 50px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    font-size: 0.95rem;
+    pointer-events: none;
+    transition: all 0.3s ease;
+}
+
+.box form .inputBox input:focus ~ label,
+.box form .inputBox input:valid ~ label {
+    top: -10px;
+    left: 12px;
+    font-size: 0.7rem;
+    color: #667eea;
+    background: white;
+    padding: 0 8px;
+    font-weight: 600;
 }
 
 .box form .inputBox input[type="number"]::-webkit-inner-spin-button,
@@ -251,77 +275,192 @@
 .box form .inputBox input[type="number"] {
     -moz-appearance: textfield;
 }
+
+.links {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 20px;
+}
+
+.links a {
+    color: #667eea;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.links a:hover {
+    color: #764ba2;
+    text-decoration: underline;
+}
+
 .error-messages {
-  background: rgba(255, 0, 0, 0.1);
-  border: 1px solid #ff2770;
-  color: #ff6b81;
-  border-radius: 6px;
-  padding: 10px 15px;
-  margin-bottom: 15px;
-  animation: fadeIn 0.3s ease;
+    background: #fef2f2;
+    border: 2px solid #ef4444;
+    color: #dc2626;
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    animation: fadeIn 0.3s ease;
 }
 
 .error-messages ul {
-  list-style-type: disc;
-  padding-left: 20px;
-  margin: 0;
+    list-style-type: disc;
+    padding-left: 20px;
+    margin: 0;
 }
 
 .error-messages li {
-  font-size: 0.85em;
-  margin-bottom: 4px;
+    font-size: 0.85rem;
+    margin-bottom: 4px;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-5px); }
-  to { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-.remove-icon {
-  position: absolute;
-  top: 6px;
-  right: 34%;
-  background: rgba(0, 0, 0, 0.6);
-  color: white;
-  font-size: 14px;
-  line-height: 16px;
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background 0.3s ease;
+#submit {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
 }
 
-.remove-icon:hover {
-  background: rgba(255, 0, 0, 0.7);
+#submit:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
 }
 
-.camera-button {
-    position: absolute;
-    bottom: 6px;
-    left: calc(50% - 45px); 
-    width: 32px;
-    height: 32px;
-    background: #45f3ff;
-    border: 3px solid #1c1c1c;
-    border-radius: 50%;
+#submit:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+#submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.divider {
     display: flex;
     align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: 0.3s ease;
-    z-index: 5;
-    box-shadow: 0 0 8px rgba(69, 243, 255, 0.6);
+    margin: 20px 0;
+    color: #9ca3af;
+    font-size: 0.85rem;
 }
 
-.camera-button svg {
-    stroke: #000;
+.divider::before,
+.divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #e5e7eb;
 }
 
-.camera-button:hover {
-    transform: scale(1.1);
-    background: #2dd4e0;
+.divider span {
+    padding: 0 15px;
+}
+
+.signin-prompt {
+    text-align: center;
+    color: #6b7280;
+    font-size: 0.9rem;
+    margin-top: 15px;
+}
+
+.signin-prompt a {
+    color: #667eea;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.signin-prompt a:hover {
+    color: #764ba2;
+    text-decoration: underline;
+}
+
+@media (max-width: 480px) {
+    .box {
+        margin: 10px;
+        border-radius: 20px;
+    }
+
+    .box form {
+        padding: 30px 25px 20px;
+    }
+
+    .brand-name {
+        font-size: 1.8rem;
+        padding: 5px 0;
+    }
+
+    .brand-logo svg {
+        width: 36px;
+        height: 36px;
+    }
+
+    .brand-tagline {
+        font-size: 0.85rem;
+    }
+
+    .box form h2 {
+        font-size: 1.2rem;
+        margin-bottom: 20px;
+    }
+
+    .profilePreview img {
+        width: 100px;
+        height: 100px;
+    }
+
+    .camera-button {
+        right: calc(50% - 55px);
+        width: 36px;
+        height: 36px;
+    }
+
+    .remove-icon {
+        right: calc(50% - 65px);
+        width: 28px;
+        height: 28px;
+        font-size: 14px;
+    }
+
+    .box form .inputBox {
+        margin-bottom: 20px;
+    }
+
+    .box form .inputBox input {
+        padding: 14px 14px 14px 45px;
+        font-size: 0.9rem;
+    }
+
+    .box form .inputBox .input-icon {
+        left: 14px;
+    }
+
+    .box form .inputBox label {
+        left: 45px;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .box form {
+        padding: 25px 20px 15px;
+    }
+
+    .brand-name {
+        font-size: 1.6rem;
+        padding: 5px 0;
+    }
 }

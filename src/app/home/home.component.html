@@ -1,34 +1,52 @@
-<div class="home-container " >
-  <div class="header" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
-    <h2>Chatlify</h2>
+<div class="home-container">
+  <!-- Professional Header -->
+  <div class="header">
+    <div class="header-content">
+      <div class="brand-section">
+        <svg xmlns="http://www.w3.org/2000/svg" class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+        <div class="brand-text">
+          <h2 class="brand-title">Messages</h2>
+          <p class="brand-subtitle">Stay connected with your friends</p>
+        </div>
+      </div>
+    </div>
   </div>
 
+  <!-- Search Bar -->
   <div class="search-container">
+    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="8"></circle>
+      <path d="m21 21-4.35-4.35"></path>
+    </svg>
     <input 
       type="text" 
-      placeholder="Search users..." 
+      placeholder="Search conversations..." 
       (input)="onKeyPress($event)"
       class="search-input"
     />
   </div>
 
+  <!-- Loading State -->
   <div *ngIf="IsLoader" class="loader-container">
-    <div class="loader"></div>
-    <p>Loading users...</p>
+    <div class="loader-spinner"></div>
+    <p class="loader-text">Loading conversations...</p>
   </div>
 
+  <!-- Users List -->
   <div *ngIf="!IsLoader" class="users-list">
     <div 
       *ngFor="let user of filteredList()" 
       class="user-card"
       (click)="userCard(user.userName)"
     >
-    <div class="user-avatar-container">
-        <div class="user-avatar" *ngIf="user.profileImage == ''">
+      <div class="user-avatar-container">
+        <div class="user-avatar" *ngIf="!user.profileImage">
           {{ user.userName.charAt(0).toUpperCase() }}
         </div>
         <div class="user-avatar user-img-avatar" *ngIf="user.profileImage">
-          <img [src]="user.profileImage" alt="{{ user.userName }}" height="50px" width="50px" />
+          <img [src]="user.profileImage" alt="{{ user.userName }}" />
         </div>
         <span 
           class="online-indicator" 
@@ -65,21 +83,33 @@
             *ngIf="!isUserTyping(user.userName) && user.lastMessage" 
             class="last-message"
           >
-            {{ user.lastMessageSender === currentUserName ? 'You: ' : '' }}
+            <span class="message-prefix" *ngIf="user.lastMessageSender === currentUserName">You: </span>
             {{ user.lastMessage }}
+          </span>
+
+          <span 
+            *ngIf="!isUserTyping(user.userName) && !user.lastMessage" 
+            class="no-messages"
+          >
+            Start a conversation
           </span>
         </div>
       </div>
 
       <div class="chevron-icon">
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-          <path d="M7 4l6 6-6 6" stroke="currentColor" stroke-width="2" fill="none"/>
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M7 4l6 6-6 6"/>
         </svg>
       </div>
     </div>
 
+    <!-- Empty State -->
     <div *ngIf="filteredList().length === 0" class="empty-state">
-      <p>No users found</p>
+      <svg class="empty-icon" xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+      </svg>
+      <p class="empty-title">No conversations found</p>
+      <p class="empty-subtitle">Start chatting with your friends!</p>
     </div>
   </div>
 </div>
