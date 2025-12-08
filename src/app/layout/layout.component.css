@@ -452,7 +452,6 @@ body {
   animation: pulse-badge 2s infinite;
 }
 
-/* Mobile Bottom Navigation Badge */
 .mobile-nav-with-badge {
   position: relative;
 }
