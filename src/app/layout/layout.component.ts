@@ -65,6 +65,13 @@ export class LayoutComponent implements OnInit {
       this.friendRequests += 1;
     });
     
+    this.chatService.unfriend$.subscribe(() => {
+      if (this.friendRequests > 0) {
+        this.loadFriendRequests();
+      }
+    });
+    
+    
   }
 
   private checkRoute(url: string): void {

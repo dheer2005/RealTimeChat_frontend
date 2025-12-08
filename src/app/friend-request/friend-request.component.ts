@@ -245,24 +245,6 @@ export class FriendRequestComponent implements OnInit, OnDestroy {
   }
 
   searchUsers(): void {
-    // if (!this.searchQuery.trim()) {
-    //   this.searchResults = [];
-    //   return;
-    // }
-
-    // this.isSearching = true;
-    // this.friendRequestSvc.searchUsers(this.searchQuery, this.currentUserId).subscribe({
-    //   next: (data: any) => {
-    //     this.searchResults = data.filter((user: User) => user.id !== this.currentUserId);
-    //     this.isSearching = false;
-    //   },
-    //   error: (err:any) => {
-    //     this.toastrSvc.error('Failed to search users');
-    //     this.isSearching = false;
-    //     console.error(err);
-    //   }
-    // });
-
     this.searchSubject.next(this.searchQuery);
   }
 
