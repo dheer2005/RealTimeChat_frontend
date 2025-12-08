@@ -6,6 +6,7 @@ import { ChatService } from '../Services/chat.service';
 import { SessionService } from '../Services/session.service';
 import { filter, Subscription } from 'rxjs';
 import { AlertService } from '../Services/alert.service';
+import { FriendrequestService } from '../Services/friendrequest.service';
 
 @Component({
   selector: 'app-layout',
@@ -20,9 +21,19 @@ export class LayoutComponent implements OnInit {
   isMobileMenuOpen = false;
   isDropdownOpen = false;
   showNavbar = false;
+  friendRequests: number = 0;
+  currentUserId: string = this.authSvc.getUserId();
   private routerSubscription?: Subscription;
 
-  constructor(private eRef: ElementRef, private sessionSvc: SessionService, private chatService: ChatService, public authSvc: AuthenticationService, private router: Router, private toastr: AlertService){
+  constructor(private eRef: ElementRef, 
+    private sessionSvc: SessionService, 
+    private chatService: ChatService, 
+    public authSvc: AuthenticationService, 
+    private router: Router, 
+    private toastr: AlertService,
+    private alertSvc: AlertService, 
+    private friendRequestSvc: FriendrequestService
+  ){
     this.currentUserName = this.authSvc.getUserName();
   }
 
@@ -46,6 +57,14 @@ export class LayoutComponent implements OnInit {
       });
 
     this.checkRoute(this.router.url);
+
+    this.loadFriendRequests();
+  
+    // Listen for friend request updates
+    this.chatService.friendRequest$.subscribe(() => {
+      this.friendRequests += 1;
+    });
+    
   }
 
   private checkRoute(url: string): void {
@@ -63,6 +82,17 @@ export class LayoutComponent implements OnInit {
 
   closeMobileMenu(): void {
     this.isMobileMenuOpen = false;
+  }
+
+  loadFriendRequests(): void {
+    this.friendRequestSvc.getPendingRequests(this.currentUserId).subscribe({
+      next: (data) => {
+        this.friendRequests = data.length;
+      },
+      error: (err) => {
+        this.alertSvc.error('Failed to load friend requests');
+      }
+    });
   }
 
   logout(){

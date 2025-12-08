@@ -393,3 +393,120 @@ body {
   background: #ede9fe;
   color: #667eea;
 }
+
+/* Desktop Navigation Badge */
+.nav-item-with-badge {
+  position: relative;
+}
+
+.nav-badge {
+  position: absolute;
+  top: 2px;
+  right: -8px;
+  background: linear-gradient(135deg, #ff4d4d 0%, #e63946 100%);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  box-shadow: 0 2px 8px rgba(230, 57, 70, 0.4);
+  animation: pulse-badge 2s infinite;
+  border: 2px solid #667eea;
+}
+
+@keyframes pulse-badge {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.tablet-nav-item-with-badge {
+  position: relative;
+}
+
+.tablet-badge {
+  position: absolute;
+  right: 20px;
+  top: 35%;
+  transform: translateY(-50%);
+  background: linear-gradient(135deg, #ff4d4d 0%, #e63946 100%);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+  min-width: 22px;
+  height: 22px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  box-shadow: 0 2px 8px rgba(230, 57, 70, 0.4);
+  animation: pulse-badge 2s infinite;
+}
+
+/* Mobile Bottom Navigation Badge */
+.mobile-nav-with-badge {
+  position: relative;
+}
+
+.mobile-badge {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  background: linear-gradient(135deg, #ff4d4d 0%, #e63946 100%);
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+  box-shadow: 0 2px 8px rgba(230, 57, 70, 0.5);
+  border: 2px solid white;
+  animation: pulse-badge 2s infinite;
+}
+
+@media (max-width: 575px) {
+  .mobile-badge {
+    top: 2px;
+    right: 6px;
+    min-width: 16px;
+    height: 16px;
+    font-size: 0.6rem;
+    border-width: 1.5px;
+  }
+}
+
+@media (max-width: 400px) {
+  .mobile-badge {
+    top: 1px;
+    right: 4px;
+    min-width: 14px;
+    height: 14px;
+    font-size: 0.55rem;
+  }
+}
+
+@media (min-width: 1200px) {
+  .nav-badge {
+    top: 0;
+    right: -12px;
+  }
+}
+
+.nav-badge,
+.tablet-badge,
+.mobile-badge {
+  z-index: 10;
+}

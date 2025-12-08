@@ -7,7 +7,6 @@ import { MatDialog } from '@angular/material/dialog';
 import { filter } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AudioService } from './Services/audio.service';
 
 @Component({
   selector: 'app-root',
@@ -21,7 +20,7 @@ export class AppComponent implements OnInit {
   showNavbar = true;
   isLoading = true;
 
-  constructor(private router: Router, private audioService: AudioService, private signalRService: VideoService, private authService: AuthenticationService, private dialog: MatDialog)
+  constructor(private router: Router, private signalRService: VideoService, private authService: AuthenticationService, private dialog: MatDialog)
   {
     this.checkRoute(this.router.url);
     // Subscribe to route changes

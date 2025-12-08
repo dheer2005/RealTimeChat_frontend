@@ -127,19 +127,28 @@ export class FriendRequestComponent implements OnInit, OnDestroy {
   }
 
   unfriend(userId: string): void {
-    this.friendRequestSvc.unfriend(this.currentUserId, userId).subscribe({
-      next: () => {
-        this.toastrSvc.success('Remove friend successfully');
-        this.searchUsers();
-        this.searchQuery = '';
-        this.searchResults = [];
-        this.loadFriendRequests();
-        this.loadFriends();
-        this.loadSentRequests();
-      },
-      error: (err) => {
-        this.toastrSvc.error('Failed to unfriend');
-        console.error(err);
+    this.toastrSvc.confirm(
+      'Remove Friend?',
+      'Are you sure you want to remove this friend? This action cannot be undone.',
+      'Yes, remove',
+      'Cancel'
+    ).then((result) => {
+      if (result.isConfirmed) {
+        this.friendRequestSvc.unfriend(this.currentUserId, userId).subscribe({
+          next: () => {
+            this.toastrSvc.success('Friend removed successfully');
+            this.searchUsers();
+            this.searchQuery = '';
+            this.searchResults = [];
+            this.loadFriendRequests();
+            this.loadFriends();
+            this.loadSentRequests();
+          },
+          error: (err) => {
+            this.toastrSvc.error('Failed to unfriend');
+            console.error(err);
+          }
+        });
       }
     });
   }

@@ -41,7 +41,7 @@ export class ProfileDescriptionComponent implements OnInit,OnDestroy {
     private activatedRoute: ActivatedRoute, 
     private sessionSvc: SessionService, 
     private chatService: ChatService, 
-    private router: Router, 
+    public router: Router, 
     private chatSvc: ChatService, 
     private authSvc: AuthenticationService, 
     private toastrSvc:AlertService

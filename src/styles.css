@@ -147,22 +147,6 @@ body {
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
-/* .input-area button {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  padding: 12px 28px;
-  border-radius: 25px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.input-area button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-} */
-
 .profileBody {
   background: white;
   border-radius: 20px;
@@ -214,4 +198,100 @@ body {
 
 .backProfile:hover {
   background: #f0f0f0;
+}
+
+.modern-chat-alert {
+  border-radius: 16px !important;
+  padding: 30px !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15) !important;
+  border: none !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+.modern-chat-title {
+  font-size: 24px !important;
+  font-weight: 700 !important;
+  color: #1f2937 !important;
+  margin-bottom: 12px !important;
+  letter-spacing: -0.5px;
+}
+
+.modern-chat-text {
+  font-size: 15px !important;
+  color: #6b7280 !important;
+  line-height: 1.6 !important;
+  margin-bottom: 24px !important;
+}
+
+.modern-chat-confirm-btn,
+.modern-chat-cancel-btn {
+  border-radius: 10px !important;
+  padding: 12px 28px !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  transition: all 0.3s ease !important;
+  border: none !important;
+  cursor: pointer !important;
+  min-width: 100px;
+}
+
+.modern-chat-confirm-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3) !important;
+}
+
+.modern-chat-confirm-btn:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4) !important;
+}
+
+.modern-chat-confirm-btn:active {
+  transform: translateY(0) !important;
+}
+
+.modern-chat-cancel-btn {
+  background: #f3f4f6 !important;
+  color: #374151 !important;
+  margin-left: 12px !important;
+}
+
+.modern-chat-cancel-btn:hover {
+  background: #e5e7eb !important;
+  transform: translateY(-2px) !important;
+}
+
+.modern-chat-cancel-btn:active {
+  transform: translateY(0) !important;
+}
+
+/* Icon styling */
+.swal2-icon.swal2-warning {
+  border-color: #f59e0b !important;
+  color: #f59e0b !important;
+  font-size: 18px !important;
+}
+
+/* Dark mode support (optional) */
+@media (prefers-color-scheme: dark) {
+  .modern-chat-alert {
+    background: #1f2937 !important;
+  }
+  
+  .modern-chat-title {
+    color: #f9fafb !important;
+  }
+  
+  .modern-chat-text {
+    color: #9ca3af !important;
+  }
+  
+  .modern-chat-cancel-btn {
+    background: #374151 !important;
+    color: #f9fafb !important;
+  }
+  
+  .modern-chat-cancel-btn:hover {
+    background: #4b5563 !important;
+  }
 }
