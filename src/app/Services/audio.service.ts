@@ -4,7 +4,7 @@ import * as signalR from '@microsoft/signalr';
 import { HubConnection } from '@microsoft/signalr';
 import { Subject } from 'rxjs';
 import { AuthenticationService } from './authentication.service';
-import { ToastrService } from 'ngx-toastr';
+import { AlertService } from './alert.service';
 
 @Injectable({
   providedIn: 'root'
@@ -39,7 +39,7 @@ export class AudioService {
 
   constructor(
     private authSvc: AuthenticationService,
-    private toastRService: ToastrService,
+    private toastRService: AlertService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);

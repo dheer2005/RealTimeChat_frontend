@@ -4,7 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthenticationService } from '../../Services/authentication.service';
 import { RegisterModel } from '../../Models/Register.model';
-import { ToastrService } from 'ngx-toastr';
+import { AlertService } from '../../Services/alert.service';
 
 @Component({
   selector: 'app-register',
@@ -19,7 +19,7 @@ export class RegisterComponent implements OnInit {
   selectedProfileImage: File | null = null;
   previewImageUrl: string | null = null;
 
-  constructor(private authSvc: AuthenticationService, private router: Router, private toastr: ToastrService, @Inject(PLATFORM_ID) private platformId: any) {}
+  constructor(private authSvc: AuthenticationService, private router: Router, private toastr: AlertService, @Inject(PLATFORM_ID) private platformId: any) {}
 
   register:RegisterModel={
     UserName: '',

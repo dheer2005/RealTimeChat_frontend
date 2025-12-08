@@ -1,15 +1,15 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { AuthenticationService } from '../Services/authentication.service';
-import { ToastrService } from 'ngx-toastr';
 import { ChatService } from '../Services/chat.service';
 import { Location } from '@angular/common';
 import { firstValueFrom, map } from 'rxjs';
 import { FriendrequestService } from '../Services/friendrequest.service';
+import { AlertService } from '../Services/alert.service';
 
 export const chatUserGuardGuard: CanActivateFn = async (route, state) => {
   const authSvc = inject(AuthenticationService);
-  const toastr = inject(ToastrService);
+  const toastr = inject(AlertService);
   const router = inject(Router);
   const chatSvc = inject(ChatService);
   const friendRequestSvc = inject(FriendrequestService);

@@ -10,11 +10,11 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
 import { VideoChatComponent } from '../video-chat/video-chat.component';
 import { Subscription } from 'rxjs';
-import { ToastrService } from 'ngx-toastr';
 import { PickerComponent } from '@ctrl/ngx-emoji-mart';
 import { AudioService } from '../Services/audio.service';
 import { AudioChatComponent } from '../audio-chat/audio-chat.component';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { AlertService } from '../Services/alert.service';
 
 
 @Component({
@@ -117,7 +117,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
     private authSvc: AuthenticationService,
     private signalRService: VideoService,
     public router: Router,
-    private toastrSvc: ToastrService,
+    private toastrSvc: AlertService,
     public dialog: MatDialog,
     private snackBar: MatSnackBar,
     private location: Location,
@@ -133,7 +133,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
           this.userInfo = res;
         },
         error: (err) => {
-          this.toastrSvc.error(err.error?.message || 'Error fetching user info', 'Error');
+          this.toastrSvc.error(err.error?.message || 'Error fetching user info');
         }
       });
     });
@@ -229,7 +229,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
       this.toastrSvc.success("Copied");
     })
     .catch(err=>{
-      this.toastrSvc.warning("Failed to copy message:", err);
+      this.toastrSvc.warning("Failed to copy message:");
     })
   }
 

@@ -1,15 +1,12 @@
-import { HttpClient } from '@angular/common/http';
 import { Component, Inject, OnInit, PLATFORM_ID } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AuthenticationService } from '../../Services/authentication.service';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { LoginModel } from '../../Models/LoginModel.model';
 import { FormsModule } from '@angular/forms';
-
-import { ToastrService } from 'ngx-toastr';
 import { ChatService } from '../../Services/chat.service';
 import { SessionService } from '../../Services/session.service';
-import { log } from 'node:console';
+import { AlertService } from '../../Services/alert.service';
 
 @Component({
   selector: 'app-login',
@@ -19,7 +16,7 @@ import { log } from 'node:console';
   styleUrl: './login.component.css'
 })
 export class LoginComponent implements OnInit {
-  constructor(private sessionSvc: SessionService,private chatSvc: ChatService, private authSvc: AuthenticationService,private toastr: ToastrService,private router: Router, @Inject(PLATFORM_ID) private platformId: any){}
+  constructor(private sessionSvc: SessionService,private chatSvc: ChatService, private authSvc: AuthenticationService,private alert: AlertService,private router: Router, @Inject(PLATFORM_ID) private platformId: any){}
 
   login:LoginModel={
     UserName: '',
@@ -46,7 +43,7 @@ export class LoginComponent implements OnInit {
     this.authSvc.loginUser(this.login).subscribe({
       next: (res:any)=>{
         this.authSvc.saveToken(res.token);
-        this.toastr.success("User logged in" , "Success");
+        this.alert.success("User logged in");
         this.authSvc.getUserName();
         this.router.navigateByUrl('/home');
         this.isLoading = false;
@@ -54,9 +51,9 @@ export class LoginComponent implements OnInit {
       error: (err:any)=>{
         this.isLoading = false;
         if(err.status==0){
-          this.toastr.error(`Error at server side please try again later: ${err}`);
+          this.alert.error(`Something wen wrong! please try again later`);
         }else{
-          this.toastr.error("wrong username and password");
+          this.alert.error("wrong username and password");
         }
       }
     });

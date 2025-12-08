@@ -6,12 +6,12 @@ import { AuthenticationService } from '../Services/authentication.service';
 import { ChatService } from '../Services/chat.service';
 import { forkJoin, map, Observable, Subscription } from 'rxjs';
 import { FriendrequestService } from '../Services/friendrequest.service';
-import { ToastrService } from 'ngx-toastr';
 import { VideoService } from '../Services/video.service';
 import { AudioService } from '../Services/audio.service';
 import { AudioChatComponent } from '../audio-chat/audio-chat.component';
 import { MatDialog } from '@angular/material/dialog';
 import { VideoChatComponent } from '../video-chat/video-chat.component';
+import { AlertService } from '../Services/alert.service';
 
 @Component({
   selector: 'app-home',
@@ -48,7 +48,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     private audioService: AudioService,
     private dialog: MatDialog,
     private friendRequestSvc: FriendrequestService,
-    private toastrSvc: ToastrService,
+    private toastrSvc: AlertService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);

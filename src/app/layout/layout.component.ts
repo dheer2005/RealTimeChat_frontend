@@ -2,10 +2,10 @@ import { Component, ElementRef, HostListener, OnInit } from '@angular/core';
 import { AuthenticationService } from '../Services/authentication.service';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule, UpperCasePipe } from '@angular/common';
-import { ToastrService } from 'ngx-toastr';
 import { ChatService } from '../Services/chat.service';
 import { SessionService } from '../Services/session.service';
 import { filter, Subscription } from 'rxjs';
+import { AlertService } from '../Services/alert.service';
 
 @Component({
   selector: 'app-layout',
@@ -22,7 +22,7 @@ export class LayoutComponent implements OnInit {
   showNavbar = false;
   private routerSubscription?: Subscription;
 
-  constructor(private eRef: ElementRef, private sessionSvc: SessionService, private chatService: ChatService, public authSvc: AuthenticationService, private router: Router, private toastr: ToastrService){
+  constructor(private eRef: ElementRef, private sessionSvc: SessionService, private chatService: ChatService, public authSvc: AuthenticationService, private router: Router, private toastr: AlertService){
     this.currentUserName = this.authSvc.getUserName();
   }
 
@@ -71,7 +71,7 @@ export class LayoutComponent implements OnInit {
     this.sessionSvc.logoutCurrentDevice().subscribe({
       next: (res)=>{
         this.authSvc.clearToken();
-        this.toastr.success("User logged out from current device" , "Success");
+        this.toastr.success("Signed out successfully!");
         this.router.navigateByUrl('/login');
       }
     });

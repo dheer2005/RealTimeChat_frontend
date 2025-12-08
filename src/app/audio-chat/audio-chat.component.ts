@@ -4,8 +4,8 @@ import { MatDialogRef } from '@angular/material/dialog';
 import { Subscription } from 'rxjs';
 import { AudioService } from '../Services/audio.service';
 import { MatIconModule } from '@angular/material/icon';
-import { ToastrService } from 'ngx-toastr';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { AlertService } from '../Services/alert.service';
 
 @Component({
   selector: 'app-audio-chat',
@@ -42,7 +42,7 @@ export class AudioChatComponent implements OnInit, OnDestroy {
 
   constructor(
     public audioService: AudioService,
-    private toastrSvc: ToastrService,
+    private toastrSvc: AlertService,
     private snackBar: MatSnackBar,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
@@ -464,9 +464,7 @@ export class AudioChatComponent implements OnInit, OnDestroy {
       track.enabled = !this.isMuted;
     });
 
-    this.toastrSvc.info(this.isMuted ? 'Microphone muted' : 'Microphone unmuted', '', {
-      timeOut: 1500
-    });
+    this.toastrSvc.info(this.isMuted ? 'Microphone muted' : 'Microphone unmuted');
   }
 
   async toggleSpeaker(): Promise<void> {
@@ -493,11 +491,7 @@ export class AudioChatComponent implements OnInit, OnDestroy {
       }
     }
     
-    this.toastrSvc.info(
-      this.isSpeakerOn ? '🔊 Speaker mode' : '📱 Earpiece mode', 
-      '', 
-      { timeOut: 1500 }
-    );
+    this.toastrSvc.info(this.isSpeakerOn ? ' Speaker mode' : ' Earpiece mode');
   }
 
   private startCallTimer(): void {

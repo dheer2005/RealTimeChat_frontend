@@ -4,10 +4,10 @@ import { FormsModule } from '@angular/forms';
 import { AuthenticationService } from '../Services/authentication.service';
 import { ChatService } from '../Services/chat.service';
 import { FriendrequestService } from '../Services/friendrequest.service';
-import { ToastrService } from 'ngx-toastr';
 import { catchError, debounceTime, distinctUntilChanged, of, Subject, Subscription, switchMap, tap } from 'rxjs';
 import { Router } from '@angular/router';
 import { query } from 'express';
+import { AlertService } from '../Services/alert.service';
 
 interface FriendRequest {
   id: string;
@@ -58,7 +58,7 @@ export class FriendRequestComponent implements OnInit, OnDestroy {
     private authSvc: AuthenticationService, 
     private chatSvc: ChatService,
     private friendRequestSvc: FriendrequestService,
-    private toastrSvc: ToastrService,
+    private toastrSvc: AlertService,
     private route: Router
   ) {
     this.currentUserName = this.authSvc.getUserName() || '';

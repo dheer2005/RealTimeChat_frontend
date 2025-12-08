@@ -2,9 +2,9 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { AuthenticationService } from '../Services/authentication.service';
 import { SessionService } from '../Services/session.service';
 import { CommonModule, DatePipe } from '@angular/common';
-import { ToastrService } from 'ngx-toastr';
 import { Subscription } from 'rxjs';
 import { ChatService } from '../Services/chat.service';
+import { AlertService } from '../Services/alert.service';
 
 @Component({
   selector: 'app-sessions',
@@ -17,7 +17,7 @@ export class SessionsComponent implements OnInit, OnDestroy {
   sessions: any = [];
   private sessionChangeSub!: Subscription;
 
-  constructor(public authSvc: AuthenticationService, private sessionSvc: SessionService, private chatSvc: ChatService, private toastrSvc: ToastrService) {
+  constructor(public authSvc: AuthenticationService, private sessionSvc: SessionService, private chatSvc: ChatService, private toastrSvc: AlertService) {
     this.loadSessions();
   }
 
@@ -62,7 +62,7 @@ export class SessionsComponent implements OnInit, OnDestroy {
         this.sessions = res;
       },
       error: (err:any) => {
-        this.toastrSvc.warning('Could not load active sessions', 'Error');
+        this.toastrSvc.warning('Could not load active sessions');
         console.error('Error loading active sessions:', err);
       }
     });
@@ -83,11 +83,11 @@ export class SessionsComponent implements OnInit, OnDestroy {
   logoutAll(){
     this.sessionSvc.logoutFromAllDevices().subscribe({
       next: (res) => {
-        this.toastrSvc.success('Logged out from all devices', 'Success');
+        this.toastrSvc.success('Logged out from all devices');
         this.sessions = this.sessions.filter((s: any) => s.jwtId === this.authSvc.getJwtId());
       },
       error: (err) => {
-        this.toastrSvc.error('Could not log out from all devices', 'Error');
+        this.toastrSvc.error('Could not log out from all devices');
         console.error('Error logging out from all devices:', err);
       }
     });
