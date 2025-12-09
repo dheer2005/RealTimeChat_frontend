@@ -58,7 +58,9 @@ export class LayoutComponent implements OnInit {
 
     this.checkRoute(this.router.url);
 
-    this.loadFriendRequests();
+    if(this.authSvc.getToken()){
+      this.loadFriendRequests();
+    }
   
     // Listen for friend request updates
     this.chatService.friendRequest$.subscribe(() => {

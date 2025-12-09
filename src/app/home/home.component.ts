@@ -119,7 +119,8 @@ export class HomeComponent implements OnInit, OnDestroy {
     });
 
     this.unfriendSubscription = this.chatService.unfriend$.subscribe(ev => {
-      if (ev && (ev.fromUser === this.currentUserId || ev.toUser === this.currentUserId)) {
+      
+      if (ev && !ev.forCancel && (ev.fromUser === this.currentUserId || ev.toUser === this.currentUserId)) {
         this.toastrSvc.info('Friend removed');
         
         const removedUserId = ev.fromUser === this.currentUserId ? ev.toUser : ev.fromUser;
