@@ -21,7 +21,10 @@ export class GroupChatComponent implements OnInit {
   showScrollButton: boolean = false;
   private userScrolled: boolean = false;
 
-  constructor(private chatSvc: ChatService, private authSvc: AuthenticationService, private location: Location) {
+  constructor(private chatSvc: ChatService, 
+    private authSvc: AuthenticationService, 
+    private location: Location
+  ) {
     this.fromUser = this.authSvc.getUserName();
   }
 

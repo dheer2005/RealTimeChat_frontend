@@ -17,7 +17,6 @@ export class VideoService {
   // private hubUrl = 'https://10.0.0.43:5000/video';
 
   private token: string | null = null;
-  private isBrowser: boolean;
 
   public incomingCall = false;
   public isCallActive = false;
@@ -36,17 +35,10 @@ export class VideoService {
   public lastOffer: {from: string, offer: RTCSessionDescriptionInit} | null = null;
 
   constructor(
-    private authSvc: AuthenticationService,
-    @Inject(PLATFORM_ID) private platformId: Object
-  ) {
-    this.isBrowser = isPlatformBrowser(this.platformId);
-  }
+    private authSvc: AuthenticationService
+  ) {}
 
   startConnection(): Promise<void> {
-    if (!this.isBrowser) {
-      return Promise.resolve();
-    }
-
     this.token = this.authSvc.getToken();
 
     if (!this.token) {
@@ -115,42 +107,42 @@ export class VideoService {
   }
 
   public sendOffer(toUser: string, offer: RTCSessionDescriptionInit): Promise<any> {
-    if (!this.isBrowser || !this.hubConnection) {
+    if (!this.hubConnection) {
       return Promise.reject('SignalR not available');
     }
     return this.hubConnection.invoke('SendOffer', toUser, JSON.stringify(offer));
   }
 
   public sendAnswer(toUser: string, answer: RTCSessionDescriptionInit): Promise<any> {
-    if (!this.isBrowser || !this.hubConnection) {
+    if (!this.hubConnection) {
       return Promise.reject('SignalR not available');
     }
     return this.hubConnection.invoke('SendAnswer', toUser, JSON.stringify(answer));
   }
 
   public sendCandidate(toUser: string, candidate: RTCIceCandidateInit): Promise<any> {
-    if (!this.isBrowser || !this.hubConnection) {
+    if (!this.hubConnection) {
       return Promise.reject('SignalR not available');
     }
     return this.hubConnection.invoke('SendIceCandidate', toUser, JSON.stringify(candidate));
   }
 
   public endCall(toUser: string): Promise<any> {
-    if (!this.isBrowser || !this.hubConnection) {
+    if (!this.hubConnection) {
       return Promise.reject('SignalR not available');
     }
     return this.hubConnection.invoke('EndCall', toUser);
   }
 
   public declineCall(fromUser: string): Promise<any> {
-    if (!this.isBrowser || !this.hubConnection) {
+    if (!this.hubConnection) {
       return Promise.reject('SignalR not available');
     }
     return this.hubConnection.invoke('DeclineCall', fromUser);
   }
 
   public async checkUserAvailability(userName: string): Promise<boolean> {
-    if (!this.isBrowser || !this.hubConnection) {
+    if (!this.hubConnection) {
       return false;
     }
     try {
@@ -162,7 +154,7 @@ export class VideoService {
   }
 
   public stopConnection(): void {
-    if (this.isBrowser && this.hubConnection) {
+    if (this.hubConnection) {
       this.hubConnection.stop()
         .catch(err => console.error("Error stopping SignalR connection:", err));
     }

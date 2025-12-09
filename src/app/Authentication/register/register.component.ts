@@ -19,7 +19,10 @@ export class RegisterComponent implements OnInit {
   selectedProfileImage: File | null = null;
   previewImageUrl: string | null = null;
 
-  constructor(private authSvc: AuthenticationService, private router: Router, private toastr: AlertService, @Inject(PLATFORM_ID) private platformId: any) {}
+  constructor(private authSvc: AuthenticationService, 
+    private router: Router, 
+    private toastr: AlertService
+  ) {}
 
   register:RegisterModel={
     UserName: '',
@@ -43,10 +46,8 @@ export class RegisterComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    if(isPlatformBrowser(this.platformId)){
-      if(localStorage.getItem('jwt') && this.authSvc.checkAuthentication()){
-        this.router.navigateByUrl('/home');
-      }
+    if(localStorage.getItem('jwt') && this.authSvc.checkAuthentication()){
+      this.router.navigateByUrl('/home');
     }
   }
 

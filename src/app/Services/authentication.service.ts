@@ -12,7 +12,11 @@ import { AlertService } from './alert.service';
 })
 export class AuthenticationService {
 
-  constructor(private http:HttpClient, private jwtHelper: JwtHelperService, private router: Router, @Inject(PLATFORM_ID) private platformId: any, private toastrSvc: AlertService) { }
+  constructor(private http:HttpClient, 
+    private jwtHelper: JwtHelperService, 
+    private router: Router, 
+    private toastrSvc: AlertService
+  ) { }
 
   private tokenKey = 'jwt';
   
@@ -38,16 +42,12 @@ export class AuthenticationService {
   };
 
   saveToken(token: string) {
-    if(isPlatformBrowser(this.platformId)){
-      localStorage.setItem(this.tokenKey, token);
-    }  
+    localStorage.setItem(this.tokenKey, token);
   }
 
   clearToken() {
-    if(isPlatformBrowser(this.platformId)){
-      localStorage.removeItem(this.tokenKey);
-      localStorage.removeItem('userName');
-    }
+    localStorage.removeItem(this.tokenKey);
+    localStorage.removeItem('userName');
   }
 
   loginUser(data:any){
@@ -93,43 +93,34 @@ export class AuthenticationService {
   }
 
   getUserName(){
-    if(isPlatformBrowser(this.platformId)){
-      const token = localStorage.getItem('jwt');
-      if(token != null){
-        const decodeToken:any = jwtDecode(token);
-        this.UserName =decodeToken ? decodeToken["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"] : null;
-        return this.UserName;
-      }
-      return token;
+    const token = localStorage.getItem('jwt');
+    if(token != null){
+      const decodeToken:any = jwtDecode(token);
+      this.UserName =decodeToken ? decodeToken["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"] : null;
+      return this.UserName;
     }
+    return token;
   }
 
   getUserId(){
-    if(isPlatformBrowser(this.platformId)){
-      const token = localStorage.getItem('jwt');
-      if(token != null){
-        const decodeToken:any = jwtDecode(token);
-        const userId =decodeToken ? decodeToken["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"] : null;
-        return userId;
-      }
+    const token = localStorage.getItem('jwt');
+    if(token != null){
+      const decodeToken:any = jwtDecode(token);
+      const userId =decodeToken ? decodeToken["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"] : null;
+      return userId;
     }
   }
 
   getToken(): string | null {
-    if (isPlatformBrowser(this.platformId)) {
-      return localStorage.getItem('jwt');
-    }
-    return null;
+    return localStorage.getItem('jwt');
   }
 
   getJwtId() {
-    if(isPlatformBrowser(this.platformId)){
-      const token = localStorage.getItem('jwt');
-      if(token != null){
-        const decodeToken:any = jwtDecode(token);
-        const jti =decodeToken ? decodeToken.jti : null;
-        return jti;
-      }
+    const token = localStorage.getItem('jwt');
+    if(token != null){
+      const decodeToken:any = jwtDecode(token);
+      const jti =decodeToken ? decodeToken.jti : null;
+      return jti;
     }
   }
 

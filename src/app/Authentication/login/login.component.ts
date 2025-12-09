@@ -16,7 +16,7 @@ import { AlertService } from '../../Services/alert.service';
   styleUrl: './login.component.css'
 })
 export class LoginComponent implements OnInit {
-  constructor(private sessionSvc: SessionService,private chatSvc: ChatService, private authSvc: AuthenticationService,private alert: AlertService,private router: Router, @Inject(PLATFORM_ID) private platformId: any){}
+  constructor(private sessionSvc: SessionService, private chatSvc: ChatService, private authSvc: AuthenticationService,private alert: AlertService,private router: Router){}
 
   login:LoginModel={
     UserName: '',
@@ -28,10 +28,8 @@ export class LoginComponent implements OnInit {
 
 
   ngOnInit(): void {
-    if(isPlatformBrowser(this.platformId)){
-      if(localStorage.getItem('jwt') && this.authSvc.checkAuthentication()){
-        this.router.navigateByUrl('/home');
-      }
+    if(localStorage.getItem('jwt') && this.authSvc.checkAuthentication()){
+      this.router.navigateByUrl('/home');
     }
     this.sessionSvc.getClientIp().subscribe((ipData:any) => {
       this.login.ClientIp = ipData.ip;

@@ -20,10 +20,13 @@ export class AppComponent implements OnInit {
   showNavbar = true;
   isLoading = true;
 
-  constructor(private router: Router, private signalRService: VideoService, private authService: AuthenticationService, private dialog: MatDialog)
+  constructor(private router: Router, 
+    private signalRService: VideoService, 
+    private authService: AuthenticationService, 
+    private dialog: MatDialog
+  )
   {
     this.checkRoute(this.router.url);
-    // Subscribe to route changes
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe((event: any) => {
@@ -34,7 +37,6 @@ export class AppComponent implements OnInit {
   }
 
   private checkRoute(url: string): void {
-    // Hide navbar for login and register
     const chatRoutes = ['/login', '/register'];
     this.showNavbar = !chatRoutes.some(route => url.startsWith(route));
   }

@@ -22,7 +22,6 @@ export class VideoChatComponent implements OnInit, OnDestroy {
   private remoteDescriptionSet = false;
   private pendingCandidates: RTCIceCandidateInit[] = [];
   private stream: MediaStream | null = null;
-  private isBrowser: boolean;
   private isEndingCall = false;
 
   isMuted = false;
@@ -37,19 +36,13 @@ export class VideoChatComponent implements OnInit, OnDestroy {
 
   constructor(
     public signalRService: VideoService,
-    @Inject(PLATFORM_ID) private platformId: Object,
     private snackBar: MatSnackBar
   ) {
-    this.isBrowser = isPlatformBrowser(this.platformId);
   }
 
   private dialogRef: MatDialogRef<VideoChatComponent> = inject(MatDialogRef);
 
   ngOnInit(): void {
-    if (!this.isBrowser) {
-      console.warn('Video chat not available during SSR');
-      return;
-    }
 
     this.setupPeerConnection();
     this.startLocalVideo();
@@ -65,7 +58,7 @@ export class VideoChatComponent implements OnInit, OnDestroy {
   }
 
   private setupSignalListeners(): void {
-    if (!this.isBrowser || !this.signalRService.hubConnection) return;
+    if (!this.signalRService.hubConnection) return;
 
     this.offerSubscription = this.signalRService.offerReceived.subscribe(async (data) => {
       if (!this.peerConnection || this.peerConnection.signalingState === 'closed') return;
@@ -160,7 +153,7 @@ export class VideoChatComponent implements OnInit, OnDestroy {
   }
 
   async declineCall(): Promise<void> {
-    if (!this.isBrowser || this.isEndingCall) return;
+    if (this.isEndingCall) return;
     
     this.isEndingCall = true;
     console.log('📹 Declining call...');
@@ -177,9 +170,6 @@ export class VideoChatComponent implements OnInit, OnDestroy {
   }
 
   async acceptCall(): Promise<void> {
-    if (!this.isBrowser) return;
-
-    console.log('📹 Accepting call...');
     this.signalRService.incomingCall = false;
     this.signalRService.isCallActive = true;
 
@@ -223,8 +213,6 @@ export class VideoChatComponent implements OnInit, OnDestroy {
   }
 
   async startCall(): Promise<void> {
-    if (!this.isBrowser) return;
-    
     try {
       console.log('📹 Starting call...');
       this.signalRService.isCallActive = true;
@@ -242,8 +230,6 @@ export class VideoChatComponent implements OnInit, OnDestroy {
   }
 
   private setupPeerConnection(): void {
-    if (!this.isBrowser) return;
-
     const configuration: RTCConfiguration = {
       iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
@@ -314,8 +300,6 @@ export class VideoChatComponent implements OnInit, OnDestroy {
   }
 
   private async startLocalVideo(): Promise<void> {
-    if (!this.isBrowser) return;
-
     try {
       this.stream = await navigator.mediaDevices.getUserMedia({
         video: { 
@@ -351,8 +335,6 @@ export class VideoChatComponent implements OnInit, OnDestroy {
   }
 
   private cleanupCall(): void {
-    if (!this.isBrowser) return;
-
     if (this.stream) {
       this.stream.getTracks().forEach((track) => {
         track.stop();
@@ -394,7 +376,7 @@ export class VideoChatComponent implements OnInit, OnDestroy {
   }
 
   async endCall(): Promise<void> {
-    if (!this.isBrowser || !this.peerConnection || this.isEndingCall) return;
+    if (!this.peerConnection || this.isEndingCall) return;
 
     this.isEndingCall = true;
     console.log('📹 Ending call...');
@@ -454,7 +436,7 @@ export class VideoChatComponent implements OnInit, OnDestroy {
       this.callDeclinedSubscription.unsubscribe();
     }
 
-    if (this.isBrowser && this.signalRService.hubConnection) {
+    if (this.signalRService.hubConnection) {
       this.signalRService.hubConnection.off('CallEnded');
     }
 

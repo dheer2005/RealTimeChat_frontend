@@ -19,7 +19,6 @@ export class AudioChatComponent implements OnInit, OnDestroy {
   private remoteDescriptionSet = false;
   private pendingCandidates: RTCIceCandidateInit[] = [];
   private stream: MediaStream | null = null;
-  private isBrowser: boolean;
   private remoteAudioElement: HTMLAudioElement | null = null;
   private isEndingCall = false;
   
@@ -43,10 +42,9 @@ export class AudioChatComponent implements OnInit, OnDestroy {
   constructor(
     public audioService: AudioService,
     private toastrSvc: AlertService,
-    private snackBar: MatSnackBar,
-    @Inject(PLATFORM_ID) private platformId: Object
+    private snackBar: MatSnackBar
   ) {
-    this.isBrowser = isPlatformBrowser(this.platformId);
+    
   }
 
   private dialogRef: MatDialogRef<AudioChatComponent> = inject(MatDialogRef);
@@ -61,10 +59,6 @@ export class AudioChatComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    if (!this.isBrowser) {
-      console.warn('Audio chat not available during SSR');
-      return;
-    }
 
     this.setupPeerConnection();
     this.startLocalAudio();
@@ -84,7 +78,7 @@ export class AudioChatComponent implements OnInit, OnDestroy {
   }
 
   private setupSignalListeners(): void {
-    if (!this.isBrowser || !this.audioService.hubConnection) return;
+    if (!this.audioService.hubConnection) return;
 
     this.offerSubscription = this.audioService.offerReceived.subscribe(async (data) => {
       if (!this.peerConnection || this.peerConnection.signalingState === 'closed') return;
@@ -178,7 +172,6 @@ export class AudioChatComponent implements OnInit, OnDestroy {
   }
 
   async initiateCall(): Promise<void> {
-    if (!this.isBrowser) return;
 
     try {
       
@@ -200,7 +193,7 @@ export class AudioChatComponent implements OnInit, OnDestroy {
   }
 
   async declineCall(): Promise<void> {
-    if (!this.isBrowser || this.isEndingCall) return;
+    if (this.isEndingCall) return;
     
     this.isEndingCall = true;
 
@@ -216,10 +209,6 @@ export class AudioChatComponent implements OnInit, OnDestroy {
   }
 
   async acceptCall(): Promise<void> {
-    if (!this.isBrowser) return;
-
-    console.log('✅ Accepting call from:', this.audioService.remoteUserId);
-
     this.audioService.incomingCall = false;
     this.audioService.isCallActive = true;
     this.startCallTimer();
@@ -262,8 +251,6 @@ export class AudioChatComponent implements OnInit, OnDestroy {
   }
 
   private setupPeerConnection(): void {
-    if (!this.isBrowser) return;
-
     const configuration: RTCConfiguration = {
       iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
@@ -345,8 +332,6 @@ export class AudioChatComponent implements OnInit, OnDestroy {
   }
 
   private async startLocalAudio(): Promise<void> {
-    if (!this.isBrowser) return;
-
     try {
       this.stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -393,8 +378,6 @@ export class AudioChatComponent implements OnInit, OnDestroy {
   }
 
   private cleanupCall(): void {
-    if (!this.isBrowser) return;
-
     if (this.stream) {
       this.stream.getTracks().forEach(track => {
         track.stop();
@@ -435,7 +418,7 @@ export class AudioChatComponent implements OnInit, OnDestroy {
   }
 
   async endCall(): Promise<void> {
-    if (!this.isBrowser || !this.peerConnection || this.isEndingCall) return;
+    if (!this.peerConnection || this.isEndingCall) return;
 
     this.isEndingCall = true;
 
@@ -523,7 +506,7 @@ export class AudioChatComponent implements OnInit, OnDestroy {
     if (this.callFailedSubscription) this.callFailedSubscription.unsubscribe();
     if (this.callDeclinedSubscription) this.callDeclinedSubscription.unsubscribe();
 
-    if (this.isBrowser && this.audioService.hubConnection) {
+    if (this.audioService.hubConnection) {
       this.audioService.hubConnection.off('CallEnded');
     }
 

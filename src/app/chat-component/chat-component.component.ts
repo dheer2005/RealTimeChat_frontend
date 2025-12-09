@@ -68,7 +68,6 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   private deleteMessageSubscription?: Subscription;
 
   private typingTimeout: any;
-  private isBrowser: boolean;
 
   isDragOver: boolean = false;
   mapStaticImageUrl: any = `https://res.cloudinary.com/ddvzeseip/image/upload/v1760094391/Chatlify/ap_a6v2ac.png`;
@@ -120,10 +119,8 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
     private toastrSvc: AlertService,
     public dialog: MatDialog,
     private snackBar: MatSnackBar,
-    private location: Location,
-    @Inject(PLATFORM_ID) private platformId: Object
+    private location: Location
   ) {
-    this.isBrowser = isPlatformBrowser(this.platformId);
     
     this.activatedRoute.paramMap.subscribe(param => {
       this.UserTo = param.get('name');
@@ -375,9 +372,6 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   }
 
   ngOnInit(): void {
-    if (!this.isBrowser) {
-      return;
-    }
 
     this.messagesSeenSubscription = this.chatService.messagesSeen$.subscribe((seenByUser) => {
       if (this.UserTo === seenByUser) {
@@ -559,8 +553,6 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
 
   async initMap() {
     try {
-      if (!this.isBrowser) return;
-
       if (this.map) {
         this.map.remove();
         this.map = null;
@@ -1011,10 +1003,6 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   }
 
   displayAudioDialog(UserTo: string): void {
-    if (!this.isBrowser) {
-      return;
-    }
-
     if (this.audioService.isOpen) {
       console.log("⚠️ Audio dialog already open — ignoring extra open call");
       return;
@@ -1052,10 +1040,6 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   }
 
   displayVideoDialog(Userto: string): void {
-    if (!this.isBrowser) {
-      return;
-    }
-    
     if (!this.signalRService.hubConnection || 
         this.signalRService.hubConnection.state !== 'Connected') {
       this.signalRService.startConnection().then(() => {
@@ -1091,10 +1075,6 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   }
 
   scrollToBottom(smooth: boolean = false): void {
-    if (!this.isBrowser) {
-      return;
-    }
-
     try {
       if (this.chatScrollContainer?.nativeElement) {
         this.chatScrollContainer.nativeElement.scrollTo({

@@ -39,8 +39,7 @@ export class ProfileDescriptionComponent implements OnInit,OnDestroy {
 
   constructor(
     private activatedRoute: ActivatedRoute, 
-    private sessionSvc: SessionService, 
-    private chatService: ChatService, 
+    private sessionSvc: SessionService,
     public router: Router, 
     private chatSvc: ChatService, 
     private authSvc: AuthenticationService, 
@@ -157,7 +156,7 @@ export class ProfileDescriptionComponent implements OnInit,OnDestroy {
   }
 
   logout(){
-    this.chatService.stopConnection();
+    this.chatSvc.stopConnection();
     // this.authSvc.logoutCurrentUser();
     this.sessionSvc.logoutCurrentDevice().subscribe({
       next: (res)=>{

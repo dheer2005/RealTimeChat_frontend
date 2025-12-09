@@ -17,7 +17,11 @@ export class SessionsComponent implements OnInit, OnDestroy {
   sessions: any = [];
   private sessionChangeSub!: Subscription;
 
-  constructor(public authSvc: AuthenticationService, private sessionSvc: SessionService, private chatSvc: ChatService, private toastrSvc: AlertService) {
+  constructor(public authSvc: AuthenticationService, 
+    private sessionSvc: SessionService, 
+    private chatSvc: ChatService, 
+    private toastrSvc: AlertService
+  ) {
     this.loadSessions();
   }
 

@@ -25,7 +25,6 @@ export class ChatService {
   
   private token: string | null = null;
   private joinedGroupName: string = '';
-  private isBrowser: boolean;
   private currentChatUser: string | null = null;
 
   private messageHandlers: Array<(id:number, fromUser: string, userTo: string, message: string, created: Date, status: string, isImage: boolean, mediaUrl: string | null,  replyTo?: { id: number, message: string, mediaUrl: string | null, isImage: boolean } | null) => void> = [];
@@ -68,10 +67,8 @@ export class ChatService {
   constructor(
     private http: HttpClient,
     private authSvc: AuthenticationService,
-    @Inject(PLATFORM_ID) private platformId: Object,
     private router: Router
   ) {
-    this.isBrowser = isPlatformBrowser(this.platformId);
   }
 
   setCurrentChatUser(userName: string | null) {
@@ -87,9 +84,6 @@ export class ChatService {
     onReceive: (id: number, fromUser: string, userTo: string, message: string, created: Date, status: string, isImage: boolean, mediaUrl: string | null,  replyTo?: { id: number, message: string, mediaUrl: string | null, isImage: boolean } | null) => void,
     onReceiveGroup: (groupName: string, fromUser: string, message: string, created: Date) => void
   ): Promise<void> {
-    if (!this.isBrowser) {
-      return;
-    }
 
     if (this.isConnectionStarted && this.hubConnection) {
       
@@ -344,7 +338,7 @@ export class ChatService {
   }
 
   public markAsSeen(fromUser: string, userTo: string): void {
-    if (!this.isBrowser || !this.hubConnection) {
+    if (!this.hubConnection) {
       return;
     }
 
@@ -371,7 +365,7 @@ export class ChatService {
   }
 
   public sendMessage(FromUser: string, UserTo: string, message: string, Created: Date, Status: 'seen' | 'sent', isImage: boolean, mediaUrl: string | null, replyToMessageId?: number): void {
-    if (!this.isBrowser || !this.hubConnection) {
+    if (!this.hubConnection) {
       return;
     }
 
@@ -384,7 +378,7 @@ export class ChatService {
   }
 
   public notifyTyping(recipientUserName: string): void {
-    if (!this.isBrowser || !this.hubConnection) {
+    if (!this.hubConnection) {
       return;
     }
 
@@ -395,7 +389,7 @@ export class ChatService {
   }
 
   public notifyStopTyping(recipientUserName: string): void {
-    if (!this.isBrowser || !this.hubConnection) {
+    if (!this.hubConnection) {
       return;
     }
 
@@ -414,7 +408,7 @@ export class ChatService {
   }
 
   public joinGroup(groupName: string): Promise<void> {
-    if (!this.isBrowser || !this.hubConnection) {
+    if (!this.hubConnection) {
       return Promise.resolve();
     }
 
@@ -423,7 +417,7 @@ export class ChatService {
   }
   
   public leaveGroup(groupName: string): Promise<void> {
-    if (!this.isBrowser || !this.hubConnection) {
+    if (!this.hubConnection) {
       return Promise.resolve();
     }
 
@@ -431,7 +425,7 @@ export class ChatService {
   }
 
   public sendMessageToGroup(groupName: string, fromUser: string, message: string, created: Date): void {
-    if (!this.isBrowser || !this.hubConnection) {
+    if (!this.hubConnection) {
       console.warn("SignalR not available");
       return;
     }
@@ -478,7 +472,7 @@ export class ChatService {
   }
 
   public async stopConnection(): Promise<void> {
-    if (this.isBrowser && this.hubConnection && this.isConnectionStarted) {
+    if (this.hubConnection && this.isConnectionStarted) {
       try {
         await this.hubConnection.stop();
         this.isConnectionStarted = false;

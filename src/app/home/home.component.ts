@@ -34,8 +34,6 @@ export class HomeComponent implements OnInit, OnDestroy {
   friendRequestSubscription!: Subscription;
   friendResponseSubscription!: Subscription;
   unfriendSubscription!: Subscription;
-
-  private isBrowser: boolean;
   
   public typingUsers: {[key: string]: boolean} = {};
 
@@ -48,16 +46,11 @@ export class HomeComponent implements OnInit, OnDestroy {
     private audioService: AudioService,
     private dialog: MatDialog,
     private friendRequestSvc: FriendrequestService,
-    private toastrSvc: AlertService,
-    @Inject(PLATFORM_ID) private platformId: Object
+    private toastrSvc: AlertService
   ) {
-    this.isBrowser = isPlatformBrowser(this.platformId);
   }
 
   ngOnInit() {
-    if (!this.isBrowser) {
-      return;
-    }
     this.currentUserName = this.authSvc.getUserName();
     this.currentUserId = this.authSvc.getUserId();
 
