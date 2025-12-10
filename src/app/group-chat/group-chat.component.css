@@ -7,18 +7,9 @@
   flex-direction: column;
 }
 
-.messages {
-  flex: 1;
-  overflow-y: auto;
-  padding: 20px;
-  background: #f8f9fa;
-  scroll-behavior: smooth;
-}
-
 .my-message {
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 16px;
   animation: slideIn 0.3s ease;
 }
 
@@ -177,17 +168,12 @@
 }
 
 .messages {
-  flex: 1;
-  overflow-y: auto;
-  padding: 1rem;
-  padding-bottom: 20px;
-}
-
-.messages {
-  flex: 1;
-  overflow-y: auto;
-  padding: 20px;
   display: flex;
+  flex: 1;
+  overflow-y: auto;
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-bottom: 10px;
   flex-direction: column;
   gap: 12px;
   background: #e5ddd5;
@@ -245,10 +231,13 @@
 }
 
 @media (max-width: 767px) {
+  .messages{
+    padding-bottom: 60px !important;
+  }
 
   .input-area {
     position: fixed;
-    bottom: 0px;   /* same height as mobile-bottom-nav */
+    bottom: 0px;  
     left: 0;
     right: 0;
     z-index: 10000;
@@ -257,7 +246,7 @@
 
   .scroll-to-bottom-btn {
     position: absolute;
-    bottom: 150px !important;
+    bottom: 120px !important;
     right: 20px;
     width: 45px;
     height: 45px;

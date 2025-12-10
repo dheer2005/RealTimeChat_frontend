@@ -95,7 +95,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
     this.friendRequestSubscription = this.chatService.friendRequest$.subscribe(req=>{
       if(req && req.toUserId == this.currentUserId){
-        this.toastrSvc.success("New Friend Request received");
+        // this.toastrSvc.success("New Friend Request received");
       }
     });
 

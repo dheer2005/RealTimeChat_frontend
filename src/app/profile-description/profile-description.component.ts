@@ -7,6 +7,7 @@ import { Subscription } from 'rxjs';
 import { ChatService } from '../Services/chat.service';
 import { SessionService } from '../Services/session.service';
 import { AlertService } from '../Services/alert.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-profile-description',
@@ -157,12 +158,51 @@ export class ProfileDescriptionComponent implements OnInit,OnDestroy {
 
   logout(){
     this.chatSvc.stopConnection();
-    // this.authSvc.logoutCurrentUser();
-    this.sessionSvc.logoutCurrentDevice().subscribe({
-      next: (res)=>{
-        this.authSvc.clearToken();
-        this.toastrSvc.success("User logged out from current device");
-        this.router.navigateByUrl('/login');
+    Swal.fire({
+      title: 'Sure you want to Logout?',
+      html: '<p style="color: #9ca3af; margin-top: 10px; line-height: 1.6;">You will need to login again to access your account.</p>',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Logout',
+      cancelButtonText: 'Cancel',
+      reverseButtons: true,
+      background: '#ffffff',
+      color: '#1f2937',
+      iconColor: '#f59e0b',
+      backdrop: 'rgba(102, 126, 234, 0.3)',
+      confirmButtonColor: '#667eea',
+      cancelButtonColor: '#1f2937',
+      customClass: {
+        popup: 'purple-gradient-popup',
+        confirmButton: 'purple-gradient-confirm-btn',
+        cancelButton: 'purple-gradient-cancel-btn',
+        title: 'purple-gradient-title'
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        Swal.fire({
+          title: 'Logging out...',
+          text: 'See you soon!',
+          icon: 'success',
+          background: '#ffffff',
+          color: '#1f2937',
+          iconColor: '#10b981',
+          showConfirmButton: false,
+          timer: 2000,
+          timerProgressBar: true,
+          customClass: {
+            popup: 'purple-gradient-popup',
+            timerProgressBar: 'purple-gradient-timer',
+            title: 'purple-gradient-title'
+          }
+        });
+        
+      this.sessionSvc.logoutCurrentDevice().subscribe({
+          next: (res)=>{
+            this.authSvc.clearToken();
+            this.router.navigateByUrl('/login');
+          }
+        });
       }
     });
   }

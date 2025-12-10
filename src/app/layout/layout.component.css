@@ -6,11 +6,11 @@
 }
 
 .navbar-logo {
-  height: 40px;
-  width: 65px;
+  width: 170px;
   height: 45px;
   cursor: pointer;
-  mix-blend-mode: screen;
+  color: white;
+  /* mix-blend-mode: screen; */
   transition: transform 0.3s ease;
 }
 

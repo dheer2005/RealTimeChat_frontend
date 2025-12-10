@@ -8,6 +8,7 @@ import { catchError, debounceTime, distinctUntilChanged, of, Subject, Subscripti
 import { Router } from '@angular/router';
 import { query } from 'express';
 import { AlertService } from '../Services/alert.service';
+import Swal from 'sweetalert2';
 
 interface FriendRequest {
   id: string;
@@ -103,7 +104,7 @@ export class FriendRequestComponent implements OnInit, OnDestroy {
 
     this.friendRequestSubscription = this.chatSvc.friendRequest$.subscribe(req=>{
       if(req.toUserId == this.currentUserId){
-        this.toastrSvc.success("New Friend Request received");
+        // this.toastrSvc.success("New Friend Request received");
         this.loadFriendRequests();
       }
     });
@@ -134,9 +135,42 @@ export class FriendRequestComponent implements OnInit, OnDestroy {
       'Cancel'
     ).then((result) => {
       if (result.isConfirmed) {
+        Swal.fire({
+        title: 'Removing Friend...',
+        text: 'Please wait',
+        icon: 'info',
+        background: '#ffffff',
+        color: '#1f2937',
+        iconColor: '#667eea',
+        showConfirmButton: false,
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+        customClass: {
+          popup: 'purple-gradient-popup',
+          title: 'purple-gradient-title'
+        }
+      });
         this.friendRequestSvc.unfriend(this.currentUserId, userId).subscribe({
           next: () => {
-            this.toastrSvc.success('Friend removed successfully');
+            Swal.fire({
+              title: 'Friend Removed!',
+              text: 'You have successfully removed this friend',
+              icon: 'success',
+              background: '#ffffff',
+              color: '#1f2937',
+              iconColor: '#10b981',
+              showConfirmButton: false,
+              timer: 2000,
+              timerProgressBar: true,
+              customClass: {
+                popup: 'purple-gradient-popup',
+                timerProgressBar: 'purple-gradient-timer',
+                title: 'purple-gradient-title'
+              }
+            });
+            // this.toastrSvc.success('Friend removed successfully');
             this.searchUsers();
             this.searchQuery = '';
             this.searchResults = [];
@@ -145,7 +179,78 @@ export class FriendRequestComponent implements OnInit, OnDestroy {
             this.loadSentRequests();
           },
           error: (err) => {
-            this.toastrSvc.error('Failed to unfriend');
+            Swal.fire({
+              title: 'Failed!',
+              text: 'Failed to remove friend. Please try again.',
+              icon: 'error',
+              background: '#ffffff',
+              color: '#1f2937',
+              iconColor: '#ef4444',
+              confirmButtonText: 'OK',
+              customClass: {
+                popup: 'purple-gradient-popup',
+                confirmButton: 'purple-gradient-confirm-btn',
+                title: 'purple-gradient-title'
+              }
+            });
+            // this.toastrSvc.error('Failed to unfriend');
+            console.error(err);
+          }
+        });
+      }
+    });
+  }
+
+  cancelRequest(userId: string): void {
+    this.toastrSvc.confirm(
+      'Withdraw?',
+      'Are you sure you want to withdraw this request? This action cannot be undone.',
+      'Yes, withdraw',
+      'Cancel'
+    ).then((result) => {
+      if (result.isConfirmed) {
+        this.friendRequestSvc.unfriend(this.currentUserId, userId).subscribe({
+          next: () => {
+            Swal.fire({
+              title: 'Request Withdrawn!',
+              text: 'You have successfully withdrawn your friend request',
+              icon: 'success',
+              background: '#ffffff',
+              color: '#1f2937',
+              iconColor: '#10b981',
+              showConfirmButton: false,
+              timer: 1500,
+              timerProgressBar: true,
+              customClass: {
+                popup: 'purple-gradient-popup',
+                timerProgressBar: 'purple-gradient-timer',
+                title: 'purple-gradient-title'
+              }
+            });
+            // this.toastrSvc.success('request withdraw successfully');
+            this.searchUsers();
+            this.searchQuery = '';
+            this.searchResults = [];
+            this.loadFriendRequests();
+            this.loadFriends();
+            this.loadSentRequests();
+          },
+          error: (err) => {
+            Swal.fire({
+              title: 'Failed!',
+              text: 'Failed to withdraw request. Please try again.',
+              icon: 'error',
+              background: '#ffffff',
+              color: '#1f2937',
+              iconColor: '#ef4444',
+              confirmButtonText: 'OK',
+              customClass: {
+                popup: 'purple-gradient-popup',
+                confirmButton: 'purple-gradient-confirm-btn',
+                title: 'purple-gradient-title'
+              }
+            });
+            // this.toastrSvc.error('Failed to withdraw request');
             console.error(err);
           }
         });
