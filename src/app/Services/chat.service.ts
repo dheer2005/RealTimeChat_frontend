@@ -1,6 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
+import { Injectable } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { AuthenticationService } from './authentication.service';
@@ -19,7 +18,7 @@ export class ChatService {
   // private baseUrl = 'https://10.0.0.43:5000/api/';
   // private chatHubUrl = 'https://10.0.0.43:5000/';
 
-  private hubConnection!: signalR.HubConnection;
+  hubConnection!: signalR.HubConnection;
   private connectionPromise: Promise<void> | null = null;
   private isConnectionStarted: boolean = false;
   
@@ -59,6 +58,14 @@ export class ChatService {
 
   private sessionChangedSubject = new Subject<string>();
   public sessionChanged$ = this.sessionChangedSubject.asObservable();
+
+  // Group-related observables
+  public groupMessages$ = new BehaviorSubject<any>(null);
+  public groupMessageDeleted$ = new BehaviorSubject<number | null>(null);
+  public groupTypingUsers$ = new BehaviorSubject<{[key: number]: string[]}>({});
+  public groupUpdatedEvent$ = new BehaviorSubject<any>(null);
+  public memberAddedEvent$ = new BehaviorSubject<any>(null);
+  public memberRemovedEvent$ = new BehaviorSubject<any>(null);
   
   public connectionState$ = new BehaviorSubject<signalR.HubConnectionState>(
     signalR.HubConnectionState.Disconnected
@@ -68,8 +75,7 @@ export class ChatService {
     private http: HttpClient,
     private authSvc: AuthenticationService,
     private router: Router
-  ) {
-  }
+  ) {}
 
   setCurrentChatUser(userName: string | null) {
     this.currentChatUser = userName;
@@ -86,27 +92,23 @@ export class ChatService {
   ): Promise<void> {
 
     if (this.isConnectionStarted && this.hubConnection) {
-      
       if (!this.messageHandlers.includes(onReceive)) {
         this.messageHandlers.push(onReceive);
       }
       if (!this.groupMessageHandlers.includes(onReceiveGroup)) {
         this.groupMessageHandlers.push(onReceiveGroup);
       }
-      
       return;
     }
 
     if (this.connectionPromise) {
       await this.connectionPromise;
-      
       if (!this.messageHandlers.includes(onReceive)) {
         this.messageHandlers.push(onReceive);
       }
       if (!this.groupMessageHandlers.includes(onReceiveGroup)) {
         this.groupMessageHandlers.push(onReceiveGroup);
       }
-      
       return;
     }
 
@@ -164,7 +166,7 @@ export class ChatService {
     }
   }
 
-  private setupEventHandlers(): void {
+  setupEventHandlers(): void {
     this.hubConnection.on("ForceLogout", () => {
       this.authSvc.clearToken();
       this.router.navigate(['/login']);
@@ -174,9 +176,7 @@ export class ChatService {
       this.sessionChangedSubject.next(userId);
     });
 
-
     this.hubConnection.on("ReceiveMessage", (msg:any) => {
-      
       const createdDate = new Date();
       
       this.messageHandlers.forEach(handler => {
@@ -228,7 +228,7 @@ export class ChatService {
 
     this.hubConnection.on("MessageDeleted", (messageId:number)=>{
       this.messageDeleteSubject.next(messageId);
-    })
+    });
 
     this.hubConnection.on("MessagesSeen", (seenByUser: string) => {
       this.messagesSeenSubject.next(seenByUser);
@@ -238,12 +238,19 @@ export class ChatService {
       this.messagesMarkedAsSeenSubject.next(user);
     });
 
-    this.hubConnection.on("ReceiveGroupMessage", (groupName: string, fromUser: string, message: string, created: string) => {
-      if (groupName === this.joinedGroupName) {
-        const createdDate = new Date(created);
-        this.groupMessageHandlers.forEach(handler => {
-          handler(groupName, fromUser, message, createdDate);
-        });
+    // Old group message handler (for backward compatibility)
+    this.hubConnection.on("ReceiveGroupMessage", (groupNameOrMessage: any, fromUser?: string, message?: string, created?: string) => {
+      // Check if this is the old format (4 parameters)
+      if (typeof groupNameOrMessage === 'string' && fromUser && message) {
+        if (groupNameOrMessage === this.joinedGroupName) {
+          const createdDate = new Date(created || new Date());
+          this.groupMessageHandlers.forEach(handler => {
+            handler(groupNameOrMessage, fromUser, message, createdDate);
+          });
+        }
+      } else {
+        // New format (single message object)
+        this.groupMessages$.next(groupNameOrMessage);
       }
     });
 
@@ -251,7 +258,7 @@ export class ChatService {
       this.reactionAddedSubject.next({ messageId, emoji, user });
     });
 
-    this.hubConnection?.on('ReactionRemoved', (messageId: number, user: string) => {
+    this.hubConnection.on('ReactionRemoved', (messageId: number, user: string) => {
       this.reactionRemovedSubject.next({ messageId, user });
     });
 
@@ -298,13 +305,51 @@ export class ChatService {
     });
 
     this.hubConnection.on("ReceiveFriendRequest", (request:any) => {
-      this.friendRequestSubject.next(request)
+      this.friendRequestSubject.next(request);
     });
+
     this.hubConnection.on("FriendRequestResponse", (response:any) => { 
       this.friendResponseSubject.next(response);
     });
+
     this.hubConnection.on("Unfriended", (data:any) => { 
       this.unfriendSubject.next(data);
+    });
+
+    // New Group Handlers
+    this.hubConnection.on('GroupMessageDeleted', (messageId: number) => {
+      this.groupMessageDeleted$.next(messageId);
+    });
+
+    this.hubConnection.on('UserTypingInGroup', (groupId: number, userName: string) => {
+      const current = this.groupTypingUsers$.value;
+      if (!current[groupId]) {
+        current[groupId] = [];
+      }
+      if (!current[groupId].includes(userName)) {
+        current[groupId].push(userName);
+        this.groupTypingUsers$.next({...current});
+      }
+    });
+
+    this.hubConnection.on('UserStopTypingInGroup', (groupId: number, userName: string) => {
+      const current = this.groupTypingUsers$.value;
+      if (current[groupId]) {
+        current[groupId] = current[groupId].filter(u => u !== userName);
+        this.groupTypingUsers$.next({...current});
+      }
+    });
+
+    this.hubConnection.on('OnGroupUpdated', (data: any) => {
+      this.groupUpdatedEvent$.next(data);
+    });
+
+    this.hubConnection.on('OnMemberAdded', (groupId: number, member: any) => {
+      this.memberAddedEvent$.next({ groupId, member });
+    });
+
+    this.hubConnection.on('OnMemberRemoved', (groupId: number, userId: string) => {
+      this.memberRemovedEvent$.next({ groupId, userId });
     });
   }
 
@@ -328,7 +373,64 @@ export class ChatService {
     });
   }
 
-  public deleteMessage(messageId: number) : void{
+  // ============== GROUP METHODS ==============
+
+  async joinGroupRoom(groupId: number): Promise<void> {
+    if (this.hubConnection?.state === 'Connected') {
+      await this.hubConnection.invoke('JoinGroupRoom', groupId);
+    }
+  }
+
+  async leaveGroupRoom(groupId: number): Promise<void> {
+    if (this.hubConnection?.state === 'Connected') {
+      await this.hubConnection.invoke('LeaveGroupRoom', groupId);
+    }
+  }
+
+  async sendGroupMessage(
+    groupId: number,
+    fromUser: string,
+    message: string,
+    created: Date,
+    isImage: boolean = false,
+    mediaUrl: string = '',
+    replyToMessageId?: number
+  ): Promise<void> {
+    if (this.hubConnection?.state === 'Connected') {
+      await this.hubConnection.invoke(
+        'SendGroupMessage',
+        groupId,
+        fromUser,
+        message,
+        created,
+        isImage,
+        mediaUrl,
+        replyToMessageId
+      );
+    }
+  }
+
+  async deleteGroupMessage(messageId: number, groupId: number): Promise<void> {
+    if (this.hubConnection?.state === 'Connected') {
+      await this.hubConnection.invoke('DeleteGroupMessage', messageId, groupId);
+    }
+  }
+
+  async notifyGroupTyping(groupId: number): Promise<void> {
+    if (this.hubConnection?.state === 'Connected') {
+      await this.hubConnection.invoke('NotifyGroupTyping', groupId);
+    }
+  }
+
+  async notifyGroupStopTyping(groupId: number): Promise<void> {
+    if (this.hubConnection?.state === 'Connected') {
+      await this.hubConnection.invoke('NotifyGroupStopTyping', groupId);
+    }
+  }
+
+  // ============== MESSAGE METHODS ==============
+
+  public deleteMessage(messageId: number): void {
     if(this.hubConnection.state === signalR.HubConnectionState.Connected){
       this.hubConnection.invoke("DeleteMessage", messageId)
         .catch(err=> console.error('Error deleting message: ', err));
@@ -407,6 +509,8 @@ export class ChatService {
     return Object.keys(this.typingUsers$.value).filter(key => this.typingUsers$.value[key]);
   }
 
+  // ============== OLD GROUP METHODS (for backward compatibility) ==============
+
   public joinGroup(groupName: string): Promise<void> {
     if (!this.hubConnection) {
       return Promise.resolve();
@@ -451,6 +555,8 @@ export class ChatService {
     });
   }
 
+  // ============== HTTP METHODS ==============
+
   public getMessages(userTo: string): Observable<any> {
     return this.http.get(`${this.baseUrl}Chat/${userTo}`, this.authSvc.getHttpOptions());
   }
@@ -470,6 +576,8 @@ export class ChatService {
   public lastMessage(userName: string): Observable<any[]> {
     return this.http.get<any[]>(`${this.baseUrl}Chat/lastMessages/${userName}`, this.authSvc.getHttpOptions());
   }
+
+  // ============== CONNECTION METHODS ==============
 
   public async stopConnection(): Promise<void> {
     if (this.hubConnection && this.isConnectionStarted) {

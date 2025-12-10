@@ -1,9 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ChatService } from '../Services/chat.service';
+import { GroupService, GroupMessage } from '../Services/group.service';
 import { AuthenticationService } from '../Services/authentication.service';
 import { CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import $ from 'jquery';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Subscription } from 'rxjs';
+
 @Component({
   selector: 'app-group-chat',
   standalone: true,
@@ -11,24 +14,37 @@ import $ from 'jquery';
   templateUrl: './group-chat.component.html',
   styleUrl: './group-chat.component.css'
 })
-export class GroupChatComponent implements OnInit {
-
-  messages: any[] = [];
+export class GroupChatComponent implements OnInit, OnDestroy {
+  messages: GroupMessage[] = [];
   message: string = '';
   fromUser: string = '';
-  groupName: string = 'AngularDevs'; 
+  groupId: number = 0;
+  groupName: string = '';
+  groupImage?: string;
+  memberCount: number = 0;
   isLoader: boolean = true;
   showScrollButton: boolean = false;
   private userScrolled: boolean = false;
+  private typingTimeout: any;
+  typingUsers: string[] = [];
+  displayTypingText: string = '';
+  
+  private groupMessageSub?: Subscription;
+  private groupDeletedSub?: Subscription;
+  private routeSub?: Subscription;
 
-  constructor(private chatSvc: ChatService, 
-    private authSvc: AuthenticationService, 
-    private location: Location
+  constructor(
+    private chatSvc: ChatService,
+    private groupSvc: GroupService,
+    private authSvc: AuthenticationService,
+    private location: Location,
+    private route: ActivatedRoute,
+    private router: Router
   ) {
     this.fromUser = this.authSvc.getUserName();
   }
 
-  groupChatBack(){
+  groupChatBack(): void {
     this.location.back();
   }
 
@@ -37,7 +53,7 @@ export class GroupChatComponent implements OnInit {
     if (scrollContainer) {
       scrollContainer.addEventListener('scroll', (event: Event) => {
         const element = event.target as HTMLElement;
-        const threshold = 150; // pixels from bottom
+        const threshold = 150;
         const atBottom = element.scrollHeight - element.scrollTop - element.clientHeight < threshold;
         
         this.showScrollButton = !atBottom;
@@ -46,45 +62,130 @@ export class GroupChatComponent implements OnInit {
     }
   }
 
-  ngOnInit(): void {
-    this.chatSvc.startConnection(this.fromUser,
-      () => {},
-      (groupName, fromUser, message, created) => {
-        if (groupName === this.groupName) {
-          this.messages.push({ groupName, fromUser, message, created });
-          if (!this.userScrolled) {
-            setTimeout(() => this.scrollToBottom(), 100);
-          }
-        }
+  async ngOnInit(): Promise<void> {
+
+    this.routeSub = this.route.params.subscribe(async params => {
+      this.groupId = +params['groupId'];
+
+      if (this.groupId) {
+
+        await this.chatSvc.startConnection(
+          this.fromUser,
+          () => {},
+          () => {}
+        );
+
+        await this.chatSvc.joinGroupRoom(this.groupId);
+
+        this.loadGroupDetails();
+        this.loadMessages();
+        this.setupSignalR();
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.groupId) {
+      this.chatSvc.leaveGroupRoom(this.groupId);
+    }
+    this.groupMessageSub?.unsubscribe();
+    this.groupDeletedSub?.unsubscribe();
+    this.routeSub?.unsubscribe();
+  }
+
+  loadGroupDetails(): void {
+    this.groupSvc.getGroupDetails(this.groupId).subscribe({
+      next: (data) => {
+        this.groupName = data.groupName;
+        this.groupImage = data.groupImage;
+        this.memberCount = data.members.length;
       },
-      ).then(() => {
-      this.chatSvc.joinGroup(this.groupName);
-      this.chatSvc.getGroupMessages(this.groupName).subscribe((res: any[]) => {
-        this.messages = res;
+      error: (err) => {
+        console.error('Failed to load group details', err);
+      }
+    });
+  }
+
+  loadMessages(): void {
+    this.groupSvc.getGroupMessages(this.groupId).subscribe({
+      next: (data) => {
+        this.messages = data;
         this.isLoader = false;
         setTimeout(() => {
           this.scrollToBottom();
           this.setupScrollListener();
         }, 100);
-      });
+      },
+      error: (err) => {
+        console.error('Failed to load messages', err);
+        this.isLoader = false;
+      }
     });
   }
 
-  send() {
+  setupSignalR(): void {
+
+    this.chatSvc.groupTypingUsers$.subscribe(data => {
+      const usersTyping = data[this.groupId] || [];
+
+      const othersTyping = usersTyping.filter(u => u !== this.fromUser);
+
+      this.typingUsers = othersTyping;
+
+      if (othersTyping.length === 1) {
+        this.displayTypingText = `${othersTyping[0]} is typing...`;
+      } 
+      else if (othersTyping.length === 2) {
+        this.displayTypingText = `${othersTyping[0]} and ${othersTyping[1]} are typing...`;
+      } 
+      else if (othersTyping.length > 2) {
+        this.displayTypingText = `${othersTyping[0]}, ${othersTyping[1]} and ${othersTyping.length - 2} others are typing...`;
+      } 
+      else {
+        this.displayTypingText = '';
+      }
+    });
+
+    this.groupMessageSub = this.chatSvc.groupMessages$.subscribe((message) => {
+      if (message && message.groupId === this.groupId) {
+        this.messages.push(message);
+        if (!this.userScrolled) {
+          setTimeout(() => this.scrollToBottom(), 100);
+        }
+      }
+    });
+
+    this.groupDeletedSub = this.chatSvc.groupMessageDeleted$.subscribe((messageId) => {
+      if (messageId) {
+        this.messages = this.messages.filter(m => m.id !== messageId);
+      }
+    });
+  }
+
+  send(): void {
     if (this.message.trim()) {
       const created = new Date();
-      this.chatSvc.sendMessageToGroup(this.groupName, this.fromUser, this.message, created);
-      const groupMsg = {
-        GroupName: this.groupName,
-        FromUser: this.fromUser,
-        Message: this.message,
-        Created: created,
-        Status: 'sent'
-      };
-  
+      this.chatSvc.sendGroupMessage(
+        this.groupId,
+        this.fromUser,
+        this.message,
+        created,
+        false,
+        ''
+      );
       this.message = '';
+      this.chatSvc.notifyGroupStopTyping(this.groupId);
       setTimeout(() => this.scrollToBottom(true), 100);
     }
+  }
+
+  onTyping(): void {
+    this.chatSvc.notifyGroupTyping(this.groupId);
+    
+    clearTimeout(this.typingTimeout);
+    this.typingTimeout = setTimeout(() => {
+      this.chatSvc.notifyGroupStopTyping(this.groupId);
+    }, 2000);
   }
 
   isNewDate(i: number): boolean {
@@ -126,7 +227,7 @@ export class GroupChatComponent implements OnInit {
     return d.toDateString();
   }
 
-  scrollToBottom(smooth: boolean = false) {
+  scrollToBottom(smooth: boolean = false): void {
     const element = document.getElementById('group-chat-scroll');
     if (element) {
       if (smooth) {
@@ -141,5 +242,13 @@ export class GroupChatComponent implements OnInit {
       this.showScrollButton = false;
       this.userScrolled = false;
     }
+  }
+
+  openGroupInfo(): void {
+    this.router.navigate(['/group-info', this.groupId]);
+  }
+
+  getInitial(name: string): string {
+    return name.charAt(0).toUpperCase();
   }
 }

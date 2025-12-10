@@ -1,0 +1,117 @@
+<div class="create-group-container">
+  <!-- Header -->
+  <div class="header">
+    <button class="back-btn" (click)="goBack()">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
+    </button>
+    <h2 class="header-title">Create New Group</h2>
+    <div class="spacer"></div>
+  </div>
+
+  <!-- Group Details Form -->
+  <div class="form-section">
+    <div class="form-card">
+      <div class="form-group">
+        <label class="form-label">Group Name *</label>
+        <input 
+          type="text" 
+          [(ngModel)]="groupName"
+          placeholder="Enter group name..."
+          class="form-input"
+          maxlength="100"
+        />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Group Image URL (Optional)</label>
+        <input 
+          type="text" 
+          [(ngModel)]="groupImage"
+          placeholder="https://example.com/image.jpg"
+          class="form-input"
+        />
+      </div>
+
+      <div class="selected-count" *ngIf="getSelectedCount() > 0">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+        {{ getSelectedCount() }} member(s) selected
+      </div>
+    </div>
+  </div>
+
+  <!-- Search Members -->
+  <div class="search-section">
+    <div class="search-container">
+      <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"></circle>
+        <path d="m21 21-4.35-4.35"></path>
+      </svg>
+      <input 
+        type="text" 
+        [(ngModel)]="searchQuery"
+        placeholder="Search friends..."
+        class="search-input"
+      />
+    </div>
+  </div>
+
+  <!-- Friends List -->
+  <div class="members-section">
+    <h3 class="section-title">Select Members</h3>
+    
+    <div class="members-list">
+      <div 
+        *ngFor="let friend of getFilteredFriends()"
+        class="member-card"
+        [class.selected]="friend.selected"
+        (click)="toggleSelection(friend)"
+      >
+        <div class="member-avatar-container">
+          <div class="member-avatar" *ngIf="!friend.profileImage">
+            {{ getInitial(friend.userName) }}
+          </div>
+          <div class="member-avatar member-img-avatar" *ngIf="friend.profileImage">
+            <img [src]="friend.profileImage" [alt]="friend.userName" />
+          </div>
+          <div class="checkbox" [class.checked]="friend.selected">
+            <svg *ngIf="friend.selected" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </div>
+        </div>
+
+        <div class="member-info">
+          <span class="member-name">{{ friend.userName }}</span>
+          <span class="member-fullname">{{ friend.fullName }}</span>
+        </div>
+      </div>
+
+      <div *ngIf="getFilteredFriends().length === 0" class="no-friends">
+        <p>No friends found</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Button -->
+  <div class="action-section">
+    <button 
+      class="create-btn"
+      [class.disabled]="!canCreateGroup() || isCreating"
+      [disabled]="!canCreateGroup() || isCreating"
+      (click)="createGroup()"
+    >
+      <span *ngIf="!isCreating">Create Group</span>
+      <span *ngIf="isCreating" class="creating">
+        <span class="spinner"></span>
+        Creating...
+      </span>
+    </button>
+  </div>
+</div>

@@ -8,13 +8,35 @@ import { ProfileDescriptionComponent } from './profile-description/profile-descr
 import { GroupChatComponent } from './group-chat/group-chat.component';
 import { chatUserGuardGuard } from './Guards/chat-user-guard.guard';
 import { SessionsComponent } from './sessions/sessions.component';
+import { GroupsListComponent } from './groups-list/groups-list.component';
+import { CreateGroupComponent } from './create-group/create-group.component';
+import { GroupInfoComponent } from './group-info/group-info.component';
 
 export const routes: Routes = [
     { path: '', redirectTo: 'home', pathMatch: 'full' },
     { path: 'login', component: LoginComponent },
     { path: 'register', component: RegisterComponent },
     { path:'home', component: HomeComponent, canActivate: [authGuard] },
-    { path: 'group-chat', component: GroupChatComponent, canActivate: [authGuard] },
+    { 
+        path: 'groups-list', 
+        component: GroupsListComponent, 
+        canActivate: [authGuard] 
+    },
+    { 
+        path: 'create-group', 
+        component: CreateGroupComponent, 
+        canActivate: [authGuard] 
+    },
+    { 
+        path: 'group-chat/:groupId', 
+        component: GroupChatComponent, 
+        canActivate: [authGuard] 
+    },
+    {
+        path: 'group-info/:groupId',
+        component: GroupInfoComponent,
+        canActivate: [authGuard]
+    },
     { path: 'chats', component: ChatComponent, canActivate: [authGuard] },
     { path: 'chats/:name', component: ChatComponent, canActivate: [authGuard, chatUserGuardGuard] },
     { path: 'profile', component: ProfileDescriptionComponent, canActivate: [authGuard] },

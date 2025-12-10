@@ -3,7 +3,7 @@
     <img src="../../assets/logo3.png" alt="logo" class="navbar-logo" routerLink="/home" />
     <ul class="navbar-nav ms-auto align-items-lg-center">
       <li class="nav-item"><a class="nav-link" routerLink="/home" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Home</a></li>
-      <li class="nav-item"><a class="nav-link" routerLink="/group-chat" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Group Chats</a></li>
+      <li class="nav-item"><a class="nav-link" routerLink="/groups-list" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Group Chats</a></li>
       <li class="nav-item nav-item-with-badge">
         <a class="nav-link" routerLink="/friend-request" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
           Friend Request
@@ -37,7 +37,7 @@
     <div class="tablet-menu" [class.show]="isMobileMenuOpen">
       <ul class="navbar-nav">
         <li class="nav-item"><a class="nav-link" routerLink="/home" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMobileMenu()">Home</a></li>
-        <li class="nav-item"><a class="nav-link" routerLink="/group-chat" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMobileMenu()">Group Chats</a></li>
+        <li class="nav-item"><a class="nav-link" routerLink="/groups-list" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMobileMenu()">Group Chats</a></li>
         <li class="nav-item tablet-nav-item-with-badge">
           <a class="nav-link" routerLink="/friend-request" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMobileMenu()">
             Friend Request
@@ -76,7 +76,7 @@
     </svg>
     <span>Home</span>
   </a>
-  <a routerLink="/group-chat" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+  <a routerLink="/groups-list" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="11" cy="7" r="4" />
       <path d="M16 20v-2a4 4 0 0 0-3-3.87" />

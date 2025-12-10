@@ -1,0 +1,182 @@
+<div class="group-info-container">
+  <!-- Header -->
+  <div class="header">
+    <button class="back-btn" (click)="goBack()">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
+    </button>
+    <h2 class="header-title">Group Info</h2>
+    <div class="spacer"></div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loader-container">
+    <div class="loader-spinner"></div>
+    <p class="loader-text">Loading...</p>
+  </div>
+
+  <!-- Group Details -->
+  <div *ngIf="!isLoading && groupDetails" class="content">
+    <!-- Group Image Section -->
+    <div class="group-image-section">
+      <div class="group-image-wrapper" (click)="updateGroupImage()">
+        <div class="group-image" *ngIf="!groupDetails.groupImage">
+          {{ getInitial(groupDetails.groupName) }}
+        </div>
+        <img *ngIf="groupDetails.groupImage" [src]="groupDetails.groupImage" [alt]="groupDetails.groupName" class="group-image" />
+        <div class="edit-overlay" *ngIf="isAdmin">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+            <circle cx="12" cy="13" r="4"></circle>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Group Name Section -->
+    <div class="info-section">
+      <div class="section-header">
+        <h3 class="section-title">Group Name</h3>
+        <button *ngIf="isAdmin && !isEditingName" class="edit-btn" (click)="toggleEditName()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+          </svg>
+        </button>
+      </div>
+      
+      <div *ngIf="!isEditingName" class="group-name-display">
+        {{ groupDetails.groupName }}
+      </div>
+      
+      <div *ngIf="isEditingName" class="edit-name-form">
+        <input 
+          type="text" 
+          [(ngModel)]="newGroupName"
+          class="edit-input"
+          placeholder="Enter group name..."
+          maxlength="100"
+        />
+        <div class="edit-actions">
+          <button class="cancel-btn" (click)="toggleEditName()">Cancel</button>
+          <button class="save-btn" (click)="saveGroupName()">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Members Section -->
+    <div class="info-section">
+      <div class="section-header">
+        <h3 class="section-title">Members ({{ getMemberCount() }})</h3>
+        <button *ngIf="isAdmin" class="add-btn" (click)="openAddMembersModal()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="8.5" cy="7" r="4"></circle>
+            <line x1="20" y1="8" x2="20" y2="14"></line>
+            <line x1="23" y1="11" x2="17" y2="11"></line>
+          </svg>
+          Add
+        </button>
+      </div>
+
+      <div class="members-list">
+        <div *ngFor="let member of groupDetails.members" class="member-item">
+          <div class="member-avatar" *ngIf="!member.profileImage">
+            {{ getInitial(member.userName) }}
+          </div>
+          <img *ngIf="member.profileImage" [src]="member.profileImage" [alt]="member.userName" class="member-avatar" />
+          
+          <div class="member-details">
+            <div class="member-name">
+              {{ member.userName }}
+              <span *ngIf="member.userId === currentUserId" class="you-badge">You</span>
+            </div>
+            <div class="member-role">
+              {{ member.isAdmin ? 'Admin' : 'Member' }}
+            </div>
+          </div>
+
+          <div class="member-actions" *ngIf="isAdmin || member.userId === currentUserId">
+            <button class="action-btn" (click)="removeMember(member)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path *ngIf="member.userId === currentUserId" d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"></path>
+                <path *ngIf="member.userId !== currentUserId" d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M8.5 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 11l-3.5 3.5L16 11"></path>
+              </svg>
+              {{ member.userId === currentUserId ? 'Leave' : 'Remove' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Leave Group Button (for non-admins) -->
+    <div class="danger-section" *ngIf="!isAdmin">
+      <button class="leave-group-btn" (click)="leaveGroup()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+          <polyline points="16 17 21 12 16 7"></polyline>
+          <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
+        Leave Group
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Members Modal -->
+<div *ngIf="showAddMembersModal" class="modal-overlay" (click)="closeAddMembersModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">Add Members</h3>
+      <button class="modal-close" (click)="closeAddMembersModal()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div *ngIf="friends.length === 0" class="empty-friends">
+        <p>All your friends are already in this group!</p>
+      </div>
+
+      <div *ngIf="friends.length > 0" class="friends-list">
+        <div 
+          *ngFor="let friend of friends"
+          class="friend-item"
+          [class.selected]="isFriendSelected(friend.id)"
+          (click)="toggleFriendSelection(friend.id)"
+        >
+          <div class="friend-avatar" *ngIf="!friend.profileImage">
+            {{ getInitial(friend.userName) }}
+          </div>
+          <img *ngIf="friend.profileImage" [src]="friend.profileImage" [alt]="friend.userName" class="friend-avatar" />
+          
+          <div class="friend-info">
+            <div class="friend-name">{{ friend.userName }}</div>
+            <div class="friend-fullname">{{ friend.fullName }}</div>
+          </div>
+
+          <div class="checkbox" [class.checked]="isFriendSelected(friend.id)">
+            <svg *ngIf="isFriendSelected(friend.id)" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer" *ngIf="friends.length > 0">
+      <button class="modal-cancel-btn" (click)="closeAddMembersModal()">Cancel</button>
+      <button 
+        class="modal-add-btn" 
+        [disabled]="selectedFriends.length === 0"
+        (click)="addSelectedMembers()"
+      >
+        Add {{ selectedFriends.length > 0 ? '(' + selectedFriends.length + ')' : '' }}
+      </button>
+    </div>
+  </div>
+</div>
