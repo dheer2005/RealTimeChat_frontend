@@ -1,6 +1,5 @@
 .groups-container {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100%;
   padding-bottom: 80px;
 }
 
@@ -189,6 +188,7 @@
 }
 
 .group-info {
+  position: relative;
   flex: 1;
   min-width: 0;
   display: flex;
@@ -310,4 +310,34 @@
     height: 48px;
     font-size: 20px;
   }
+}
+
+.typing-indicator {
+  font-size: 13px;
+  color: #22c55e;
+  font-style: italic;
+}
+
+.unread-badge {
+  position: absolute;
+  right: 0px;
+  bottom: 0px;
+  width: 25px;
+  height: 25px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #22c55e;
+  color: white;
+  font-size: 12px;
+  padding: 3px 7px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+.typing-text {
+  color: #4ade80;
+  font-size: 13px;
+  margin-top: 3px;
+  font-style: italic;
 }

@@ -68,14 +68,20 @@
         </div>
 
         <div class="group-last-message">
-          <span *ngIf="group.lastMessage" class="last-message">
-            <span class="message-sender">{{ getLastMessageSender(group) }}</span>
-            {{ getLastMessagePreview(group) }}
-          </span>
-          <span *ngIf="!group.lastMessage" class="no-messages">
-            No messages yet
-          </span>
+            <div class="typing-text" *ngIf="group.typingText">
+              {{ group.typingText }}
+            </div>
+
+            <span *ngIf="!group.typingUsers?.length" class="last-message">
+                <span class="message-sender">{{ getLastMessageSender(group) }}</span>
+                {{ getLastMessagePreview(group) }}
+            </span>
         </div>
+        
+        <span *ngIf="group.unreadCount && group.unreadCount > 0"
+            class="unread-badge">
+        {{ group.unreadCount }}
+        </span>
       </div>
 
       <div class="chevron-icon">

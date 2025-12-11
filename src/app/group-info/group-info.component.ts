@@ -8,6 +8,7 @@ import { FriendrequestService } from '../Services/friendrequest.service';
 import { AlertService } from '../Services/alert.service';
 import { Subscription } from 'rxjs';
 import Swal from 'sweetalert2';
+import { ChatService } from '../Services/chat.service';
 
 @Component({
   selector: 'app-group-info',
@@ -21,6 +22,7 @@ export class GroupInfoComponent implements OnInit, OnDestroy {
   groupDetails?: GroupDetails;
   isAdmin: boolean = false;
   currentUserId: string = '';
+  currentUserName: string = '';
   isEditingName: boolean = false;
   newGroupName: string = '';
   newGroupImage: string = '';
@@ -38,15 +40,24 @@ export class GroupInfoComponent implements OnInit, OnDestroy {
     private groupSvc: GroupService,
     private authSvc: AuthenticationService,
     private friendSvc: FriendrequestService,
+    private chatSvc: ChatService,
     private alertSvc: AlertService
   ) {
     this.currentUserId = this.authSvc.getUserId();
+    this.currentUserName = this.authSvc.getUserName();
   }
 
-  ngOnInit(): void {
-    this.routeSub = this.route.params.subscribe(params => {
+  async ngOnInit(): Promise<void> {
+    this.routeSub = this.route.params.subscribe(async params => {
       this.groupId = +params['groupId'];
       if (this.groupId) {
+        await this.chatSvc.startConnection(
+          this.currentUserName,
+          () => {},
+          () => {}
+        );
+
+        await this.chatSvc.joinGroupRoom(this.groupId);
         this.loadGroupDetails();
       }
     });
@@ -89,16 +100,20 @@ export class GroupInfoComponent implements OnInit, OnDestroy {
   }
 
   saveGroupName(): void {
-    if (!this.newGroupName.trim()) {
+    const name = this.newGroupName.trim();
+    if (!name) {
       this.alertSvc.warning('Group name cannot be empty');
       return;
     }
 
-    this.groupSvc.updateGroup(this.groupId, this.newGroupName.trim(), undefined).subscribe({
+    this.groupSvc.updateGroup(this.groupId, name, undefined).subscribe({
       next: () => {
         if (this.groupDetails) {
-          this.groupDetails.groupName = this.newGroupName.trim();
+          this.groupDetails.groupName = name;
         }
+
+        this.chatSvc.notifyGroupUpdated(this.groupId, name, this.newGroupImage);
+
         this.isEditingName = false;
         this.alertSvc.success('Group name updated');
       },
@@ -120,22 +135,22 @@ export class GroupInfoComponent implements OnInit, OnDestroy {
       input: 'text',
       inputLabel: 'Image URL',
       inputValue: this.newGroupImage,
-      inputPlaceholder: 'https://example.com/image.jpg',
       showCancelButton: true,
-      confirmButtonText: 'Update',
-      cancelButtonText: 'Cancel',
-      confirmButtonColor: '#667eea',
-      customClass: {
-        popup: 'purple-gradient-popup'
-      }
+      confirmButtonText: 'Update'
     }).then((result) => {
       if (result.isConfirmed) {
-        this.groupSvc.updateGroup(this.groupId, undefined, result.value).subscribe({
+        const img = result.value;
+
+        this.groupSvc.updateGroup(this.groupId, undefined, img).subscribe({
           next: () => {
             if (this.groupDetails) {
-              this.groupDetails.groupImage = result.value;
-              this.newGroupImage = result.value;
+              this.groupDetails.groupImage = img;
+              this.newGroupImage = img;
             }
+
+            // 🔥 Send realtime update
+            this.chatSvc.notifyGroupUpdated(this.groupId, this.newGroupName, img);
+
             this.alertSvc.success('Group image updated');
           },
           error: (err) => {
@@ -193,6 +208,9 @@ export class GroupInfoComponent implements OnInit, OnDestroy {
     this.groupSvc.addMembers(this.groupId, this.selectedFriends).subscribe({
       next: (newMembers) => {
         this.alertSvc.success(`${newMembers.length} member(s) added`);
+        newMembers.forEach((member:any) => {
+          this.chatSvc.notifyMemberAdded(this.groupId, member);
+        });
         this.loadGroupDetails();
         this.closeAddMembersModal();
       },
@@ -243,6 +261,7 @@ export class GroupInfoComponent implements OnInit, OnDestroy {
       if (result.isConfirmed) {
         this.groupSvc.removeMember(this.groupId, member.userId).subscribe({
           next: () => {
+            this.chatSvc.notifyMemberRemoved(this.groupId, member.userId);
             if (isRemovingSelf) {
               this.alertSvc.success('You left the group');
               this.router.navigate(['/groups-list']);

@@ -18,9 +18,7 @@
         <div class="group-name">{{ groupName }}</div>
         <div class="group-members">{{ memberCount }} members</div>
         <div *ngIf="typingUsers.length > 0" class="typing-indicator">
-          <span *ngFor="let user of typingUsers">
-            {{ user }} is typing...
-          </span>
+          {{ displayTypingText }}
         </div>
       </div>
     </div>

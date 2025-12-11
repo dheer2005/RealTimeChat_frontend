@@ -476,6 +476,11 @@
 }
 
 @media (max-width: 768px) {
+  .header{
+    position: sticky !important;
+    top: 0;
+    z-index: 10;
+  }
   .group-image {
     width: 100px;
     height: 100px;
@@ -484,5 +489,13 @@
 
   .info-section {
     padding: 20px;
+  }
+}
+
+@media (min-width: 768px) {
+  .header {
+    position: sticky !important;
+    top: 60px;
+    z-index: 10;
   }
 }

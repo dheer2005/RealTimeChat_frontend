@@ -6,6 +6,7 @@ import { GroupService, GroupDetails } from '../Services/group.service';
 import { ChatService } from '../Services/chat.service';
 import { AuthenticationService } from '../Services/authentication.service';
 import { Subscription } from 'rxjs';
+import { log } from 'console';
 
 @Component({
   selector: 'app-groups-list',
@@ -21,9 +22,12 @@ export class GroupsListComponent implements OnInit, OnDestroy {
   isLoading: boolean = true;
   showCreateModal: boolean = false;
   currentUserName: string = '';
+  typingUsers: string[] = [];
+  displayTypingText: string = '';
 
   private groupMessageSub?: Subscription;
   private groupUpdatedSub?: Subscription;
+  private typingSub?: Subscription;
 
   constructor(
     private groupSvc: GroupService,
@@ -34,9 +38,14 @@ export class GroupsListComponent implements OnInit, OnDestroy {
     this.currentUserName = this.authSvc.getUserName();
   }
 
-  ngOnInit(): void {
-    this.loadGroups();
-    this.setupSignalR();
+  async ngOnInit(): Promise<void> {
+     await this.chatSvc.startConnection(
+      this.currentUserName,
+      () => console.log('✅ Groups SignalR Connected'),
+      () => console.log('❌ Groups SignalR Disconnected')
+    );
+    await this.loadGroups();
+    await this.setupSignalR();
   }
 
   ngOnDestroy(): void {
@@ -44,12 +53,17 @@ export class GroupsListComponent implements OnInit, OnDestroy {
     this.groupUpdatedSub?.unsubscribe();
   }
 
-  loadGroups(): void {
+  async loadGroups(): Promise<void> {
     this.groupSvc.getMyGroups().subscribe({
-      next: (data) => {
+      next: async (data) => {
         this.groups = data;
         this.filteredGroups = data;
         this.isLoading = false;
+
+        for (const g of this.groups) {
+          await this.chatSvc.joinGroupRoom(g.id);
+        }
+
       },
       error: (err) => {
         console.error('Failed to load groups', err);
@@ -59,41 +73,112 @@ export class GroupsListComponent implements OnInit, OnDestroy {
   }
 
   setupSignalR(): void {
-    // this.chatSvc.setupEventHandlers();
-
     this.groupMessageSub = this.chatSvc.groupMessages$.subscribe((message) => {
-      if (message) {
-        const group = this.groups.find(g => g.id === message.groupId);
-        if (group) {
-          group.lastMessage = {
-            id: message.id,
-            groupId: message.groupId,
-            fromUser: message.fromUser,
-            message: message.message,
-            isImage: message.isImage,
-            mediaUrl: message.mediaUrl,
-            created: new Date(message.created),
-            status: message.status
-          };
-          
-          // Re-sort groups by last message time
-          this.groups.sort((a, b) => {
-            const timeA = a.lastMessage?.created?.getTime() || a.createdAt.getTime();
-            const timeB = b.lastMessage?.created?.getTime() || b.createdAt.getTime();
-            return timeB - timeA;
-          });
-          
+      if (!message) return;
+
+      const group = this.groups.find(g => g.id === message.groupId);
+      if (!group) return;
+
+      group.lastMessage = {
+        ...message,
+        created: new Date(message.created)
+      };
+
+      group.typingUsers = [];
+
+      const currentUrl = this.router.url;
+      const isCurrentlyViewing = currentUrl.includes(`/group-chat/${group.id}`);
+      
+      if (!isCurrentlyViewing && message.fromUser !== this.currentUserName) {
+        group.unreadCount = (group.unreadCount || 0) + 1;
+      }
+
+      this.groups.sort((a, b) => {
+        const timeA = a.lastMessage?.created?.getTime() || a.createdAt.getTime();
+        const timeB = b.lastMessage?.created?.getTime() || b.createdAt.getTime();
+        return timeB - timeA;
+      });
+
+      this.filterGroups();
+    });
+
+    this.groupUpdatedSub = this.chatSvc.groupUpdatedEvent$.subscribe((data) => {
+      if (!data) return;
+      
+      const group = this.groups.find(g => g.id === data.groupId);
+      if (group) {
+        group.groupName = data.groupName;
+        if (data.groupImage !== undefined) {
+          group.groupImage = data.groupImage;
+        }
+        this.filterGroups();
+      }
+    });
+
+    this.typingSub = this.chatSvc.groupTypingUsers$.subscribe(data => {
+      this.groups.forEach(group => {
+        const usersTyping = data[group.id] || [];
+
+        const othersTyping = usersTyping.filter(u => u !== this.currentUserName);
+
+        group.typingUsers = othersTyping;
+
+        if (othersTyping.length === 1) {
+          group.typingText = `${othersTyping[0]} is typing...`;
+        }
+        else if (othersTyping.length === 2) {
+          group.typingText = `${othersTyping[0]} and ${othersTyping[1]} are typing...`;
+        }
+        else if (othersTyping.length > 2) {
+          group.typingText = `${othersTyping[0]}, ${othersTyping[1]} and ${othersTyping.length - 2} others are typing...`;
+        }
+        else {
+          group.typingText = '';
+        }
+      });
+      this.filterGroups();
+    });
+
+    this.chatSvc.memberAddedEvent$.subscribe((event) => {
+      if (!event) return;
+
+      let group = this.groups.find(g => g.id === event.groupId);
+
+      if (!group) {
+
+        this.groupSvc.getGroupDetails(event.groupId).subscribe({
+          next: (data) => {
+            this.groups = [data, ...this.groups];
+            this.filteredGroups = [...this.groups];
+
+            this.chatSvc.joinGroupRoom(event.groupId);
+          },
+          error: (err) => console.error("Failed to load new group:", err)
+        });
+
+        return;
+      }
+      if (event.member) {
+        const exists = group.members.some(m => m.userId === event.member.userId);
+
+        if (!exists) {
+          group.members = [...group.members, event.member];
+          this.groups = [...this.groups];
           this.filterGroups();
         }
       }
     });
 
-    this.groupUpdatedSub = this.chatSvc.groupUpdatedEvent$.subscribe((data) => {
-      if (data) {
-        const group = this.groups.find(g => g.id === data.groupId);
-        if (group) {
-          group.groupName = data.groupName;
-          group.groupImage = data.groupImage;
+    this.chatSvc.memberRemovedEvent$.subscribe((event) => {
+      if (!event) return;
+      
+      const group = this.groups.find(g => g.id === event.groupId);
+      if (group) {
+        group.members = group.members.filter(m => m.userId !== event.userId);
+        
+        if (event.userId === this.authSvc.getUserId()) {
+          this.groups = this.groups.filter(g => g.id !== event.groupId);
+          this.filterGroups();
         }
       }
     });
@@ -115,6 +200,10 @@ export class GroupsListComponent implements OnInit, OnDestroy {
   }
 
   openGroup(groupId: number): void {
+    const group = this.groups.find(g => g.id === groupId);
+    if (group) {
+      group.unreadCount = 0;
+    }
     this.groupSvc.setCurrentGroup(groupId);
     this.router.navigate(['/group-chat', groupId]);
   }

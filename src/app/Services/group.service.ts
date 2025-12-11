@@ -18,6 +18,8 @@ export interface GroupDetails {
   members: GroupMember[];
   lastMessage?: GroupMessage;
   unreadCount: number;
+  typingUsers?: string[];
+  typingText?: string;
 }
 
 export interface GroupMember {
@@ -45,8 +47,8 @@ export interface GroupMessage {
   providedIn: 'root'
 })
 export class GroupService {
-  private apiUrl = 'https://localhost:7180/api/Group';
-  // private apiUrl = 'https://realtime001.bsite.net/api/Group';
+  private apiUrl = 'https://realtime001.bsite.net/api/Group';
+  // private apiUrl = 'https://localhost:7180/api/Group';
 
   public currentGroupId$ = new BehaviorSubject<number | null>(null);
   public groupUpdated$ = new BehaviorSubject<any>(null);

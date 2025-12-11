@@ -63,9 +63,9 @@ export class ChatService {
   public groupMessages$ = new BehaviorSubject<any>(null);
   public groupMessageDeleted$ = new BehaviorSubject<number | null>(null);
   public groupTypingUsers$ = new BehaviorSubject<{[key: number]: string[]}>({});
-  public groupUpdatedEvent$ = new BehaviorSubject<any>(null);
-  public memberAddedEvent$ = new BehaviorSubject<any>(null);
-  public memberRemovedEvent$ = new BehaviorSubject<any>(null);
+  public memberAddedEvent$ = new Subject<any>();
+  public memberRemovedEvent$ = new Subject<any>();
+  public groupUpdatedEvent$ = new Subject<any>();
   
   public connectionState$ = new BehaviorSubject<signalR.HubConnectionState>(
     signalR.HubConnectionState.Disconnected
@@ -238,9 +238,7 @@ export class ChatService {
       this.messagesMarkedAsSeenSubject.next(user);
     });
 
-    // Old group message handler (for backward compatibility)
     this.hubConnection.on("ReceiveGroupMessage", (groupNameOrMessage: any, fromUser?: string, message?: string, created?: string) => {
-      // Check if this is the old format (4 parameters)
       if (typeof groupNameOrMessage === 'string' && fromUser && message) {
         if (groupNameOrMessage === this.joinedGroupName) {
           const createdDate = new Date(created || new Date());
@@ -249,7 +247,6 @@ export class ChatService {
           });
         }
       } else {
-        // New format (single message object)
         this.groupMessages$.next(groupNameOrMessage);
       }
     });
@@ -316,7 +313,6 @@ export class ChatService {
       this.unfriendSubject.next(data);
     });
 
-    // New Group Handlers
     this.hubConnection.on('GroupMessageDeleted', (messageId: number) => {
       this.groupMessageDeleted$.next(messageId);
     });
@@ -373,7 +369,6 @@ export class ChatService {
     });
   }
 
-  // ============== GROUP METHODS ==============
 
   async joinGroupRoom(groupId: number): Promise<void> {
     if (this.hubConnection?.state === 'Connected') {
@@ -384,6 +379,27 @@ export class ChatService {
   async leaveGroupRoom(groupId: number): Promise<void> {
     if (this.hubConnection?.state === 'Connected') {
       await this.hubConnection.invoke('LeaveGroupRoom', groupId);
+    }
+  }
+
+  public async notifyMemberAdded(groupId: number, member: any): Promise<void> {
+    if (this.hubConnection?.state === signalR.HubConnectionState.Connected) {
+      await this.hubConnection.invoke("MemberAdded", groupId, member)
+        .catch(err => console.error("Error calling MemberAdded:", err));
+    }
+  }
+
+  public async notifyMemberRemoved(groupId: number, userId: string): Promise<void> {
+    if (this.hubConnection?.state === signalR.HubConnectionState.Connected) {
+      await this.hubConnection.invoke("MemberRemoved", groupId, userId)
+        .catch(err => console.error("Error calling MemberRemoved:", err));
+    }
+  }
+
+  public async notifyGroupUpdated(groupId: number, groupName: string, groupImage: string): Promise<void> {
+    if (this.hubConnection?.state === signalR.HubConnectionState.Connected) {
+      await this.hubConnection.invoke("GroupUpdated", groupId, groupName, groupImage)
+        .catch(err => console.error("Error calling GroupUpdated:", err));
     }
   }
 
@@ -427,8 +443,6 @@ export class ChatService {
       await this.hubConnection.invoke('NotifyGroupStopTyping', groupId);
     }
   }
-
-  // ============== MESSAGE METHODS ==============
 
   public deleteMessage(messageId: number): void {
     if(this.hubConnection.state === signalR.HubConnectionState.Connected){
@@ -509,7 +523,6 @@ export class ChatService {
     return Object.keys(this.typingUsers$.value).filter(key => this.typingUsers$.value[key]);
   }
 
-  // ============== OLD GROUP METHODS (for backward compatibility) ==============
 
   public joinGroup(groupName: string): Promise<void> {
     if (!this.hubConnection) {
@@ -555,7 +568,6 @@ export class ChatService {
     });
   }
 
-  // ============== HTTP METHODS ==============
 
   public getMessages(userTo: string): Observable<any> {
     return this.http.get(`${this.baseUrl}Chat/${userTo}`, this.authSvc.getHttpOptions());
@@ -577,7 +589,6 @@ export class ChatService {
     return this.http.get<any[]>(`${this.baseUrl}Chat/lastMessages/${userName}`, this.authSvc.getHttpOptions());
   }
 
-  // ============== CONNECTION METHODS ==============
 
   public async stopConnection(): Promise<void> {
     if (this.hubConnection && this.isConnectionStarted) {
