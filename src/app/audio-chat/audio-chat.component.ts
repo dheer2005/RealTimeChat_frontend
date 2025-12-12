@@ -71,10 +71,6 @@ export class AudioChatComponent implements OnInit, OnDestroy {
     } else {
       this.setupSignalListeners();
     }
-
-    // if (!this.audioService.incomingCall) {
-    //   setTimeout(() => this.initiateCall(), 500);
-    // }
   }
 
   private setupSignalListeners(): void {
@@ -121,8 +117,6 @@ export class AudioChatComponent implements OnInit, OnDestroy {
             this.isRinging = false;
             this.audioService.isCallActive = true;
             this.startCallTimer();
-
-            console.log('🎉 Call connected!');
           }
         } catch (error) {
           console.error("Error setting remote description:", error);
@@ -276,7 +270,6 @@ export class AudioChatComponent implements OnInit, OnDestroy {
     };
 
     this.peerConnection.ontrack = (event) => {
-      console.log('🎵 Remote audio track received');
       
       if (!this.remoteAudioElement) {
         this.remoteAudioElement = new Audio();
@@ -288,15 +281,7 @@ export class AudioChatComponent implements OnInit, OnDestroy {
       this.monitorRemoteAudio(event.streams[0]);
       
       this.remoteAudioElement.play()
-        .then(() => console.log('🔊 Remote audio playing'))
         .catch(err => console.error("Error playing remote audio:", err));
-    };
-
-    this.peerConnection.oniceconnectionstatechange = () => {
-      
-      if (this.peerConnection.iceConnectionState === 'connected') {
-        console.log('✅ ICE Connected!');
-      }
     };
 
     this.peerConnection.onconnectionstatechange = () => {
@@ -381,7 +366,6 @@ export class AudioChatComponent implements OnInit, OnDestroy {
     if (this.stream) {
       this.stream.getTracks().forEach(track => {
         track.stop();
-        console.log('Stopped track:', track.kind);
       });
       this.stream = null;
     }

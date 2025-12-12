@@ -261,12 +261,15 @@ export class ChatService {
     });
 
     this.hubConnection.on("OnlineUsers", (users: any[]) => {
-      this.onlineUsers$.next(users);
+      if (users && users.length > 0) {
+        this.onlineUsers$.next(users);
+      }
     });
 
     this.hubConnection.on("UserOnline", (userName: string) => {
       const currentUsers = this.onlineUsers$.value;
-      const userIndex = currentUsers.findIndex(u => u.userName === userName);
+      const userIndex = currentUsers.findIndex(u => u.userName.toLowerCase() === userName.toLowerCase());
+      
       if (userIndex !== -1) {
         currentUsers[userIndex].isOnline = true;
         this.onlineUsers$.next([...currentUsers]);
@@ -275,7 +278,8 @@ export class ChatService {
 
     this.hubConnection.on("UserOffline", (userName: string) => {
       const currentUsers = this.onlineUsers$.value;
-      const userIndex = currentUsers.findIndex(u => u.userName === userName);
+      const userIndex = currentUsers.findIndex(u => u.userName.toLowerCase() === userName.toLowerCase());
+      
       if (userIndex !== -1) {
         currentUsers[userIndex].isOnline = false;
         this.onlineUsers$.next([...currentUsers]);
@@ -575,7 +579,7 @@ export class ChatService {
     };
   
     this.SaveGroupChats(groupMsg).subscribe({
-      next: () => console.log("Group message saved"),
+      next: () => {},
       error: (err) => console.error("Error saving group message:", err)
     });
   }

@@ -251,13 +251,6 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
     
   }
 
-  // @HostListener('document: click')
-  // closeContextMenu(){
-  //   this.showContextMenu = false;
-  //   this.selectedMsgId = null;
-  //   this.showMsgContextMenu = false;
-  // }
-
   goToMessage(messageId: number, image?: any) {
     this.showContextMenu = false;
     this.profileClicked = false;
@@ -361,7 +354,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
     if (this.chatScrollContainer?.nativeElement && !this.chatScrollContainer.nativeElement.dataset.scrollListenerAdded) {
       this.chatScrollContainer.nativeElement.addEventListener('scroll', (event: Event) => {
         const element = event.target as HTMLElement;
-        const threshold = 150; // pixels from bottom
+        const threshold = 150;
         const atBottom = element.scrollHeight - element.scrollTop - element.clientHeight < threshold;
         
         this.showScrollButton = !atBottom;
@@ -591,7 +584,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
 
           navigator.geolocation.getCurrentPosition(
             (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-            () => resolve({ lat: 28.6139, lng: 77.2090 }), // fallback
+            () => resolve({ lat: 28.6139, lng: 77.2090 }),
             { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
           );
         });
@@ -1004,7 +997,6 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
 
   displayAudioDialog(UserTo: string): void {
     if (this.audioService.isOpen) {
-      console.log("⚠️ Audio dialog already open — ignoring extra open call");
       return;
     }
     

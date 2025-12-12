@@ -104,7 +104,6 @@ export class FriendRequestComponent implements OnInit, OnDestroy {
 
     this.friendRequestSubscription = this.chatSvc.friendRequest$.subscribe(req=>{
       if(req.toUserId == this.currentUserId){
-        // this.toastrSvc.success("New Friend Request received");
         this.loadFriendRequests();
       }
     });
@@ -170,7 +169,6 @@ export class FriendRequestComponent implements OnInit, OnDestroy {
                 title: 'purple-gradient-title'
               }
             });
-            // this.toastrSvc.success('Friend removed successfully');
             this.searchUsers();
             this.searchQuery = '';
             this.searchResults = [];
@@ -193,7 +191,6 @@ export class FriendRequestComponent implements OnInit, OnDestroy {
                 title: 'purple-gradient-title'
               }
             });
-            // this.toastrSvc.error('Failed to unfriend');
             console.error(err);
           }
         });
@@ -227,7 +224,6 @@ export class FriendRequestComponent implements OnInit, OnDestroy {
                 title: 'purple-gradient-title'
               }
             });
-            // this.toastrSvc.success('request withdraw successfully');
             this.searchUsers();
             this.searchQuery = '';
             this.searchResults = [];
@@ -250,7 +246,6 @@ export class FriendRequestComponent implements OnInit, OnDestroy {
                 title: 'purple-gradient-title'
               }
             });
-            // this.toastrSvc.error('Failed to withdraw request');
             console.error(err);
           }
         });

@@ -80,10 +80,6 @@ export class GroupChatComponent implements OnInit, OnDestroy {
         this.loadGroupDetails();
         this.loadMessages();
         this.setupSignalR();
-
-        // setTimeout(() => {
-        //   this.markGroupMessagesAsSeen();
-        // }, 500);
       }
     });
   }
@@ -165,13 +161,6 @@ export class GroupChatComponent implements OnInit, OnDestroy {
       }
     });
   }
-
-  // private markGroupMessagesAsSeen(): void {
-  //   if (this.chatSvc.hubConnection?.state === 'Connected') {
-  //     this.chatSvc.hubConnection.invoke('MarkGroupMessagesAsSeen', this.groupId, this.fromUser)
-  //       .catch(err => console.error('Error marking group messages as seen:', err));
-  //   }
-  // }
 
   send(): void {
     if (this.message.trim()) {

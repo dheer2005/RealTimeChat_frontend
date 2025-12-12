@@ -76,7 +76,6 @@ export class HomeComponent implements OnInit, OnDestroy {
     });
 
     this.videoService.offerReceived.subscribe(async(data)=>{
-      console.log("Video offer received in home component:", data);
       if(data){
         if(!this.videoService.isOpen){
           this.videoService.isOpen = true;
@@ -234,12 +233,13 @@ export class HomeComponent implements OnInit, OnDestroy {
       );
 
       this.onlineUsersSubscription = this.chatService.onlineUsers$.subscribe(onlineUsers => {
-        if (!onlineUsers || onlineUsers.length === 0) {
-          this.userList2 = [];
-          return;
-        }
+      if (!onlineUsers || onlineUsers.length === 0) {
+        return;
+      }
 
-        const friendUserNames = this.friends.map(f => f.userName.toLowerCase());
+      const friendUserNames = this.friends.map(f => f.userName.toLowerCase());
+
+      if (this.IsLoader) {
         this.userList2 = onlineUsers
           .filter(u => u.userName.toLowerCase() !== this.authSvc.getUserName().toLowerCase())
           .filter(u => friendUserNames.includes(u.userName.toLowerCase()))
@@ -257,10 +257,8 @@ export class HomeComponent implements OnInit, OnDestroy {
           }));
 
         this.chatService.getUnreadSummary(this.currentUserName).subscribe(summary => {
-
           summary.forEach((item:any) => {
             const user = this.userList2.find(u => u.userName === item.userName);
-
             if (user) {
               user.unreadCount = item.unreadCount;
               user.lastMessage = item.lastMessage;
@@ -275,7 +273,19 @@ export class HomeComponent implements OnInit, OnDestroy {
 
           this.IsLoader = false;
         });
-      });
+      } else {
+        onlineUsers.forEach(onlineUser => {
+          if (friendUserNames.includes(onlineUser.userName.toLowerCase())) {
+            const existingUser = this.userList2.find(
+              u => u.userName.toLowerCase() === onlineUser.userName.toLowerCase()
+            );
+            if (existingUser) {
+              existingUser.isOnline = onlineUser.isOnline;
+            }
+          }
+        });
+      }
+    });
 
       this.typingUsersSubscription = this.chatService.typingUsers$.subscribe(
         (typingUsers) => {

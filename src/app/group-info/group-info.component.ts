@@ -206,8 +206,6 @@ export class GroupInfoComponent implements OnInit, OnDestroy {
 
     this.groupSvc.addMembers(this.groupId, this.selectedFriends).subscribe({
       next: (newMembers) => {
-        console.log("new mebers:", newMembers);
-        
         this.alertSvc.success(`${newMembers.length} member(s) added`);
         newMembers.forEach((member:any) => {
           this.chatSvc.notifyMemberAdded(this.groupId, member);

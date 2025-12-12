@@ -14,9 +14,10 @@ export class AudioService {
   public hubConnection!: HubConnection;
   private hubUrl = 'https://realtime001.bsite.net/audio';
   
+  // private hubUrl = 'https://localhost:7180/audio';
+
   // private hubUrl = 'https://10.0.0.43:5000/audio';
   
-  // private hubUrl = 'https://localhost:7180/audio';
 
   private token: string | null = null;
 
@@ -59,7 +60,6 @@ export class AudioService {
 
     this.hubConnection.on('ReceiveOffer', (from: string, offer: string) => {
       if (this.isCallActive || this.incomingCall) {
-        console.log('⚠️ Ignoring incoming call from', from, '- already in a call');
         return;
       }
 
@@ -72,27 +72,22 @@ export class AudioService {
       this.remoteUserId = from;
 
       this.incomingAudioCall.next(from);
-      console.log('📞 Incoming call from:', from);
     });
 
     this.hubConnection.on('CallFailed', (reason: string) => {
       this.toastRService.warning(reason);
-      console.warn('🎤 Call failed:', reason);
       this.callFailed.next(reason);
       this.resetCallState();
     });
 
     this.hubConnection.on('CallDeclined', (by: string) => {
-      console.log('🎤 Call declined by:', by);
       this.callDeclined.next(by);
       this.resetCallState();
     });
 
     this.hubConnection.on("IncomingAudioCall", (from: string) => {
-      console.log("📞 Incoming audio call from:", from);
 
       if (this.isCallActive || this.incomingCall) {
-        console.log('⚠️ Ignoring incoming call notification - already in a call');
         return;
       }
       this.incomingCall = true;
@@ -110,7 +105,6 @@ export class AudioService {
     });
 
     this.hubConnection.on('CallEnded', (from: string) => {
-      console.log('🎤 Call ended by:', from);
       this.resetCallState();
     });
 
