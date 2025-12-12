@@ -6,6 +6,7 @@ import { GroupService } from '../Services/group.service';
 import { FriendrequestService } from '../Services/friendrequest.service';
 import { AuthenticationService } from '../Services/authentication.service';
 import { AlertService } from '../Services/alert.service';
+import { ChatService } from '../Services/chat.service';
 
 interface Friend {
   id: string;
@@ -35,6 +36,7 @@ export class CreateGroupComponent implements OnInit {
     private friendSvc: FriendrequestService,
     private authSvc: AuthenticationService,
     private router: Router,
+    private chatSvc: ChatService,
     private location: Location,
     private alertSvc: AlertService
   ) {
@@ -97,12 +99,15 @@ export class CreateGroupComponent implements OnInit {
       .filter(f => f.selected)
       .map(f => f.id);
 
+    const allMemberIds = [...selectedUserIds,this.currentUserId];
+
     this.groupSvc.createGroup({
       groupName: this.groupName,
       groupImage: this.groupImage || undefined,
       memberUserIds: selectedUserIds
     }).subscribe({
       next: (response) => {
+        this.chatSvc.notifyGroupCreated(response, selectedUserIds);
         this.alertSvc.success('Group created successfully!');
         this.router.navigate(['/groups-list']);
       },

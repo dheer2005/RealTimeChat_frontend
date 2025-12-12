@@ -182,6 +182,19 @@ export class GroupsListComponent implements OnInit, OnDestroy {
         }
       }
     });
+
+    this.chatSvc.groupCreatedEvent$.subscribe((group) => {
+      if (!group?.groupId) return;
+
+      this.groupSvc.getGroupDetails(group.groupId).subscribe({
+        next: (fullGroup) => {
+          this.groups = [fullGroup, ...this.groups];
+          this.filteredGroups = [...this.groups];
+          this.chatSvc.joinGroupRoom(fullGroup.id);
+        },
+        error: (err) => console.error("Failed to load new group:", err)
+      });
+    });
   }
 
   onSearch(): void {

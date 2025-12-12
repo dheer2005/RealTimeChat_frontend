@@ -128,13 +128,11 @@ export class HomeComponent implements OnInit, OnDestroy {
     
     if (!newFriend) return;
     
-    // Add to friends array if not already present
     const exists = this.friends.some(f => f.id === newFriend.id);
     if (!exists) {
       this.friends.push(newFriend);
     }
     
-    // Add to visible user list if they're online
     this.addToUserList2IfOnline(newFriend);
   }
 
@@ -142,10 +140,8 @@ export class HomeComponent implements OnInit, OnDestroy {
     
     const friend = this.friends.find(f => f.id === userId);
     
-    // Remove from friends array
     this.friends = this.friends.filter(f => f.id !== userId);
     
-    // Remove from visible chat list
     if (friend) {
       this.userList2 = this.userList2.filter(u => 
         u.userName.toLowerCase() !== friend.userName.toLowerCase()
@@ -160,7 +156,6 @@ export class HomeComponent implements OnInit, OnDestroy {
     );
     
     if (onlineUser && onlineUser.isOnline) {
-      // Check if not already in list
       const exists = this.userList2.some(u => 
         u.userName.toLowerCase() === friend.userName.toLowerCase()
       );
@@ -181,7 +176,6 @@ export class HomeComponent implements OnInit, OnDestroy {
         
         this.userList2.push(newUserEntry);
         
-        // Sort the list by last message time
         this.userList2 = this.userList2.sort(
           (a, b) => (b.lastMessageTime?.getTime() || 0) - (a.lastMessageTime?.getTime() || 0)
         );

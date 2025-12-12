@@ -66,6 +66,7 @@ export class ChatService {
   public memberAddedEvent$ = new Subject<any>();
   public memberRemovedEvent$ = new Subject<any>();
   public groupUpdatedEvent$ = new Subject<any>();
+  public groupCreatedEvent$ = new Subject<any>();
   
   public connectionState$ = new BehaviorSubject<signalR.HubConnectionState>(
     signalR.HubConnectionState.Disconnected
@@ -347,6 +348,10 @@ export class ChatService {
     this.hubConnection.on('OnMemberRemoved', (groupId: number, userId: string) => {
       this.memberRemovedEvent$.next({ groupId, userId });
     });
+
+    this.hubConnection.on("ReceiveGroupCreated", (group: any) => {
+      this.groupCreatedEvent$.next(group);
+    });
   }
 
   private setupConnectionHandlers(): void {
@@ -379,6 +384,13 @@ export class ChatService {
   async leaveGroupRoom(groupId: number): Promise<void> {
     if (this.hubConnection?.state === 'Connected') {
       await this.hubConnection.invoke('LeaveGroupRoom', groupId);
+    }
+  }
+
+  public async notifyGroupCreated(group: any, memberIds: string[]): Promise<void> {
+    if (this.hubConnection?.state === signalR.HubConnectionState.Connected) {
+      await this.hubConnection.invoke("GroupCreated", group, memberIds)
+        .catch(err => console.error("Error calling GroupCreated:", err));
     }
   }
 
