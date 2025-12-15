@@ -67,6 +67,9 @@ export class ChatService {
   public memberRemovedEvent$ = new Subject<any>();
   public groupUpdatedEvent$ = new Subject<any>();
   public groupCreatedEvent$ = new Subject<any>();
+  public memberPromotedEvent$ = new Subject<any>();
+  public memberDemotedEvent$ = new Subject<any>();
+  public groupDeletedEvent$ = new Subject<number>();
   
   public connectionState$ = new BehaviorSubject<signalR.HubConnectionState>(
     signalR.HubConnectionState.Disconnected
@@ -356,6 +359,18 @@ export class ChatService {
     this.hubConnection.on("ReceiveGroupCreated", (group: any) => {
       this.groupCreatedEvent$.next(group);
     });
+
+    this.hubConnection.on('OnMemberPromotedToAdmin', (groupId: number, userId: string) => {
+      this.memberPromotedEvent$.next({ groupId, userId });
+    });
+
+    this.hubConnection.on('OnMemberDemotedFromAdmin', (groupId: number, userId: string) => {
+      this.memberDemotedEvent$.next({ groupId, userId });
+    });
+
+    this.hubConnection.on('OnGroupDeleted', (groupId: number) => {
+      this.groupDeletedEvent$.next(groupId);
+    });
   }
 
   private setupConnectionHandlers(): void {
@@ -409,6 +424,27 @@ export class ChatService {
     if (this.hubConnection?.state === signalR.HubConnectionState.Connected) {
       await this.hubConnection.invoke("MemberRemoved", groupId, userId)
         .catch(err => console.error("Error calling MemberRemoved:", err));
+    }
+  }
+
+  public async notifyMemberPromoted(groupId: number, userId: string): Promise<void> {
+    if (this.hubConnection?.state === signalR.HubConnectionState.Connected) {
+      await this.hubConnection.invoke("MemberPromotedToAdmin", groupId, userId)
+        .catch(err => console.error("Error calling MemberPromotedToAdmin:", err));
+    }
+  }
+
+  public async notifyMemberDemoted(groupId: number, userId: string): Promise<void> {
+    if (this.hubConnection?.state === signalR.HubConnectionState.Connected) {
+      await this.hubConnection.invoke("MemberDemotedFromAdmin", groupId, userId)
+        .catch(err => console.error("Error calling MemberDemotedFromAdmin:", err));
+    }
+  }
+
+  public async notifyGroupDeleted(groupId: number, memberIds: string[]): Promise<void> {
+    if (this.hubConnection?.state === signalR.HubConnectionState.Connected) {
+      await this.hubConnection.invoke("GroupDeleted", groupId, memberIds)
+        .catch(err => console.error("Error calling GroupDeleted:", err));
     }
   }
 

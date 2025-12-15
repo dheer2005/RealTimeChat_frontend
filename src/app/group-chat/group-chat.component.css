@@ -313,3 +313,16 @@
     height: 44px;
   }
 }
+
+
+@media (min-width: 768px) {
+  .chat-box {
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+
+  }
+}

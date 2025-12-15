@@ -48,6 +48,7 @@ export interface GroupMessage {
 })
 export class GroupService {
   private apiUrl = 'https://realtime001.bsite.net/api/Group';
+  
   // private apiUrl = 'https://localhost:7180/api/Group';
 
   public currentGroupId$ = new BehaviorSubject<number | null>(null);
@@ -118,6 +119,18 @@ export class GroupService {
     }, {
       headers: this.getHeaders()
     });
+  }
+
+  makeAdmin(adminDto:any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/make-admin`, adminDto, {headers: this.getHeaders()});
+  }
+
+  removeAdmin(dto: { groupId: number; userId: string }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/remove-admin`, dto, this.authSvc.getHttpOptions());
+  }
+
+  deleteGroup(groupId: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/delete/${groupId}`, this.authSvc.getHttpOptions());
   }
 
   setCurrentGroup(groupId: number): void {

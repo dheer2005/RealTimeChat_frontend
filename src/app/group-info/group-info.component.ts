@@ -32,6 +32,12 @@ export class GroupInfoComponent implements OnInit, OnDestroy {
   isLoading: boolean = true;
   
   private routeSub?: Subscription;
+  private promotedSub?: Subscription;
+  private demotedSub?: Subscription;
+  private groupDeletedSub?: Subscription;
+  private memberAddedSub?: Subscription;
+  private memberRemovedSub?: Subscription;
+
 
   constructor(
     private route: ActivatedRoute,
@@ -61,10 +67,78 @@ export class GroupInfoComponent implements OnInit, OnDestroy {
         this.loadGroupDetails();
       }
     });
+    this.promotedSub = this.chatSvc.memberPromotedEvent$.subscribe(event => {
+      if (event.groupId === this.groupId && this.groupDetails) {
+        const member = this.groupDetails.members.find(m => m.userId === event.userId);
+        if (member) {
+          member.isAdmin = true;
+          if (member.userId === this.currentUserId) {
+            this.isAdmin = true;
+          }
+          this.alertSvc.info(`${member.userName} is now an admin`);
+        }
+      }
+    });
+
+    this.demotedSub = this.chatSvc.memberDemotedEvent$.subscribe(event => {
+      if (event.groupId === this.groupId && this.groupDetails) {
+        const member = this.groupDetails.members.find(m => m.userId === event.userId);
+        if (member) {
+          member.isAdmin = false;
+          this.alertSvc.info(`${member.userName} is no longer an admin`);
+          
+          if (member.userId === this.currentUserId) {
+            this.isAdmin = false;
+          }
+        }
+      }
+    });
+
+    this.groupDeletedSub = this.chatSvc.groupDeletedEvent$.subscribe(groupId => {
+      if (groupId === this.groupId) {
+        this.alertSvc.info('This group has been deleted');
+        this.router.navigate(['/groups-list']);
+      }
+    });
+
+    this.memberAddedSub = this.chatSvc.memberAddedEvent$.subscribe(event => {
+      if (event && event.groupId === this.groupId && this.groupDetails) {
+        const exists = this.groupDetails.members.some(m => m.userId === event.member.userId);
+        
+        if (!exists && event.member) {
+          this.groupDetails.members = [...this.groupDetails.members, event.member];
+          this.alertSvc.info(`${event.member.userName} joined the group`);
+        }
+      }
+    });
+
+    this.memberRemovedSub = this.chatSvc.memberRemovedEvent$.subscribe(event => {
+      if (event && event.groupId === this.groupId && this.groupDetails) {
+        const removedMember = this.groupDetails.members.find(m => m.userId === event.userId);
+        
+        this.groupDetails.members = this.groupDetails.members.filter(m => m.userId !== event.userId);
+        
+        if (removedMember) {
+          if (event.userId !== this.currentUserId) {
+            this.alertSvc.info(`${removedMember.userName} left the group`);
+          }
+        }
+        
+        if (event.userId === this.currentUserId) {
+          this.alertSvc.info('You have been removed from this group');
+          this.router.navigate(['/groups-list']);
+        }
+      }
+    });
   }
 
   ngOnDestroy(): void {
     this.routeSub?.unsubscribe();
+    this.promotedSub?.unsubscribe();
+    this.demotedSub?.unsubscribe();
+    this.groupDeletedSub?.unsubscribe();
+    this.memberAddedSub?.unsubscribe();
+    this.memberRemovedSub?.unsubscribe();
   }
 
   loadGroupDetails(): void {
@@ -232,6 +306,84 @@ export class GroupInfoComponent implements OnInit, OnDestroy {
     this.removeMember(me);
   }
 
+  removeAdmin(member: GroupMember): void {
+    if (!this.isAdmin) {
+      this.alertSvc.error('Only admins can demote members');
+      return;
+    }
+
+    if (!member.isAdmin) {
+      this.alertSvc.info('This member is not an admin');
+      return;
+    }
+
+    Swal.fire({
+      title: `Remove ${member.userName} as Admin?`,
+      text: 'They will become a regular member',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Remove',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      customClass: {
+        popup: 'purple-gradient-popup'
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        const dto = {
+          groupId: this.groupId,
+          userId: member.userId
+        };
+
+        this.groupSvc.removeAdmin(dto).subscribe({
+          next: () => {
+            member.isAdmin = false;
+            this.alertSvc.success(`${member.userName} is no longer an admin`);
+            this.chatSvc.notifyMemberDemoted(this.groupId, member.userId);
+          },
+          error: (err) => {
+            this.alertSvc.error(err.error?.message || 'Failed to remove admin');
+          }
+        });
+      }
+    });
+  }
+
+  deleteGroup(): void {
+    if (!this.isAdmin) {
+      this.alertSvc.error('Only admins can delete groups');
+      return;
+    }
+
+    Swal.fire({
+      title: 'Delete Group?',
+      text: 'This action cannot be undone. All messages and data will be permanently deleted.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Delete',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      customClass: {
+        popup: 'purple-gradient-popup'
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.groupSvc.deleteGroup(this.groupId).subscribe({
+          next: (response) => {
+            this.alertSvc.success('Group deleted successfully');
+            this.chatSvc.notifyGroupDeleted(this.groupId, response.memberIds);
+            this.router.navigate(['/groups-list']);
+          },
+          error: (err) => {
+            this.alertSvc.error(err.error?.message || 'Failed to delete group');
+          }
+        });
+      }
+    });
+  }
+
   removeMember(member: GroupMember): void {
     if (!this.isAdmin && member.userId !== this.currentUserId) {
       this.alertSvc.warning('Only admins can remove members');
@@ -239,10 +391,17 @@ export class GroupInfoComponent implements OnInit, OnDestroy {
     }
 
     const isRemovingSelf = member.userId === this.currentUserId;
-    const title = isRemovingSelf ? 'Leave Group?' : `Remove ${member.userName}?`;
-    const text = isRemovingSelf 
+    const isLastMember = this.groupDetails?.members.length === 1;
+    
+    let title = isRemovingSelf ? 'Leave Group?' : `Remove ${member.userName}?`;
+    let text = isRemovingSelf 
       ? 'You will no longer have access to this group'
       : 'This member will be removed from the group';
+
+    if (isLastMember && isRemovingSelf) {
+      title = 'Delete Group?';
+      text = 'You are the last member. Leaving will permanently delete this group and all its data.';
+    }
 
     Swal.fire({
       title: title,
@@ -259,14 +418,22 @@ export class GroupInfoComponent implements OnInit, OnDestroy {
     }).then((result) => {
       if (result.isConfirmed) {
         this.groupSvc.removeMember(this.groupId, member.userId).subscribe({
-          next: () => {
-            this.chatSvc.notifyMemberRemoved(this.groupId, member.userId);
-            if (isRemovingSelf) {
-              this.alertSvc.success('You left the group');
+          next: (response) => {
+            if (response.groupDeleted) {
+              this.alertSvc.success('Group deleted as the last member left');
+              if (response.groupId) {
+                this.chatSvc.notifyGroupDeleted(response.groupId, []);
+              }
               this.router.navigate(['/groups-list']);
             } else {
-              this.alertSvc.success('Member removed');
-              this.loadGroupDetails();
+              this.chatSvc.notifyMemberRemoved(this.groupId, member.userId);
+              if (isRemovingSelf) {
+                this.alertSvc.success('You left the group');
+                this.router.navigate(['/groups-list']);
+              } else {
+                this.alertSvc.success('Member removed');
+                this.loadGroupDetails();
+              }
             }
           },
           error: (err) => {
@@ -279,8 +446,31 @@ export class GroupInfoComponent implements OnInit, OnDestroy {
   }
 
   makeAdmin(member: GroupMember): void {
-    // This would require a backend endpoint to promote to admin
-    this.alertSvc.info('This feature is coming soon');
+    if (!this.isAdmin) {
+      this.alertSvc.error('Only admins can promote members');
+      return;
+    }
+
+    if (member.isAdmin) {
+      this.alertSvc.info('This member is already an admin');
+      return;
+    }
+
+    const dto = {
+      groupId: this.groupId,
+      userId: member.userId
+    };
+    this.groupSvc.makeAdmin(dto).subscribe({
+      next: () => {
+        member.isAdmin = true;
+        this.alertSvc.success(`${member.userName} is now an admin`);
+        this.chatSvc.notifyMemberPromoted(this.groupId, member.userId);
+      },
+      error: (err) => {
+        this.alertSvc.error('Failed to promote member');
+        console.error(err);
+      }
+    });
   }
 
   getInitial(name: string): string {

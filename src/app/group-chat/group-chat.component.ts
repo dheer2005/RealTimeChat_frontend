@@ -32,6 +32,9 @@ export class GroupChatComponent implements OnInit, OnDestroy {
   private groupMessageSub?: Subscription;
   private groupDeletedSub?: Subscription;
   private routeSub?: Subscription;
+  private groupUpdatedSub?: Subscription;
+  private memberAddedSub?: Subscription
+  private memberRemovedSub?: Subscription;
 
   constructor(
     private chatSvc: ChatService,
@@ -91,6 +94,9 @@ export class GroupChatComponent implements OnInit, OnDestroy {
     this.groupMessageSub?.unsubscribe();
     this.groupDeletedSub?.unsubscribe();
     this.routeSub?.unsubscribe();
+    this.groupUpdatedSub?.unsubscribe();
+    this.memberAddedSub?.unsubscribe();
+    this.memberRemovedSub?.unsubscribe();
   }
 
   loadGroupDetails(): void {
@@ -158,6 +164,38 @@ export class GroupChatComponent implements OnInit, OnDestroy {
     this.groupDeletedSub = this.chatSvc.groupMessageDeleted$.subscribe((messageId) => {
       if (messageId) {
         this.messages = this.messages.filter(m => m.id !== messageId);
+      }
+    });
+
+    this.groupUpdatedSub = this.chatSvc.groupUpdatedEvent$.subscribe((data) => {
+      if (data && data.groupId === this.groupId) {
+        this.groupName = data.groupName;
+        if (data.groupImage !== undefined) {
+          this.groupImage = data.groupImage;
+        }
+      }
+    });
+
+    this.memberAddedSub = this.chatSvc.memberAddedEvent$.subscribe((event) => {
+      if (event && event.groupId === this.groupId) {
+        this.memberCount++;
+      }
+    });
+
+    this.memberRemovedSub = this.chatSvc.memberRemovedEvent$.subscribe((event) => {
+      if (event && event.groupId === this.groupId) {
+        this.memberCount--;
+        
+        const currentUserId = this.authSvc.getUserId();
+        if (event.userId === currentUserId) {
+          this.router.navigate(['/groups-list']);
+        }
+      }
+    });
+
+    this.chatSvc.groupDeletedEvent$.subscribe((groupId) => {
+      if (groupId === this.groupId) {
+        this.router.navigate(['/groups-list']);
       }
     });
   }

@@ -1,5 +1,4 @@
 <div class="group-info-container">
-  <!-- Header -->
   <div class="header">
     <button class="back-btn" (click)="goBack()">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -10,15 +9,12 @@
     <div class="spacer"></div>
   </div>
 
-  <!-- Loading State -->
   <div *ngIf="isLoading" class="loader-container">
     <div class="loader-spinner"></div>
     <p class="loader-text">Loading...</p>
   </div>
 
-  <!-- Group Details -->
   <div *ngIf="!isLoading && groupDetails" class="content">
-    <!-- Group Image Section -->
     <div class="group-image-section">
       <div class="group-image-wrapper" (click)="updateGroupImage()">
         <div class="group-image" *ngIf="!groupDetails.groupImage">
@@ -34,7 +30,6 @@
       </div>
     </div>
 
-    <!-- Group Name Section -->
     <div class="info-section">
       <div class="section-header">
         <h3 class="section-title">Group Name</h3>
@@ -65,7 +60,6 @@
       </div>
     </div>
 
-    <!-- Members Section -->
     <div class="info-section">
       <div class="section-header">
         <h3 class="section-title">Members ({{ getMemberCount() }})</h3>
@@ -98,6 +92,21 @@
           </div>
 
           <div class="member-actions" *ngIf="isAdmin || member.userId === currentUserId">
+            <button *ngIf="isAdmin && !member.isAdmin && member.userId !== currentUserId" 
+            class="action-btn promote-btn" (click)="makeAdmin(member)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"></path>
+              </svg>
+              Make Admin
+            </button>
+
+            <button *ngIf="isAdmin && member.isAdmin && member.userId !== currentUserId" 
+              class="action-btn demote-btn" (click)="removeAdmin(member)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"></path>
+              </svg>
+              Remove Admin
+            </button>
             <button class="action-btn" (click)="removeMember(member)">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path *ngIf="member.userId === currentUserId" d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"></path>
@@ -110,7 +119,6 @@
       </div>
     </div>
 
-    <!-- Leave Group Button (for non-admins) -->
     <div class="danger-section" *ngIf="!isAdmin">
       <button class="leave-group-btn" (click)="leaveGroup()">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -121,10 +129,21 @@
         Leave Group
       </button>
     </div>
+    <div class="danger-section" *ngIf="isAdmin">
+      <button class="delete-group-btn" (click)="deleteGroup()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          <line x1="10" y1="11" x2="10" y2="17"></line>
+          <line x1="14" y1="11" x2="14" y2="17"></line>
+        </svg>
+        Delete Group
+      </button>
+    </div>
   </div>
+  
 </div>
 
-<!-- Add Members Modal -->
 <div *ngIf="showAddMembersModal" class="modal-overlay" (click)="closeAddMembersModal()">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">

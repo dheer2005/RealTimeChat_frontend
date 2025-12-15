@@ -28,6 +28,10 @@ export class GroupsListComponent implements OnInit, OnDestroy {
   private groupMessageSub?: Subscription;
   private groupUpdatedSub?: Subscription;
   private typingSub?: Subscription;
+  private memberAddedEventSub?: Subscription;
+  private memberRemovedEventSub?: Subscription;
+  private groupCreatedEventSub?: Subscription;
+
 
   constructor(
     private groupSvc: GroupService,
@@ -51,6 +55,10 @@ export class GroupsListComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.groupMessageSub?.unsubscribe();
     this.groupUpdatedSub?.unsubscribe();
+    this.typingSub?.unsubscribe();
+    this.memberAddedEventSub?.unsubscribe();
+    this.memberRemovedEventSub?.unsubscribe();
+    this.groupCreatedEventSub?.unsubscribe();
   }
 
   async loadGroups(): Promise<void> {
@@ -139,7 +147,7 @@ export class GroupsListComponent implements OnInit, OnDestroy {
       this.filterGroups();
     });
 
-    this.chatSvc.memberAddedEvent$.subscribe((event) => {
+    this.memberAddedEventSub = this.chatSvc.memberAddedEvent$.subscribe((event) => {
       if (!event) return;
 
       let group = this.groups.find(g => g.id === event.groupId);
@@ -169,7 +177,7 @@ export class GroupsListComponent implements OnInit, OnDestroy {
       }
     });
 
-    this.chatSvc.memberRemovedEvent$.subscribe((event) => {
+    this.memberRemovedEventSub = this.chatSvc.memberRemovedEvent$.subscribe((event) => {
       if (!event) return;
       
       const group = this.groups.find(g => g.id === event.groupId);
@@ -183,7 +191,7 @@ export class GroupsListComponent implements OnInit, OnDestroy {
       }
     });
 
-    this.chatSvc.groupCreatedEvent$.subscribe((group) => {
+    this.groupCreatedEventSub = this.chatSvc.groupCreatedEvent$.subscribe((group) => {
       if (!group?.groupId) return;
 
       this.groupSvc.getGroupDetails(group.groupId).subscribe({
