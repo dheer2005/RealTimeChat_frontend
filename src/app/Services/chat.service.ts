@@ -465,6 +465,7 @@ export class ChatService {
     replyToMessageId?: number
   ): Promise<void> {
     if (this.hubConnection?.state === 'Connected') {
+      
       await this.hubConnection.invoke(
         'SendGroupMessage',
         groupId,

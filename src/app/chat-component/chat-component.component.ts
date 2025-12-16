@@ -118,7 +118,6 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
     public router: Router,
     private toastrSvc: AlertService,
     public dialog: MatDialog,
-    private snackBar: MatSnackBar,
     private location: Location
   ) {
     

@@ -18,7 +18,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(
       routes,
       withPreloading(PreloadAllModules)
-    ), 
+    ),
     provideClientHydration(), 
     importProvidersFrom(
       JwtModule.forRoot({

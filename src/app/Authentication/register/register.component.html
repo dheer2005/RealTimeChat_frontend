@@ -1,7 +1,6 @@
 <section class="body">
     <div class="box">
         <form #form="ngForm" (ngSubmit)="onRegister()">
-            <!-- Brand Header -->
             <div class="brand-header">
                 <div class="brand-logo">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="url(#gradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -19,8 +18,7 @@
             </div>
 
             <h2>Create Your Account</h2>
-            
-            <!-- Profile Image Preview -->
+
             <div class="profilePreview" (click)="triggerFileInput()">
                 <img 
                     [src]="previewImageUrl || 'assets/default-avatar.jpg'" 
@@ -50,7 +48,6 @@
                 </div>
             </div>
 
-            <!-- Username Input -->
             <div class="inputBox">
                 <input 
                     type="text" 
@@ -66,7 +63,6 @@
                 <label>Username</label>
             </div>
 
-            <!-- Full Name Input -->
             <div class="inputBox">
                 <input 
                     type="text" 
@@ -84,7 +80,6 @@
                 <label>Full Name</label>
             </div>
 
-            <!-- Email Input -->
             <div class="inputBox">
                 <input 
                     type="email" 
@@ -100,7 +95,6 @@
                 <label>Email Address</label>
             </div>
 
-            <!-- Phone Number Input -->
             <div class="inputBox">
                 <input 
                     type="tel" 
@@ -115,7 +109,6 @@
                 <label>Phone Number</label>
             </div>
 
-            <!-- Password Input -->
             <div class="inputBox">
                 <input 
                     type="password" 
@@ -131,30 +124,25 @@
                 <label>Password</label>
             </div>
             
-            <!-- Links -->
             <div class="links">
                 <a routerLink="/login">Already have an account?</a>
             </div>
 
-            <!-- Validation Errors -->
             <div *ngIf="errorMessages?.length" class="error-messages">
                 <ul>
                     <li *ngFor="let error of errorMessages">{{ error }}</li>
                 </ul>
             </div>
 
-            <!-- Submit Button -->
             <button type="submit" [disabled]="isRegister" id="submit">
                 <span *ngIf="!isRegister">Create Account</span>
                 <span *ngIf="isRegister">Creating Account...</span>
             </button>
 
-            <!-- Divider -->
             <div class="divider">
                 <span>Already a member?</span>
             </div>
 
-            <!-- Sign In Prompt -->
             <div class="signin-prompt">
                 Have an account? <a routerLink="/login">Sign in here</a>
             </div>

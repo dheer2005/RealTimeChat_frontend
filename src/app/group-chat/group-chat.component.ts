@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ElementRef, ViewChild } from '@angular/core';
 import { ChatService } from '../Services/chat.service';
 import { GroupService, GroupMessage } from '../Services/group.service';
 import { AuthenticationService } from '../Services/authentication.service';
@@ -15,6 +15,7 @@ import { Subscription } from 'rxjs';
   styleUrl: './group-chat.component.css'
 })
 export class GroupChatComponent implements OnInit, OnDestroy {
+  @ViewChild('messageInput') messageInputRef!: ElementRef<HTMLInputElement>;
   messages: GroupMessage[] = [];
   message: string = '';
   fromUser: string = '';
@@ -28,6 +29,11 @@ export class GroupChatComponent implements OnInit, OnDestroy {
   private typingTimeout: any;
   typingUsers: string[] = [];
   displayTypingText: string = '';
+
+  replyingToMessage: any = null;
+  selectedMsgId: number | null = null;
+  showMsgContextMenu: boolean = false;
+  contextMenuPosition = { x: 0, y: 0 };
   
   private groupMessageSub?: Subscription;
   private groupDeletedSub?: Subscription;
@@ -154,6 +160,8 @@ export class GroupChatComponent implements OnInit, OnDestroy {
 
     this.groupMessageSub = this.chatSvc.groupMessages$.subscribe((message) => {
       if (message && message.groupId === this.groupId) {
+        console.log("msg from signalr:", message);
+        
         this.messages.push(message);
         if (!this.userScrolled) {
           setTimeout(() => this.scrollToBottom(), 100);
@@ -203,15 +211,19 @@ export class GroupChatComponent implements OnInit, OnDestroy {
   send(): void {
     if (this.message.trim()) {
       const created = new Date();
+      const replyToId = this.replyingToMessage ? this.replyingToMessage.id : null;
+      
       this.chatSvc.sendGroupMessage(
         this.groupId,
         this.fromUser,
         this.message,
         created,
         false,
-        ''
+        '',
+        replyToId
       );
       this.message = '';
+      this.replyingToMessage = null;
       this.chatSvc.notifyGroupStopTyping(this.groupId);
       setTimeout(() => this.scrollToBottom(true), 100);
     }
@@ -288,5 +300,97 @@ export class GroupChatComponent implements OnInit, OnDestroy {
 
   getInitial(name: string): string {
     return name.charAt(0).toUpperCase();
+  }
+
+  replyToMessage(msg: any) {
+    this.replyingToMessage = msg;
+    this.showMsgContextMenu = false;
+    setTimeout(()=>{
+      this.messageInputRef.nativeElement.focus();
+    }, 0);
+  }
+
+  cancelReply() {
+    this.replyingToMessage = null;
+  }
+
+  copyMessage(msg: any) {
+    navigator.clipboard.writeText(msg).then(() => {
+      console.log('Message copied');
+    }).catch(err => {
+      console.error('Failed to copy:', err);
+    });
+    this.showMsgContextMenu = false;
+  }
+
+  deleteMsg(msgId: number) {
+    this.chatSvc.deleteGroupMessage(msgId, this.groupId);
+    this.showMsgContextMenu = false;
+  }
+
+  onMsgRightClick(event: MouseEvent, msg: any) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    this.selectedMsgId = msg.id;
+    this.showMsgContextMenu = true;
+
+    const menuWidth = 150;
+    const menuHeight = 120;
+    const padding = 10;
+
+    let x = event.clientX;
+    let y = event.clientY;
+
+    if (x + menuWidth > window.innerWidth) {
+      x = window.innerWidth - menuWidth - padding;
+    }
+
+    if (y + menuHeight > window.innerHeight) {
+      y = window.innerHeight - menuHeight - padding;
+    }
+    
+    if (x < padding) x = padding;
+    if (y < padding) y = padding;
+
+    this.contextMenuPosition = { x, y };
+
+    setTimeout(() => {
+      const menu = document.querySelector('.msg-context-menu') as HTMLElement;
+      if (menu) {
+        menu.style.left = `${x}px`;
+        menu.style.top = `${y}px`;
+      }
+    }, 0);
+  }
+
+  goToMessage(messageId: number) {
+    this.showMsgContextMenu = false;
+
+    setTimeout(() => {
+      const targetMessage = document.getElementById('msg-' + messageId) as HTMLElement;
+
+      if (targetMessage) {
+        targetMessage.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
+
+        targetMessage.style.backgroundColor = 'rgba(255, 255, 0, 0.2)';
+        setTimeout(() => {
+          targetMessage.style.backgroundColor = '';
+        }, 2000);
+      } 
+    }, 100);
+  }
+
+  @HostListener('document:click', ['$event'])
+  closeOnOutsideClick(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+
+    if (!target.closest('.msg-context-menu') && !target.closest('.message-bubble')) {
+      this.showMsgContextMenu = false;
+      this.selectedMsgId = null;
+    }
   }
 }

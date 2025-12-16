@@ -1,10 +1,9 @@
-import { Component, Inject, OnInit, PLATFORM_ID } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AuthenticationService } from '../../Services/authentication.service';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { LoginModel } from '../../Models/LoginModel.model';
 import { FormsModule } from '@angular/forms';
-import { ChatService } from '../../Services/chat.service';
 import { SessionService } from '../../Services/session.service';
 import { AlertService } from '../../Services/alert.service';
 
@@ -16,7 +15,11 @@ import { AlertService } from '../../Services/alert.service';
   styleUrl: './login.component.css'
 })
 export class LoginComponent implements OnInit {
-  constructor(private sessionSvc: SessionService, private chatSvc: ChatService, private authSvc: AuthenticationService,private alert: AlertService,private router: Router){}
+  constructor(private sessionSvc: SessionService,
+    private authSvc: AuthenticationService,
+    private alert: AlertService,
+    private router: Router
+  ){}
 
   login:LoginModel={
     UserName: '',
@@ -34,6 +37,15 @@ export class LoginComponent implements OnInit {
     this.sessionSvc.getClientIp().subscribe((ipData:any) => {
       this.login.ClientIp = ipData.ip;
     });
+  }
+
+  handleGoogleLogin(idToken: string){
+    this.isLoading = true;
+
+    const googleLoginModel = {
+      IdToken: idToken,
+      ClientIp: this.login.ClientIp
+    }
   }
 
   onLogin(){

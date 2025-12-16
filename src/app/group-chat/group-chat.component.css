@@ -76,6 +76,14 @@
 }
 
 .group-details {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2px;
+}
+
+.group-details-left {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -245,7 +253,6 @@
 .input-wrapper {
   display: flex;
   gap: 12px;
-  max-width: 1200px;
   margin: 0 auto;
 }
 
@@ -325,4 +332,117 @@
     bottom: 0;
 
   }
+}
+
+.msg-context-menu {
+  position: fixed;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  padding: 5px 0;
+  min-width: 150px;
+  z-index: 2000;
+  white-space: nowrap;
+}
+
+.msg-context-menu ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.msg-context-menu li {
+  padding: 12px 20px;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 14px;
+  color: #333;
+}
+
+.msg-context-menu li:hover {
+  background: #f0f0f0;
+}
+
+.input-Reply-preview {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  border-left: 4px solid #667eea;
+  padding: 10px 14px;
+  margin: 8px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+}
+
+.replying-text {
+  font-size: 13px;
+  color: #667eea;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.reply-message p {
+  margin: 4px 0 0 0;
+  font-size: 14px;
+  color: #2d3748;
+}
+
+.cancel-reply-btn {
+  background: none;
+  border: none;
+  color: #667eea;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: all 0.3s ease;
+  border-radius: 50%;
+}
+
+.cancel-reply-btn:hover {
+  color: #764ba2;
+  background: rgba(102, 126, 234, 0.1);
+  transform: scale(1.1);
+}
+
+.reply-preview {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);
+  border-left: 3px solid #667eea;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.reply-preview:hover {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+  transform: translateX(2px);
+}
+
+.reply-user {
+  font-size: 13px;
+  color: #667eea;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.reply-text {
+  font-size: 14px;
+  color: #2d3748;
+  margin-top: 4px;
+}
+
+/* For sent messages reply preview */
+.my-message .reply-preview {
+  background: rgba(255, 255, 255, 0.2);
+  border-left: 3px solid rgba(255, 255, 255, 0.6);
+}
+
+.my-message .reply-user {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.my-message .reply-text {
+  color: rgba(255, 255, 255, 0.8);
 }

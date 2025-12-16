@@ -15,11 +15,14 @@
         <img [src]="groupImage" [alt]="groupName" />
       </div>
       <div class="group-details">
-        <div class="group-name">{{ groupName }}</div>
-        <div class="group-members">{{ memberCount }} members</div>
-        <div *ngIf="typingUsers.length > 0" class="typing-indicator">
-          {{ displayTypingText }}
+        <div class="group-details-left">
+          <div class="group-name">{{ groupName }}</div>
+          <div *ngIf="typingUsers.length > 0" class="typing-indicator">
+            {{ displayTypingText }}
+          </div>
         </div>
+        <div class="group-details-right"></div>
+          <div class="group-members">{{ memberCount }} members</div>
       </div>
     </div>
 
@@ -32,7 +35,6 @@
     </button>
   </div>
 
-  <!-- Messages Area -->
   <div class="messages" id="group-chat-scroll">
     <div *ngFor="let msg of messages; let i = index">
       <div class="main-separator" *ngIf="isNewDate(i)">
@@ -48,10 +50,26 @@
         }"
       >
         <div class="msg-info">
-          <div class="msg-text">
+          <div class="msg-text" [id]="'msg-'+msg.id" (contextmenu)="onMsgRightClick($event, msg)">
             <b *ngIf="msg.fromUser !== fromUser" class="sender-name">{{ msg.fromUser }}</b>
+
+            <div *ngIf="msg.replyTo" class="reply-preview" (click)="goToMessage(msg.replyTo.id)">
+              <div class="reply-user">{{ msg.replyTo.fromUser }}</div>
+              <div class="reply-text">
+                <span>{{ msg.replyTo.message }}</span>
+              </div>
+            </div>
+
             <p class="message-content">{{ msg.message }}</p>
             <span class="msg-time">{{ msg.created | date: 'shortTime' }}</span>
+
+            <div *ngIf="showMsgContextMenu && selectedMsgId == msg.id" class="msg-context-menu">
+              <ul>
+                <li (click)="replyToMessage(msg)">Reply</li>
+                <li *ngIf="msg.message != ''" (click)="copyMessage(msg.message)">Copy message</li>
+                <li *ngIf="msg.fromUser == fromUser" (click)="deleteMsg(selectedMsgId!)">Delete</li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
@@ -63,7 +81,6 @@
     </div>
   </div>
 
-  <!-- Scroll to Bottom Button -->
   <button 
     *ngIf="showScrollButton" 
     class="scroll-to-bottom-btn"
@@ -75,22 +92,34 @@
     </svg>
   </button>
 
-  <!-- Input Area -->
-  <div class="input-area">
-    <div class="input-wrapper">
-      <input
-        [(ngModel)]="message"
-        (keyup.enter)="send()"
-        (input)="onTyping()"
-        placeholder="Type a message..."
-        class="message-input"
-      />
+  <div class="message-input-container">
+    <div *ngIf="replyingToMessage" class="input-Reply-preview">
+      <div class="reply-info">
+        <span class="replying-text">Replying to {{ replyingToMessage.fromUser }}:</span>
+        <div class="reply-message">
+          <p>{{ replyingToMessage.message }}</p>
+        </div>
+      </div>
+      <button (click)="cancelReply()" class="cancel-reply-btn">✖</button>
+    </div>
+    <div class="input-area">
+      <div class="input-wrapper">
+        <input
+          #messageInput
+          [(ngModel)]="message"
+          (keyup.enter)="send()"
+          (input)="onTyping()"
+          placeholder="Type a message..."
+          class="message-input"
+        />
 
-      <button (click)="send()" class="send-btn" [disabled]="!message.trim()">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-        </svg>
-      </button>
+        <button (click)="send()" class="send-btn" [disabled]="!message.trim()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+          </svg>
+        </button>
+      </div>
     </div>
   </div>
+  
 </div>
