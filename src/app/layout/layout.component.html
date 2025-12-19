@@ -7,7 +7,7 @@
       <li class="nav-item nav-item-with-badge">
         <a class="nav-link" routerLink="/friend-request" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
           Friend Request
-          <span class="nav-badge" *ngIf="friendRequests > 0">{{ friendRequests }}</span>
+          <span class="nav-badge" *ngIf="this.chatService.PendingfriendRequestsCount > 0">{{ this.chatService.PendingfriendRequestsCount }}</span>
         </a>
       </li>
       <li class="nav-item"><a class="nav-link" routerLink="/profile" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Profile</a></li>
@@ -41,7 +41,7 @@
         <li class="nav-item tablet-nav-item-with-badge">
           <a class="nav-link" routerLink="/friend-request" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMobileMenu()">
             Friend Request
-            <span class="tablet-badge" *ngIf="friendRequests > 0">{{ friendRequests }}</span>
+            <span class="tablet-badge" *ngIf="this.chatService.PendingfriendRequestsCount > 0">{{ this.chatService.PendingfriendRequestsCount }}</span>
           </a>
         </li>
         <li class="nav-item"><a class="nav-link" routerLink="/profile" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMobileMenu()">Profile</a></li>
@@ -92,7 +92,7 @@
       <circle cx="16" cy="6" r="3" />
     </svg>
     <span>Friends</span>
-    <span class="mobile-badge" *ngIf="friendRequests > 0">{{ friendRequests }}</span>
+    <span class="mobile-badge" *ngIf="this.chatService.PendingfriendRequestsCount">{{ this.chatService.PendingfriendRequestsCount }}</span>
   </a>
   <a routerLink="/profile" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

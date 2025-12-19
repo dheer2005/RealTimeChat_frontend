@@ -22,13 +22,12 @@ export class LayoutComponent implements OnInit {
   isMobileMenuOpen = false;
   isDropdownOpen = false;
   showNavbar = false;
-  friendRequests: number = 0;
   currentUserId: string = this.authSvc.getUserId();
   private routerSubscription?: Subscription;
 
   constructor(private eRef: ElementRef, 
     private sessionSvc: SessionService, 
-    private chatService: ChatService, 
+    public chatService: ChatService, 
     public authSvc: AuthenticationService, 
     private router: Router, 
     private toastr: AlertService,
@@ -40,12 +39,22 @@ export class LayoutComponent implements OnInit {
 
   @HostListener('document:click', ['$event'])
   onClickOutside(event: Event) {
-    if (this.isNavbarOpen && !this.eRef.nativeElement.contains(event.target)) {
+    const target = event.target as HTMLElement;
+
+    if (this.isNavbarOpen && !this.eRef.nativeElement.contains(target)) {
       this.isNavbarOpen = false;
     }
-    const target = event.target as HTMLElement;
+
     if (!target.closest('.user-menu')) {
       this.isDropdownOpen = false;
+    }
+
+    if (
+      this.isMobileMenuOpen &&
+      !target.closest('.tablet-menu') &&
+      !target.closest('.navbar-toggler')
+    ) {
+      this.isMobileMenuOpen = false;
     }
   }
 
@@ -64,11 +73,11 @@ export class LayoutComponent implements OnInit {
     }
   
     this.chatService.friendRequest$.subscribe(() => {
-      this.friendRequests += 1;
+      this.chatService.PendingfriendRequestsCount += 1;
     });
     
     this.chatService.unfriend$.subscribe(() => {
-      if (this.friendRequests > 0) {
+      if (this.chatService.PendingfriendRequestsCount > 0) {
         this.loadFriendRequests();
       }
     });
@@ -96,7 +105,7 @@ export class LayoutComponent implements OnInit {
   loadFriendRequests(): void {
     this.friendRequestSvc.getPendingRequests(this.currentUserId).subscribe({
       next: (data) => {
-        this.friendRequests = data.length;
+        this.chatService.PendingfriendRequestsCount = data.length;
       },
       error: (err) => {
         this.alertSvc.error('Failed to load friend requests');

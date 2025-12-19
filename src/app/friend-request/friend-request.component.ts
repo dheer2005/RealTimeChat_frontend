@@ -108,21 +108,67 @@ export class FriendRequestComponent implements OnInit, OnDestroy {
       }
     });
 
-    this.friendResponseSubscription = this.chatSvc.friendResponse$.subscribe(res=>{
-      if(res){
-        this.toastrSvc.success(`Friend request ${res.status}`);
-        this.searchUsers();
-        this.loadFriends();
-        this.loadSentRequests();
-        this.loadFriendRequests();
+    this.friendResponseSubscription = this.chatSvc.friendResponse$.subscribe(res => {
+      if (!res || res.status?.toLowerCase() !== 'accepted') return;
+
+      const newFriend =
+        res.fromUserId === this.currentUserId ? res.toUser : res.fromUser;
+
+      if (!newFriend) return;
+
+      const homeFriends = this.chatSvc.getHomeFriends() || [];
+      if (!homeFriends.some(f => f.id === newFriend.id)) {
+        homeFriends.push(newFriend);
+        this.chatSvc.setHomeFriends(homeFriends);
       }
+
+      const homeUsers = this.chatSvc.getHomeUserList() || [];
+      if (!homeUsers.some(u => u.userName === newFriend.userName)) {
+        homeUsers.push({
+          userName: newFriend.userName,
+          fullName: newFriend.fullName || '',
+          email: newFriend.email || '',
+          profileImage: newFriend.profileImage || '',
+          isOnline: false,
+          unreadCount: 0,
+          lastMessage: '',
+          lastMessageSender: '',
+          lastMessageTime: null
+        });
+        this.chatSvc.setHomeUserList(homeUsers);
+      }
+      this.loadSentRequests();
     });
 
-    this.unfriendSubscription = this.chatSvc.unfriend$.subscribe(ev=>{
-      if(ev && (ev.user1 == this.currentUserId || ev.user2 == this.currentUserId)){
-        this.searchUsers();
-        this.loadFriends();
+    this.unfriendSubscription = this.chatSvc.unfriend$.subscribe(ev => {
+      if (!ev || ev.forCancel) return;
+
+      const removedUserId =
+        ev.fromUser === this.currentUserId ? ev.toUser : ev.fromUser;
+
+      this.friends = this.friends.filter(f => f.id !== removedUserId);
+
+      const homeFriends = this.chatSvc.getHomeFriends() || [];
+      const updatedHomeFriends = homeFriends.filter(
+        f => f.id !== removedUserId
+      );
+      this.chatSvc.setHomeFriends(updatedHomeFriends);
+
+      const homeUsers = this.chatSvc.getHomeUserList() || [];
+
+      const removedFriend = homeFriends.find(f => f.id === removedUserId);
+
+      if (removedFriend) {
+        const updatedHomeUsers = homeUsers.filter(
+          u => u.userName.toLowerCase() !== removedFriend.userName.toLowerCase()
+        );
+
+        this.chatSvc.setHomeUserList(updatedHomeUsers);
       }
+
+      this.searchResults = this.searchResults.filter(
+        u => u.id !== removedUserId
+      );
     });
   }
 
@@ -169,12 +215,6 @@ export class FriendRequestComponent implements OnInit, OnDestroy {
                 title: 'purple-gradient-title'
               }
             });
-            this.searchUsers();
-            this.searchQuery = '';
-            this.searchResults = [];
-            this.loadFriendRequests();
-            this.loadFriends();
-            this.loadSentRequests();
           },
           error: (err) => {
             Swal.fire({
@@ -224,6 +264,7 @@ export class FriendRequestComponent implements OnInit, OnDestroy {
                 title: 'purple-gradient-title'
               }
             });
+            this.chatSvc.PendingfriendRequestsCount = Math.max(0, this.chatSvc.PendingfriendRequestsCount - 1);
             this.searchUsers();
             this.searchQuery = '';
             this.searchResults = [];
@@ -311,7 +352,29 @@ export class FriendRequestComponent implements OnInit, OnDestroy {
     this.friendRequestSvc.getFriendsList(this.currentUserId).subscribe({
       next: (data) => {
         this.friends = data;
+        this.chatSvc.setHomeFriends(this.friends);
         this.isLoading = false;
+        const homeUsers = this.chatSvc.getHomeUserList() || [];
+         this.friends.forEach(friend => {
+          const exists = homeUsers.some(
+            u => u.userName.toLowerCase() === friend.userName.toLowerCase()
+          );
+
+          if (!exists) {
+            homeUsers.push({
+              userName: friend.userName,
+              fullName: friend.fullName || '',
+              email: friend.email || '',
+              profileImage: friend.profileImage || '',
+              isOnline: false,
+              unreadCount: 0,
+              lastMessage: '',
+              lastMessageSender: '',
+              lastMessageTime: null
+            });
+          }
+        });
+        this.chatSvc.setHomeUserList(homeUsers);
       },
       error: (err) => {
         this.toastrSvc.error('Failed to load friends list');
@@ -380,6 +443,7 @@ export class FriendRequestComponent implements OnInit, OnDestroy {
 
     this.friendRequestSvc.getFriendRequestResponse(responseData).subscribe({
       next: () => {
+        this.chatSvc.PendingfriendRequestsCount = Math.max(0, this.chatSvc.PendingfriendRequestsCount - 1);
         this.loadFriendRequests();
         if (action === 'accept') {
           this.loadFriends();

@@ -59,6 +59,10 @@ export class ChatService {
   private sessionChangedSubject = new Subject<string>();
   public sessionChanged$ = this.sessionChangedSubject.asObservable();
 
+  private homeUserList: any[] | null = null;
+  private homeFriends: any[] | null = null;
+  PendingfriendRequestsCount: number = 0;
+
   // Group-related observables
   public groupMessages$ = new BehaviorSubject<any>(null);
   public groupMessageDeleted$ = new BehaviorSubject<number | null>(null);
@@ -70,6 +74,7 @@ export class ChatService {
   public memberPromotedEvent$ = new Subject<any>();
   public memberDemotedEvent$ = new Subject<any>();
   public groupDeletedEvent$ = new Subject<number>();
+  public conversationSeen$ = new Subject<string>();
   
   public connectionState$ = new BehaviorSubject<signalR.HubConnectionState>(
     signalR.HubConnectionState.Disconnected
@@ -80,6 +85,27 @@ export class ChatService {
     private authSvc: AuthenticationService,
     private router: Router
   ) {}
+
+  setHomeFriends(friends: any[]) {
+    this.homeFriends = friends;
+  }
+
+  getHomeFriends(): any[] | null {
+    return this.homeFriends;
+  }
+
+  setHomeUserList(list: any[]) {
+    this.homeUserList = list;
+  }
+
+  getHomeUserList(): any[] | null {
+    return this.homeUserList;
+  }
+
+  clearHomeCache() {
+    this.homeFriends = null;
+    this.homeUserList = null;
+  }
 
   setCurrentChatUser(userName: string | null) {
     this.currentChatUser = userName;
@@ -216,6 +242,7 @@ export class ChatService {
         if (index !== -1) {
           users[index].lastMessage = msg.message;
           users[index].lastMessageSender = msg.fromUser;
+          users[index].lastMessageTime = createdDate;
 
           if (msg.userTo === myUsername && this.getCurrentChatUser() !== msg.fromUser) {
             users[index].unreadCount = (users[index].unreadCount || 0) + 1;
@@ -514,12 +541,7 @@ export class ChatService {
     if (this.hubConnection.state === signalR.HubConnectionState.Connected) {
       this.hubConnection.invoke("MarkAsSeen", fromUser, userTo)
         .then(() => {
-          const users = this.onlineUsers$.value;
-          const index = users.findIndex(u => u.userName === fromUser);
-          if (index !== -1) {
-            users[index].unreadCount = 0;
-            this.onlineUsers$.next([...users]);
-          }
+          this.conversationSeen$.next(userTo);
         })
         .catch(err => console.error('Error invoking MarkAsSeen:', err));
     }

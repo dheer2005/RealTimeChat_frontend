@@ -31,9 +31,10 @@ export class HomeComponent implements OnInit, OnDestroy {
   
   private onlineUsersSubscription?: Subscription;
   private typingUsersSubscription?: Subscription;
-  friendRequestSubscription!: Subscription;
-  friendResponseSubscription!: Subscription;
-  unfriendSubscription!: Subscription;
+  private friendRequestSubscription!: Subscription;
+  private friendResponseSubscription!: Subscription;
+  private unfriendSubscription!: Subscription;
+  private messageDeleteSubscription!: Subscription;
   
   public typingUsers: {[key: string]: boolean} = {};
 
@@ -54,7 +55,18 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.currentUserName = this.authSvc.getUserName();
     this.currentUserId = this.authSvc.getUserId();
 
-    this.loadFriends();
+    const cachedFriends = this.chatService.getHomeFriends();
+    const cachedUserList = this.chatService.getHomeUserList();
+
+    if (cachedFriends && cachedUserList) {
+      this.friends = cachedFriends;
+      this.userList2 = cachedUserList;
+      this.IsLoader = false;
+      this.initializeSignalR();
+    }else{
+      this.loadFriends();
+    }
+
 
     this.audioService.incomingAudioCall.subscribe((fromUser: string) => {
       
@@ -119,6 +131,74 @@ export class HomeComponent implements OnInit, OnDestroy {
         this.removeFriendOptimistically(removedUserId);
       }
     });
+
+    this.messageDeleteSubscription = this.chatService.messageDelete$.subscribe(messageId => {
+
+      let changed = false;
+
+      this.userList2.forEach(user => {
+
+        if (user.lastMessage && user.lastMessageId === messageId) {
+          user.lastMessage = '';
+          user.lastMessageSender = '';
+          user.lastMessageTime = null;
+          user.unreadCount = 0;
+          changed = true;
+          return;
+        }
+
+        if (
+          user.unreadCount > 0 &&
+          user.lastMessageSender !== this.currentUserName
+        ) {
+          user.unreadCount = Math.max(0, user.unreadCount - 1);
+          changed = true;
+        }
+      });
+
+      if (changed) {
+        this.userList2 = [...this.userList2];
+        this.chatService.setHomeUserList(this.userList2);
+      }
+
+      this.syncUnreadSummary();
+    });
+  }
+
+  private syncUnreadSummary(): void {
+    this.chatService.getUnreadSummary(this.currentUserName).subscribe(summary => {
+
+      const summaryMap = new Map(
+        summary.map((s: any) => [s.userName, s])
+      );
+
+      this.userList2.forEach(user => {
+        const item = summaryMap.get(user.userName);
+
+        if (!item) {
+          user.unreadCount = 0;
+          user.lastMessage = '';
+          user.lastMessageSender = '';
+          user.lastMessageTime = null;
+          user.lastMessageId = null;
+          return;
+        }
+
+        user.unreadCount = item.unreadCount;
+        user.lastMessage = item.lastMessage;
+        user.lastMessageSender = item.lastMessageSender;
+        user.lastMessageTime = item.lastMessageTime
+          ? new Date(item.lastMessageTime)
+          : null;
+        user.lastMessageId = item.lastMessageId;
+      });
+
+      this.userList2 = [...this.userList2].sort(
+        (a, b) => (b.lastMessageTime?.getTime() || 0) - (a.lastMessageTime?.getTime() || 0)
+      );
+
+      this.chatService.setHomeUserList(this.userList2);
+    });
   }
 
   private addFriendOptimistically(response: any): void {
@@ -146,6 +226,9 @@ export class HomeComponent implements OnInit, OnDestroy {
         u.userName.toLowerCase() !== friend.userName.toLowerCase()
       );
     }
+
+    this.chatService.setHomeFriends(this.friends);
+    this.chatService.setHomeUserList(this.userList2);
   }
 
   private addToUserList2IfOnline(friend: any): void {
@@ -178,6 +261,9 @@ export class HomeComponent implements OnInit, OnDestroy {
         this.userList2 = this.userList2.sort(
           (a, b) => (b.lastMessageTime?.getTime() || 0) - (a.lastMessageTime?.getTime() || 0)
         );
+
+        this.chatService.setHomeFriends(this.friends);
+        this.chatService.setHomeUserList(this.userList2);
       }
     }
   }
@@ -203,6 +289,9 @@ export class HomeComponent implements OnInit, OnDestroy {
       this.typingUsersSubscription.unsubscribe();
     }
 
+    if(this.messageDeleteSubscription){
+      this.messageDeleteSubscription.unsubscribe();
+    }
   }
 
   loadFriends(): void {
@@ -212,6 +301,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         if(this.friends.length == 0){
           this.IsLoader = false;
         }
+        this.chatService.setHomeFriends(data);
         
         this.initializeSignalR();
       },
@@ -233,14 +323,14 @@ export class HomeComponent implements OnInit, OnDestroy {
       );
 
       this.onlineUsersSubscription = this.chatService.onlineUsers$.subscribe(onlineUsers => {
-      if (!onlineUsers || onlineUsers.length === 0) {
-        return;
-      }
+        if (!onlineUsers || onlineUsers.length === 0) {
+          return;
+        }
 
-      const friendUserNames = this.friends.map(f => f.userName.toLowerCase());
+        const friendUserNames = this.friends.map(f => f.userName.toLowerCase());
 
-      if (this.IsLoader) {
-        this.userList2 = onlineUsers
+        if (this.IsLoader) {
+          this.userList2 = onlineUsers
           .filter(u => u.userName.toLowerCase() !== this.authSvc.getUserName().toLowerCase())
           .filter(u => friendUserNames.includes(u.userName.toLowerCase()))
           .map(u => ({
@@ -250,48 +340,93 @@ export class HomeComponent implements OnInit, OnDestroy {
             email: u.email || '',
             isOnline: u.isOnline || false,
             profileImage: u.profileImage || '',
-            unreadCount: 0,
-            lastMessage: u.lastMessage || '',
-            lastMessageSender: u.lastMessageSender || '',
+            unreadCount: 0, // Initialize to 0, will be updated by unread summary
+            lastMessage: '',
+            lastMessageSender: '',
             lastMessageTime: null as Date | null
           }));
 
-        this.chatService.getUnreadSummary(this.currentUserName).subscribe(summary => {
-          summary.forEach((item:any) => {
-            const user = this.userList2.find(u => u.userName === item.userName);
-            if (user) {
-              user.unreadCount = item.unreadCount;
-              user.lastMessage = item.lastMessage;
-              user.lastMessageTime = new Date(item.lastMessageTime);
-              user.lastMessageSender = item.lastMessageSender;
-            }
+          this.chatService.getUnreadSummary(this.currentUserName).subscribe(summary => {
+            summary.forEach((item:any) => {
+              const user = this.userList2.find(u => u.userName === item.userName);
+              if (user) {
+                user.unreadCount = item.unreadCount;
+                user.lastMessage = item.lastMessage;
+                user.lastMessageTime = new Date(item.lastMessageTime);
+                user.lastMessageSender = item.lastMessageSender;
+              }
+            });
+
+            this.userList2 = this.userList2.sort(
+              (a, b) => (b.lastMessageTime?.getTime() || 0) - (a.lastMessageTime?.getTime() || 0)
+            );
+
+            this.chatService.setHomeUserList(this.userList2);
+
+            this.IsLoader = false;
           });
+        } else {
+          let changed = false;
 
-          this.userList2 = this.userList2.sort(
-            (a, b) => (b.lastMessageTime?.getTime() || 0) - (a.lastMessageTime?.getTime() || 0)
-          );
+          onlineUsers.forEach(onlineUser => {
+            if (!friendUserNames.includes(onlineUser.userName.toLowerCase())) return;
 
-          this.IsLoader = false;
-        });
-      } else {
-        onlineUsers.forEach(onlineUser => {
-          if (friendUserNames.includes(onlineUser.userName.toLowerCase())) {
             const existingUser = this.userList2.find(
               u => u.userName.toLowerCase() === onlineUser.userName.toLowerCase()
             );
-            if (existingUser) {
-              existingUser.isOnline = onlineUser.isOnline;
-            }
-          }
-        });
-      }
-    });
 
-      this.typingUsersSubscription = this.chatService.typingUsers$.subscribe(
-        (typingUsers) => {
-          this.typingUsers = typingUsers;
+            if (existingUser) {
+              if (existingUser.isOnline !== onlineUser.isOnline) {
+                existingUser.isOnline = onlineUser.isOnline;
+                changed = true;
+              }
+
+              if (onlineUser.lastMessage && existingUser.lastMessage !== onlineUser.lastMessage) {
+                existingUser.unreadCount = existingUser.unreadCount || 0;
+                if (onlineUser.lastMessageSender !== this.currentUserName) {
+                  existingUser.unreadCount += 1;
+                }
+                existingUser.lastMessage = onlineUser.lastMessage;
+                existingUser.lastMessageSender = onlineUser.lastMessageSender;
+                existingUser.lastMessageTime = onlineUser.lastMessageTime
+                  ? new Date(onlineUser.lastMessageTime)
+                  : null;
+                changed = true;
+              }
+            }
+          });
+
+          if (changed) {
+            this.userList2 = [...this.userList2].sort(
+              (a, b) => (b.lastMessageTime?.getTime() || 0) - (a.lastMessageTime?.getTime() || 0)
+            );
+
+            this.chatService.setHomeUserList(this.userList2);
+          }
         }
-      );
+      }
+    );
+
+    this.typingUsersSubscription = this.chatService.typingUsers$.subscribe(
+      (typingUsers) => {
+        this.typingUsers = typingUsers;
+      }
+    );
+
+    this.chatService.conversationSeen$.subscribe(userName => {
+
+      const list = this.chatService.getHomeUserList() || [];
+
+      const user = list.find(u => u.userName === userName);
+      if (!user) return;
+
+      user.unreadCount = 0;
+      user.lastMessageSender = user.lastMessageSender;
+      user.lastMessage = user.lastMessage || '';
+
+      this.chatService.setHomeUserList([...list]);
+      this.userList2 = [...list];
+    });
 
     } catch (error) {
       console.error("Error initializing SignalR:", error);
