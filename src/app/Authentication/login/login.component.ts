@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthenticationService } from '../../Services/authentication.service';
 import { CommonModule } from '@angular/common';
 import { LoginModel } from '../../Models/LoginModel.model';
@@ -17,7 +17,8 @@ import { AlertService } from '../../Services/alert.service';
 export class LoginComponent implements OnInit {
   constructor(private sessionSvc: SessionService,
     private authSvc: AuthenticationService,
-    private alert: AlertService,
+    private alertSvc: AlertService,
+    private activatedRoute: ActivatedRoute,
     private router: Router
   ){}
 
@@ -31,6 +32,11 @@ export class LoginComponent implements OnInit {
 
 
   ngOnInit(): void {
+    this.activatedRoute.queryParams.subscribe((params: any) => {
+      if (params['sessionExpired'] === 'true') {
+        this.alertSvc.warning('Your session has expired. Please login again.');
+      }
+    });
     if(localStorage.getItem('jwt') && this.authSvc.checkAuthentication()){
       this.router.navigateByUrl('/home');
     }
@@ -53,7 +59,7 @@ export class LoginComponent implements OnInit {
     this.authSvc.loginUser(this.login).subscribe({
       next: (res:any)=>{
         this.authSvc.saveToken(res.token);
-        this.alert.success("User logged in");
+        this.alertSvc.success("User logged in");
         this.authSvc.getUserName();
         this.router.navigateByUrl('/home');
         this.isLoading = false;
@@ -61,9 +67,9 @@ export class LoginComponent implements OnInit {
       error: (err:any)=>{
         this.isLoading = false;
         if(err.status==0){
-          this.alert.error(`Something wen wrong! please try again later`);
+          this.alertSvc.error(`Something wen wrong! please try again later`);
         }else{
-          this.alert.error("wrong username and password");
+          this.alertSvc.error("wrong username and password");
         }
       }
     });

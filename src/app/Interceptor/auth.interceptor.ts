@@ -20,11 +20,25 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     });
   }
 
+  const publicEndpoints = [
+    '/login',
+    '/register',
+    '/forgot-password',
+    '/reset-password',
+    '/refresh-token'
+  ];
+
+  const isPublicEndpoint = publicEndpoints.some(endpoint => 
+    req.url.toLowerCase().includes(endpoint.toLowerCase())
+  );
+
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      if (error.status === 401) {
+      if (error.status === 401 && !isPublicEndpoint && token) {
         authSvc.clearToken();
-        router.navigate(['/login']);
+        router.navigate(['/login'],{
+          queryParams: { sessionExpired: 'true' }
+        });
       }
       return throwError(() => error);
     })
