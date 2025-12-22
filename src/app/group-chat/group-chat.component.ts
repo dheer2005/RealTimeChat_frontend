@@ -375,10 +375,10 @@ export class GroupChatComponent implements OnInit, OnDestroy {
           behavior: 'smooth',
           block: 'center'
         });
-
-        targetMessage.style.backgroundColor = 'rgba(255, 255, 0, 0.2)';
+        
+        targetMessage.classList.add('highlight-message');
         setTimeout(() => {
-          targetMessage.style.backgroundColor = '';
+          targetMessage.classList.remove('highlight-message');
         }, 2000);
       } 
     }, 100);

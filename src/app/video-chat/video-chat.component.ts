@@ -1,5 +1,5 @@
-import { Component, ElementRef, inject, OnInit, OnDestroy, ViewChild, Inject, PLATFORM_ID } from '@angular/core';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { Component, ElementRef, inject, OnInit, OnDestroy, ViewChild } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { VideoService } from '../Services/video.service';
 import { MatDialogRef } from '@angular/material/dialog';

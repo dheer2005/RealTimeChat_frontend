@@ -1,10 +1,10 @@
-import { Component, Inject, OnDestroy, OnInit, PLATFORM_ID } from '@angular/core';
-import { isPlatformBrowser, CommonModule } from '@angular/common';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthenticationService } from '../Services/authentication.service';
 import { ChatService } from '../Services/chat.service';
-import { forkJoin, map, Observable, Subscription } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { FriendrequestService } from '../Services/friendrequest.service';
 import { VideoService } from '../Services/video.service';
 import { AudioService } from '../Services/audio.service';

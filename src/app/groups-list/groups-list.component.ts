@@ -6,7 +6,6 @@ import { GroupService, GroupDetails } from '../Services/group.service';
 import { ChatService } from '../Services/chat.service';
 import { AuthenticationService } from '../Services/authentication.service';
 import { Subscription } from 'rxjs';
-import { log } from 'console';
 
 @Component({
   selector: 'app-groups-list',

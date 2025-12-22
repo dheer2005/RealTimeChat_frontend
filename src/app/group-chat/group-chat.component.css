@@ -446,3 +446,16 @@
 .my-message .reply-text {
   color: rgba(255, 255, 255, 0.8);
 }
+
+.highlight-message {
+  position: relative;
+}
+
+.highlight-message::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 0, 0.35);
+  border-radius: inherit;
+  pointer-events: none;
+}

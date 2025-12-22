@@ -1,5 +1,5 @@
-import { Component, ElementRef, OnDestroy, OnInit, ViewChild, Inject, PLATFORM_ID, HostListener, AfterViewChecked } from '@angular/core';
-import { isPlatformBrowser, CommonModule, Location } from '@angular/common';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild, HostListener, AfterViewChecked } from '@angular/core';
+import { CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ChatService } from '../Services/chat.service';
@@ -13,7 +13,6 @@ import { Subscription } from 'rxjs';
 import { PickerComponent } from '@ctrl/ngx-emoji-mart';
 import { AudioService } from '../Services/audio.service';
 import { AudioChatComponent } from '../audio-chat/audio-chat.component';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { AlertService } from '../Services/alert.service';
 
 

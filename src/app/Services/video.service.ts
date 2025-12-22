@@ -1,9 +1,8 @@
-import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
+import {  Injectable } from '@angular/core';
 import { HubConnection } from '@microsoft/signalr';
 import * as signalR from '@microsoft/signalr';
 import { AuthenticationService } from './authentication.service';
-import { BehaviorSubject, Subject } from 'rxjs';
+import {  Subject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'

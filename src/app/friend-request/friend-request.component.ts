@@ -6,7 +6,6 @@ import { ChatService } from '../Services/chat.service';
 import { FriendrequestService } from '../Services/friendrequest.service';
 import { catchError, debounceTime, distinctUntilChanged, of, Subject, Subscription, switchMap, tap } from 'rxjs';
 import { Router } from '@angular/router';
-import { query } from 'express';
 import { AlertService } from '../Services/alert.service';
 import Swal from 'sweetalert2';
 

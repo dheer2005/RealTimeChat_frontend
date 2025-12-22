@@ -1,4 +1,4 @@
-import { Component, input, Input, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthenticationService } from '../Services/authentication.service';
 import { CommonModule } from '@angular/common';

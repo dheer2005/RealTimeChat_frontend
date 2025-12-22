@@ -29,8 +29,7 @@ export class LayoutComponent implements OnInit {
     private sessionSvc: SessionService, 
     public chatService: ChatService, 
     public authSvc: AuthenticationService, 
-    private router: Router, 
-    private toastr: AlertService,
+    private router: Router,
     private alertSvc: AlertService, 
     private friendRequestSvc: FriendrequestService
   ){
