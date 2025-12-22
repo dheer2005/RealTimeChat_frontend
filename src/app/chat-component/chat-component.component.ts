@@ -14,6 +14,7 @@ import { PickerComponent } from '@ctrl/ngx-emoji-mart';
 import { AudioService } from '../Services/audio.service';
 import { AudioChatComponent } from '../audio-chat/audio-chat.component';
 import { AlertService } from '../Services/alert.service';
+import * as L from 'leaflet';
 
 
 @Component({
@@ -558,8 +559,6 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
         return;
       }
 
-      const L = await import('leaflet');
-
       const newContainer = mapContainer.cloneNode(true) as HTMLElement;
       mapContainer.replaceWith(newContainer);
 
@@ -852,8 +851,6 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
       if (!exists) {
         const finalStatus = (this.UserTo === this.fromUser) ? 'seen' : Status;
 
-        const repliedMsg = this.messages.find(m => m.id === replyTo?.id);
-
         this.messages.push({ 
           id: Id,
           fromUser: FromUser, 
@@ -1102,6 +1099,18 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
 
     if (this.messagesSeenSubscription) {
       this.messagesSeenSubscription.unsubscribe();
+    }
+
+    if(this.reactionAddedSubscription){
+      this.reactionAddedSubscription.unsubscribe();
+    }
+
+    if(this.reactionRemovedSubscription){
+      this.reactionRemovedSubscription.unsubscribe();
+    }
+
+    if(this.deleteMessageSubscription){
+      this.deleteMessageSubscription.unsubscribe();
     }
 
     this.UserTo = null;
