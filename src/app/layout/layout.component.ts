@@ -160,6 +160,7 @@ export class LayoutComponent implements OnInit {
       this.sessionSvc.logoutCurrentDevice().subscribe({
           next: (res)=>{
             this.authSvc.clearToken();
+            this.chatService.clearHomeCache();
             this.router.navigateByUrl('/login');
           }
         });

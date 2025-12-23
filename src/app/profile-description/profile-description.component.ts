@@ -200,6 +200,7 @@ export class ProfileDescriptionComponent implements OnInit,OnDestroy {
       this.sessionSvc.logoutCurrentDevice().subscribe({
           next: (res)=>{
             this.authSvc.clearToken();
+            this.chatSvc.clearHomeCache();
             this.router.navigateByUrl('/login');
           }
         });
